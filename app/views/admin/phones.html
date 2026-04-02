@@ -1,0 +1,424 @@
+<div class="admin-page">
+  <div class="admin-topbar">
+    <h1 class="admin-topbar__title">Danh sách SĐT <span style="font-weight:400;color:#888;font-size:1rem;">({{totalPhones}} người)</span></h1>
+    <div style="display:flex;gap:.75rem;">
+      <button onclick="openDeleteSchoolModal()" class="btn btn--outline" style="color:#c0392b;border-color:#e8b4b0;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:.3rem;"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+        Xóa theo trường
+      </button>
+      <a href="/admin/download/import" class="btn btn--outline">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:.3rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Import Excel
+      </a>
+      <button onclick="openModal()" class="btn btn--primary">+ Thêm mới</button>
+    </div>
+  </div>
+
+  {{#if success}}<div class="flash flash--success flash--admin"><span>{{success}}</span><button class="flash__close" onclick="this.parentElement.remove()">✕</button></div>{{/if}}
+  {{#if error}}<div class="flash flash--error flash--admin"><span>{{error}}</span><button class="flash__close" onclick="this.parentElement.remove()">✕</button></div>{{/if}}
+
+  <div class="admin-card">
+    <!-- Tìm kiếm & lọc -->
+    <form method="GET" action="/admin/download/phones" id="filterForm" style="padding:1rem 1.5rem;border-bottom:1px solid #e8e8e4;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+      <input class="form-input" type="text" name="search" value="{{filter.search}}" placeholder="🔍 Tìm tên, SĐT, tên trường..." style="flex:2;min-width:200px;" />
+      <select class="form-input" name="grade" style="flex:1;min-width:120px;">
+        <option value="">Tất cả khối</option>
+        <option value="lop1" {{#if (eq filter.grade 'lop1')}}selected{{/if}}>Lớp 1</option>
+        <option value="lop2" {{#if (eq filter.grade 'lop2')}}selected{{/if}}>Lớp 2</option>
+        <option value="lop3" {{#if (eq filter.grade 'lop3')}}selected{{/if}}>Lớp 3</option>
+        <option value="lop4" {{#if (eq filter.grade 'lop4')}}selected{{/if}}>Lớp 4</option>
+        <option value="lop5" {{#if (eq filter.grade 'lop5')}}selected{{/if}}>Lớp 5</option>
+      </select>
+      <select class="form-input" name="program_id" style="flex:1;min-width:160px;">
+        <option value="">Tất cả chương trình</option>
+        {{#each programs}}
+        <option value="{{id}}" {{#if (eq id ../filter.program_id)}}selected{{/if}}>{{name}}</option>
+        {{/each}}
+      </select>
+      <button type="submit" class="btn btn--primary btn--sm">Lọc</button>
+      <a href="/admin/download/phones" class="btn btn--outline btn--sm">Xóa lọc</a>
+    </form>
+
+    <!-- Thanh bulk action (ẩn mặc định) -->
+    <div id="bulkBar" style="display:none;padding:.75rem 1.5rem;background:#fff8e1;border-bottom:1px solid #ffe082;display:none;align-items:center;gap:1rem;">
+      <span id="bulkCount" style="font-size:.9rem;font-weight:500;color:#5f5e5a;">0 người được chọn</span>
+      <button onclick="deleteBulk()" class="btn btn--sm btn--danger">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:.3rem;"><path d="M3 6h18M19 6l-1 14H6L5 6"/></svg>
+        Xóa những người đã chọn
+      </button>
+      <button onclick="clearSelection()" class="btn btn--sm btn--outline">Bỏ chọn tất cả</button>
+    </div>
+
+    <!-- Bảng -->
+    <table class="admin-table" style="table-layout:fixed;width:100%;">
+      <thead>
+        <tr>
+          <th style="width:40px;text-align:center;">
+            <input type="checkbox" id="checkAll" onchange="toggleAll(this)" style="width:16px;height:16px;cursor:pointer;" title="Chọn tất cả" />
+          </th>
+          <th style="width:17%">Họ tên</th>
+          <th style="width:13%">SĐT</th>
+          <th style="width:17%">Tên trường</th>
+          <th style="width:8%">Khối</th>
+          <th style="width:15%">Chương trình</th>
+          <th style="width:10%">Ngày thêm</th>
+          <th style="width:14%;text-align:right">Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each phones}}
+        <tr id="row-{{id}}">
+          <td style="text-align:center;">
+            <input type="checkbox" class="row-check" value="{{id}}" onchange="onCheckChange()" style="width:16px;height:16px;cursor:pointer;" />
+          </td>
+          <td style="word-break:break-word;">
+            <span class="view-{{id}}">{{name}}</span>
+            <input class="form-input edit-{{id}}" type="text" value="{{name}}" style="display:none;padding:.3rem .5rem;font-size:.85rem;width:100%;" />
+          </td>
+          <td>
+            <span class="view-{{id}}"><code style="font-size:.9rem;">{{phone}}</code></span>
+            <input class="form-input edit-{{id}}" type="text" value="{{phone}}" style="display:none;padding:.3rem .5rem;font-size:.85rem;width:100%;" />
+          </td>
+          <td style="word-break:break-word;">
+            <span class="view-{{id}}">{{#if school}}{{school}}{{else}}<span style="color:#bbb;">—</span>{{/if}}</span>
+            <input class="form-input edit-{{id}}" type="text" value="{{school}}" style="display:none;padding:.3rem .5rem;font-size:.85rem;width:100%;" placeholder="Tên trường" />
+          </td>
+          <td>
+            <span class="view-{{id}}">
+              <span class="badge badge--green">
+                {{#if (eq grade 'lop1')}}Lớp 1{{/if}}
+                {{#if (eq grade 'lop2')}}Lớp 2{{/if}}
+                {{#if (eq grade 'lop3')}}Lớp 3{{/if}}
+                {{#if (eq grade 'lop4')}}Lớp 4{{/if}}
+                {{#if (eq grade 'lop5')}}Lớp 5{{/if}}
+              </span>
+            </span>
+            <select class="form-input edit-{{id}}" style="display:none;padding:.3rem .5rem;font-size:.85rem;">
+              <option value="lop1" {{#if (eq grade 'lop1')}}selected{{/if}}>Lớp 1</option>
+              <option value="lop2" {{#if (eq grade 'lop2')}}selected{{/if}}>Lớp 2</option>
+              <option value="lop3" {{#if (eq grade 'lop3')}}selected{{/if}}>Lớp 3</option>
+              <option value="lop4" {{#if (eq grade 'lop4')}}selected{{/if}}>Lớp 4</option>
+              <option value="lop5" {{#if (eq grade 'lop5')}}selected{{/if}}>Lớp 5</option>
+            </select>
+          </td>
+          <td>
+            <span class="view-{{id}}"><span class="badge badge--blue">{{program_name}}</span></span>
+            <select class="form-input edit-{{id}}" style="display:none;padding:.3rem .5rem;font-size:.85rem;">
+              {{#each ../programs}}
+              <option value="{{id}}" {{#if (eq id ../program_id)}}selected{{/if}}>{{name}}</option>
+              {{/each}}
+            </select>
+          </td>
+          <td>{{formatDate created_at}}</td>
+          <td style="text-align:right;">
+            <div style="display:flex;gap:.4rem;justify-content:flex-end;">
+              <button class="btn btn--sm btn--outline view-{{id}}" onclick="startEdit({{id}})">Sửa</button>
+              <button class="btn btn--sm btn--primary edit-{{id}}" style="display:none;" onclick="saveEdit({{id}})">Lưu</button>
+              <button class="btn btn--sm btn--outline edit-{{id}}" style="display:none;" onclick="cancelEdit({{id}})">Hủy</button>
+              <form action="/admin/download/phones/{{id}}/delete" method="POST" onsubmit="return confirm('Xóa số này?')" style="display:inline;" class="view-{{id}}">
+                <button type="submit" class="btn btn--sm btn--danger">Xóa</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {{else}}
+        <tr>
+          <td colspan="8" style="text-align:center;color:#9a9890;padding:2rem;">
+            {{#if filter.search}}Không tìm thấy kết quả nào.{{else}}Chưa có số điện thoại nào.{{/if}}
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== MODAL THÊM MỚI ===== -->
+<div id="modal-overlay" onclick="closeModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;"></div>
+<div id="modal-add" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1000;background:#fff;border-radius:12px;width:520px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+  <div style="padding:1.25rem 1.5rem;border-bottom:1px solid #e8e8e4;display:flex;align-items:center;justify-content:space-between;">
+    <span style="font-weight:600;font-size:1rem;">Thêm số điện thoại mới</span>
+    <button onclick="closeModal()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:#888;">✕</button>
+  </div>
+  <form action="/admin/download/phones/add" method="POST" style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
+    <div class="form-group" style="margin:0;">
+      <label class="form-label">Họ tên <span style="color:red;">*</span></label>
+      <input class="form-input" type="text" name="name" placeholder="Nguyễn Văn A" required />
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label class="form-label">Số điện thoại <span style="color:red;">*</span></label>
+      <input class="form-input" type="tel" name="phone" placeholder="0912345678" required />
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label class="form-label">Tên trường</label>
+      <input class="form-input" type="text" name="school" placeholder="TH Nguyễn Du" />
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Khối lớp <span style="color:red;">*</span></label>
+        <select class="form-input" name="grade" required>
+          <option value="lop1">Lớp 1</option>
+          <option value="lop2">Lớp 2</option>
+          <option value="lop3">Lớp 3</option>
+          <option value="lop4">Lớp 4</option>
+          <option value="lop5">Lớp 5</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Chương trình <span style="color:red;">*</span></label>
+        <select class="form-input" name="program_id" required>
+          {{#each programs}}
+          <option value="{{id}}">{{name}}</option>
+          {{/each}}
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem;">
+      <button type="button" onclick="closeModal()" class="btn btn--outline">Hủy</button>
+      <button type="submit" class="btn btn--primary">+ Thêm</button>
+    </div>
+  </form>
+</div>
+
+<!-- ===== MODAL XÓA THEO TRƯỜNG ===== -->
+<div id="school-modal-overlay" onclick="closeDeleteSchoolModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;"></div>
+<div id="school-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1000;background:#fff;border-radius:12px;width:560px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+  <div style="padding:1.25rem 1.5rem;border-bottom:1px solid #e8e8e4;display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <div style="font-weight:600;font-size:1rem;">Xóa theo trường</div>
+      <div style="font-size:.825rem;color:#888;margin-top:.2rem;">Xóa toàn bộ giáo viên thuộc một trường cụ thể</div>
+    </div>
+    <button onclick="closeDeleteSchoolModal()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:#888;">✕</button>
+  </div>
+  <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem;">
+
+    <!-- Tìm kiếm trường -->
+    <div>
+      <label class="form-label">Tìm & chọn trường</label>
+      <input class="form-input" type="text" id="schoolSearch" placeholder="Gõ tên trường..." oninput="filterSchools(this.value)" autocomplete="off" />
+    </div>
+
+    <!-- Danh sách trường -->
+    <div id="schoolList" style="max-height:280px;overflow-y:auto;border:1px solid #e8e8e4;border-radius:8px;">
+      <div style="padding:1.5rem;text-align:center;color:#9a9890;font-size:.875rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto .5rem;opacity:.3;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Đang tải danh sách trường...
+      </div>
+    </div>
+
+    <div id="schoolSelectedInfo" style="display:none;background:#fff8e1;border-radius:8px;padding:.875rem 1rem;font-size:.875rem;color:#5f5e5a;border:1px solid #ffe082;">
+      Đã chọn: <strong id="schoolSelectedName"></strong> — <span id="schoolSelectedCount"></span>
+    </div>
+
+    <div style="display:flex;gap:.75rem;justify-content:flex-end;">
+      <button onclick="closeDeleteSchoolModal()" class="btn btn--outline">Hủy</button>
+      <button id="btnDeleteSchool" onclick="confirmDeleteBySchool()" class="btn btn--danger" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:.3rem;"><path d="M3 6h18M19 6l-1 14H6L5 6"/></svg>
+        Xóa trường này
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Modal thêm mới ──────────────────────────────────────────
+function openModal() {
+  document.getElementById('modal-overlay').style.display = 'block';
+  document.getElementById('modal-add').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+  document.getElementById('modal-add').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// ── Inline edit ─────────────────────────────────────────────
+function startEdit(id) {
+  document.querySelectorAll(`.view-${id}`).forEach(el => el.style.display = 'none');
+  document.querySelectorAll(`.edit-${id}`).forEach(el => el.style.display = 'inline-block');
+}
+function cancelEdit(id) {
+  document.querySelectorAll(`.view-${id}`).forEach(el => el.style.display = '');
+  document.querySelectorAll(`.edit-${id}`).forEach(el => el.style.display = 'none');
+}
+async function saveEdit(id) {
+  const inputs = document.querySelectorAll(`.edit-${id}`);
+  const name = inputs[0].value, phone = inputs[1].value, school = inputs[2].value;
+  const grade = inputs[3].value, program_id = inputs[4].value;
+  const res = await fetch(`/admin/download/phones/${id}/edit`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, phone, school, grade, program_id })
+  });
+  const data = await res.json();
+  if (data.ok) location.reload();
+  else alert('Lỗi: ' + data.message);
+}
+
+// ── Checkbox bulk select ────────────────────────────────────
+function toggleAll(cb) {
+  document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked);
+  onCheckChange();
+}
+function onCheckChange() {
+  const checked = document.querySelectorAll('.row-check:checked');
+  const bar = document.getElementById('bulkBar');
+  const countEl = document.getElementById('bulkCount');
+  const checkAll = document.getElementById('checkAll');
+  const total = document.querySelectorAll('.row-check').length;
+
+  if (checked.length > 0) {
+    bar.style.display = 'flex';
+    countEl.textContent = `${checked.length} người được chọn`;
+  } else {
+    bar.style.display = 'none';
+  }
+  checkAll.indeterminate = checked.length > 0 && checked.length < total;
+  checkAll.checked = checked.length === total && total > 0;
+}
+function clearSelection() {
+  document.querySelectorAll('.row-check').forEach(c => c.checked = false);
+  document.getElementById('checkAll').checked = false;
+  onCheckChange();
+}
+
+async function deleteBulk() {
+  const checked = document.querySelectorAll('.row-check:checked');
+  if (!checked.length) return;
+  const ids = Array.from(checked).map(c => c.value);
+  if (!confirm(`Xóa ${ids.length} người đã chọn? Thao tác này không thể hoàn tác.`)) return;
+
+  const res = await fetch('/admin/download/phones/bulk-delete', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    ids.forEach(id => document.getElementById('row-' + id)?.remove());
+    clearSelection();
+    // Cập nhật đếm
+    const countEl = document.querySelector('.admin-topbar__title span');
+    if (countEl) {
+      const cur = parseInt(countEl.textContent) || 0;
+      countEl.textContent = `(${cur - data.count} người)`;
+    }
+    showToast(`Đã xóa ${data.count} người thành công`, 'success');
+  } else {
+    alert('Lỗi: ' + data.message);
+  }
+}
+
+// ── Modal xóa theo trường ───────────────────────────────────
+let allSchools = [];
+let selectedSchool = null;
+
+async function openDeleteSchoolModal() {
+  document.getElementById('school-modal-overlay').style.display = 'block';
+  document.getElementById('school-modal').style.display = 'block';
+  document.getElementById('schoolSearch').value = '';
+  document.getElementById('schoolSelectedInfo').style.display = 'none';
+  document.getElementById('btnDeleteSchool').disabled = true;
+  selectedSchool = null;
+  document.body.style.overflow = 'hidden';
+
+  const res = await fetch('/admin/download/phones/schools');
+  const data = await res.json();
+  if (data.ok) {
+    allSchools = data.schools;
+    renderSchoolList(allSchools);
+  }
+}
+function closeDeleteSchoolModal() {
+  document.getElementById('school-modal-overlay').style.display = 'none';
+  document.getElementById('school-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function renderSchoolList(schools) {
+  const list = document.getElementById('schoolList');
+  if (!schools.length) {
+    list.innerHTML = '<div style="padding:1.5rem;text-align:center;color:#9a9890;font-size:.875rem;">Không tìm thấy trường nào.</div>';
+    return;
+  }
+  list.innerHTML = schools.map(s => `
+    <div class="school-item" onclick="selectSchool(this, '${s.replace(/'/g,"\\'")}')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <span>${s}</span>
+    </div>
+  `).join('');
+}
+
+function filterSchools(q) {
+  const filtered = q ? allSchools.filter(s => s.toLowerCase().includes(q.toLowerCase())) : allSchools;
+  renderSchoolList(filtered);
+}
+
+async function selectSchool(el, school) {
+  document.querySelectorAll('.school-item').forEach(i => i.classList.remove('school-item--active'));
+  el.classList.add('school-item--active');
+  selectedSchool = school;
+
+  // Đếm số người thuộc trường này
+  const params = new URLSearchParams({ school });
+  const res = await fetch('/admin/download/phones/delete-by-filter', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ school, _countOnly: true })
+  });
+
+  // Lấy count từ danh sách hiện tại (client-side nhanh hơn)
+  const rows = document.querySelectorAll('#row-\\3');
+  const inPage = Array.from(document.querySelectorAll('td')).filter(td => td.textContent.trim() === school).length;
+
+  document.getElementById('schoolSelectedName').textContent = school;
+  document.getElementById('schoolSelectedCount').textContent = 'Xem số người bên dưới khi xóa';
+  document.getElementById('schoolSelectedInfo').style.display = 'block';
+  document.getElementById('btnDeleteSchool').disabled = false;
+}
+
+async function confirmDeleteBySchool() {
+  if (!selectedSchool) return;
+  if (!confirm(`Xóa toàn bộ giáo viên trường "${selectedSchool}"?\n\nThao tác này sẽ xóa TẤT CẢ người thuộc trường này và không thể hoàn tác.`)) return;
+
+  const res = await fetch('/admin/download/phones/delete-by-filter', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ school: selectedSchool })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    closeDeleteSchoolModal();
+    showToast(`Đã xóa ${data.count} người từ trường "${selectedSchool}"`, 'success');
+    setTimeout(() => location.reload(), 1200);
+  } else {
+    alert('Lỗi: ' + data.message);
+  }
+}
+
+// ── Toast notification ──────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;padding:.75rem 1.25rem;border-radius:8px;font-size:.9rem;font-weight:500;color:#fff;background:${type==='success'?'#1a7f5a':'#c0392b'};box-shadow:0 4px 16px rgba(0,0,0,.15);transition:opacity .3s;`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+</script>
+
+<style>
+.school-item {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .7rem 1rem;
+  cursor: pointer;
+  font-size: .875rem;
+  color: #3c3c3a;
+  border-bottom: 1px solid #f0f0ec;
+  transition: background .1s;
+}
+.school-item:last-child { border-bottom: none; }
+.school-item:hover { background: #f5f5f3; }
+.school-item--active { background: #e8f5f0; color: #1a7f5a; font-weight: 500; }
+.school-item--active svg { stroke: #1a7f5a; }
+#bulkBar { display: none; }
+#bulkBar.visible { display: flex !important; }
+</style>

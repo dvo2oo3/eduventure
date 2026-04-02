@@ -1,0 +1,63 @@
+<div class="admin-page">
+  <div class="admin-topbar">
+    <h1 class="admin-topbar__title">Quản lý Tin tức & Chương trình</h1>
+    <a href="/admin/news/create" class="btn btn--primary">+ Thêm tin mới</a>
+  </div>
+
+  <div class="admin-card">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th style="width:40%">Tiêu đề</th>
+          <th>Loại</th>
+          <th>Ngày sự kiện</th>
+          <th>Trạng thái</th>
+          <th>Ghim</th>
+          <th style="text-align:right">Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each rows}}
+        <tr id="row-{{id}}">
+          <td>
+            <a href="/admin/news/{{id}}/edit" class="table-link">{{truncate title 70}}</a>
+          </td>
+          <td><span class="badge {{#if (eq category 'program')}}badge--green{{else}}badge--blue{{/if}}">{{#if (eq category 'program')}}Chương trình{{else}}Tin tức{{/if}}</span></td>
+          <td>{{#if event_date}}{{formatDate event_date}}{{else}}—{{/if}}</td>
+          <td>
+            <button class="toggle-btn {{#if is_visible}}toggle-btn--on{{else}}toggle-btn--off{{/if}}"
+              onclick="toggleField({{id}},'visible',this)"
+              title="Nhấn để {{#if is_visible}}ẩn{{else}}hiện{{/if}}">
+              {{#if is_visible}}Hiện{{else}}Ẩn{{/if}}
+            </button>
+          </td>
+          <td>
+            <button class="toggle-btn {{#if is_pinned}}toggle-btn--pin{{else}}toggle-btn--off{{/if}}"
+              onclick="toggleField({{id}},'pin',this)"
+              title="{{#if is_pinned}}Bỏ ghim{{else}}Ghim trang chủ{{/if}}">
+              {{#if is_pinned}}📌 Ghim{{else}}Không ghim{{/if}}
+            </button>
+          </td>
+          <td>
+            <div class="table-actions">
+              <a href="/admin/news/{{id}}/edit" class="btn btn--sm btn--outline">Sửa</a>
+              <form action="/admin/news/{{id}}/delete" method="POST" style="display:inline;" onsubmit="return confirm('Xóa tin này?')">
+                <button type="submit" class="btn btn--sm btn--danger">Xóa</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    <!-- PAGINATION -->
+    {{#if (ne totalPages 1)}}
+    <div class="pagination" style="padding:1rem 1.25rem;">
+      {{#each (range 1 totalPages)}}
+      <a href="/admin/news?page={{this}}" class="pagination__btn {{#if (eq this ../page)}}pagination__btn--active{{/if}}">{{this}}</a>
+      {{/each}}
+    </div>
+    {{/if}}
+  </div>
+</div>

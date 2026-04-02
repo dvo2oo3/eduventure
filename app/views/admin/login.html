@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng nhập Admin — {{siteName}}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body class="login-body">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-card__header">
+        <div class="login-card__logo">
+          <svg width="40" height="40" viewBox="0 0 28 28" fill="none">
+            <rect width="28" height="28" rx="8" fill="#1a7f5a"/>
+            <path d="M7 14c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="14" cy="17" r="3" fill="#fff"/>
+          </svg>
+        </div>
+        <h1 class="login-card__title">{{siteName}} Admin</h1>
+        <p class="login-card__sub">Đăng nhập để quản lý nội dung</p>
+      </div>
+
+      {{#if error}}
+      <div class="flash flash--error" style="margin-bottom:1rem;">{{error}}</div>
+      {{/if}}
+
+      <form class="login-form" action="/admin/login" method="POST">
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input class="form-input" type="email" id="email" name="email" placeholder="admin@eduventure.vn" required autofocus />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="password">Mật khẩu</label>
+          <input class="form-input" type="password" id="password" name="password" placeholder="••••••••" required />
+        </div>
+        <button type="submit" class="btn btn--primary btn--block btn--lg" style="margin-top:0.5rem;">Đăng nhập</button>
+      </form>
+
+      <div class="login-card__back">
+        <a href="/">← Về trang chủ</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

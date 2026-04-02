@@ -1,0 +1,153 @@
+<!-- HERO -->
+{{#if siteBannerActive}}
+<section class="hero"
+  style="background-image:url('{{siteBannerUrl}}');background-size:{{siteBannerZoom}}%;background-position:{{siteBannerPosition}};position:relative;">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
+  <div class="container hero__inner" style="position:relative;z-index:1;">
+    <div class="hero__content">
+      <div class="hero__badge">Kỹ năng sống · Lớp 1 → Lớp 5</div>
+      <h1 class="hero__title" style="color:{{#if siteBannerTextColor}}{{siteBannerTextColor}}{{else}}#ffffff{{/if}};">{{#if siteBannerTitle}}{{siteBannerTitle}}{{else}}Trang bị kỹ năng
+        sống cho học sinh tiểu học{{/if}}</h1>
+      <p class="hero__desc" style="color:{{#if siteBannerTextColor}}{{siteBannerTextColor}}{{else}}rgba(255,255,255,.85){{/if}};opacity:.9;">{{#if
+        siteBannerSubtitle}}{{siteBannerSubtitle}}{{else}}Chương trình giáo dục thực tiễn dành cho học sinh tiểu
+        học.{{/if}}</p>
+      <div class="hero__actions">
+        <a href="/chuong-trinh" class="btn btn--primary">Xem chương trình</a>
+        <a href="/tai-xuong" class="btn btn--outline">Tải phần mềm</a>
+      </div>
+    </div>
+    <div class="hero__visual" aria-hidden="true"></div>
+  </div>
+</section>
+{{else}}
+<section class="hero">
+  <div class="container hero__inner">
+    <div class="hero__content">
+      <div class="hero__badge">Kỹ năng sống · Lớp 1 → Lớp 5</div>
+      <h1 class="hero__title">{{#if siteBannerTitle}}{{siteBannerTitle}}{{else}}Trang bị kỹ năng sống<br>cho học sinh tiểu học{{/if}}</h1>
+      <p class="hero__desc">{{#if siteBannerSubtitle}}{{siteBannerSubtitle}}{{else}}Chương trình giáo dục thực tiễn, được triển khai tại các trường tiểu học trên toàn quốc —
+        giúp học sinh phát triển toàn diện từ sớm.{{/if}}</p>
+      <div class="hero__actions">
+        <a href="/chuong-trinh" class="btn btn--primary">Xem chương trình</a>
+        <a href="/tai-xuong" class="btn btn--outline">Tải phần mềm</a>
+      </div>
+    </div>
+    <div class="hero__visual" aria-hidden="true">
+      <div class="hero__circle hero__circle--1"></div>
+      <div class="hero__circle hero__circle--2"></div>
+      <div class="hero__circle hero__circle--3"></div>
+      <svg class="hero__icon" width="120" height="120" viewBox="0 0 120 120" fill="none">
+        <circle cx="60" cy="60" r="48" fill="rgba(26,127,90,.12)" />
+        <path d="M40 60c0-11.046 8.954-20 20-20s20 8.954 20 20" stroke="#1a7f5a" stroke-width="3"
+          stroke-linecap="round" />
+        <circle cx="60" cy="70" r="10" fill="#1a7f5a" fill-opacity=".8" />
+        <path d="M46 85c2.5-4 8-6.5 14-6.5s11.5 2.5 14 6.5" stroke="#1a7f5a" stroke-width="2.5"
+          stroke-linecap="round" />
+      </svg>
+    </div>
+  </div>
+</section>
+{{/if}}
+<!-- EVENT BANNER -->
+{{#if siteEventBannerActive}}
+{{#if siteEventBannerUrl}}
+<section style="padding:1.5rem 0 0;">
+  <div class="container">
+    {{#if siteEventBannerTitle}}
+    <h2 style="font-size:1.65rem;font-weight:700;color:var(--color-text-primary, #1a1a1a);margin:0 0 .85rem;text-align:center;line-height:1.35;letter-spacing:-.01em;">{{siteEventBannerTitle}}</h2>
+    {{/if}}
+    {{#if siteEventBannerLink}}
+    <a href="{{siteEventBannerLink}}" style="display:block;position:relative;border-radius:12px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.1);transition:transform .2s;" onmouseover="this.style.transform='scale(1.005)'" onmouseout="this.style.transform=''">
+    {{else}}
+    <div style="position:relative;border-radius:12px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.1);">
+    {{/if}}
+      <div style="height:220px;background-image:url('{{siteEventBannerUrl}}');background-size:{{siteEventZoom}}%;background-position:{{siteEventPosition}};background-repeat:no-repeat;background-color:#eee;"></div>
+    {{#if siteEventBannerLink}}</a>{{else}}</div>{{/if}}
+  </div>
+</section>
+{{/if}}
+{{/if}}
+
+<!-- TIN NỔI BẬT -->
+<section class="section">
+  <div class="container">
+    <div class="section__header">
+      <div>
+        <h2 class="section__title">Tin nổi bật</h2>
+        <p class="section__sub">Các hoạt động và sự kiện mới nhất</p>
+      </div>
+      <a href="/chuong-trinh" class="section__more">Xem tất cả →</a>
+    </div>
+
+    {{#if pinnedNews.length}}
+    <div class="news-grid">
+      {{#each pinnedNews}}
+      <article class="news-card">
+        <div class="news-card__img"
+          style="{{#if image}}background-image:url('{{image}}');background-size:cover;background-position:center;{{/if}}">
+          {{#unless image}}
+          <div class="news-card__img-placeholder">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(26,127,90,.5)" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14,2 14,8 20,8" />
+            </svg>
+          </div>
+          {{/unless}}
+          {{#if category}}<span class="news-card__cat">{{#if (eq category 'program')}}Chương trình{{else}}Tin
+            tức{{/if}}</span>{{/if}}
+        </div>
+        <div class="news-card__body">
+          <div class="news-card__meta">
+            {{#if event_date}}<span>{{formatDate event_date}}</span>{{/if}}
+            {{#if location}}<span class="news-card__loc">📍 {{location}}</span>{{/if}}
+          </div>
+          <h3 class="news-card__title">{{title}}</h3>
+          <p class="news-card__summary">{{truncate summary 100}}</p>
+          <a href="/chuong-trinh/{{slug}}" class="news-card__link">Xem chi tiết →</a>
+        </div>
+      </article>
+      {{/each}}
+    </div>
+    {{else}}
+    <div class="empty-state">
+      <p>Chưa có tin nổi bật nào.</p>
+    </div>
+    {{/if}}
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-section">
+  <div class="container stats-grid">
+    <div class="stat-item">
+      <div class="stat-item__num">120+</div>
+      <div class="stat-item__label">Trường đối tác</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-item__num">50.000+</div>
+      <div class="stat-item__label">Học sinh</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-item__num">5</div>
+      <div class="stat-item__label">Khối lớp</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-item__num">10+</div>
+      <div class="stat-item__label">Năm kinh nghiệm</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container cta-inner">
+    <div>
+      <h2 class="cta-section__title">Bắt đầu cùng EduVenture?</h2>
+      <p class="cta-section__desc">Liên hệ với chúng tôi để triển khai chương trình tại trường của bạn.</p>
+    </div>
+    <div class="cta-section__actions">
+      <a href="/lien-he" class="btn btn--white">Liên hệ ngay</a>
+      <a href="/tai-xuong" class="btn btn--outline-white">Tải phần mềm</a>
+    </div>
+  </div>
+</section>

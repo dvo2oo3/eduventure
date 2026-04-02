@@ -1,0 +1,143 @@
+<div class="admin-page">
+  <div class="admin-topbar">
+    <h1 class="admin-topbar__title">Quản lý Liên hệ & Bản đồ</h1>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
+
+    <!-- CÀI ĐẶT THÔNG TIN -->
+    <div class="admin-card">
+      <div class="admin-card__header">
+        <div class="admin-card__title">Thông tin liên hệ & Bản đồ</div>
+      </div>
+      <form action="/admin/contact/settings" method="POST" class="admin-form">
+        <div class="form-group">
+          <label class="form-label">Địa chỉ</label>
+          <textarea class="form-input form-textarea" name="address" rows="2">{{settings.address}}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" name="email" value="{{settings.email}}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Số điện thoại</label>
+          <input class="form-input" type="text" name="phone" value="{{settings.phone}}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Giờ làm việc</label>
+          <input class="form-input" type="text" name="working_hours" value="{{settings.working_hours}}" placeholder="Thứ 2 – Thứ 6: 8:00 – 17:30" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Google Maps Embed URL</label>
+          <textarea class="form-input form-textarea" name="map_embed" rows="3" placeholder="https://www.google.com/maps/embed?pb=...">{{settings.map_embed}}</textarea>
+          <div class="form-hint">Vào Google Maps → Chia sẻ → Nhúng bản đồ → Copy link src từ thẻ &lt;iframe&gt;</div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary">Lưu thay đổi</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- TIN NHẮN -->
+    <div class="admin-card">
+      <div class="admin-card__header">
+        <div class="admin-card__title">
+          Tin nhắn từ người dùng
+          {{#if unread}}<span class="badge badge--amber" style="margin-left:8px;">{{unread}} chưa đọc</span>{{/if}}
+        </div>
+      </div>
+      <div class="msg-list">
+        {{#each messages}}
+        <div class="msg-item {{#unless is_read}}msg-item--unread{{/unless}}" id="msg-{{id}}"
+          style="cursor:pointer;"
+          onclick="openMsg({{id}})">
+          <div class="msg-item__header">
+            <div class="msg-item__name">
+              {{#unless is_read}}<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1a7f5a;margin-right:6px;vertical-align:middle;"></span>{{/unless}}
+              {{full_name}}
+            </div>
+            <div class="msg-item__date">{{formatDate created_at}}</div>
+          </div>
+          <div class="msg-item__email">{{email}}{{#if phone}} · {{phone}}{{/if}}</div>
+          <p class="msg-item__text">{{truncate message 120}}</p>
+        </div>
+        {{else}}
+        <div class="empty-state" style="padding:2rem;">
+          <p>Chưa có tin nhắn nào.</p>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL XEM TIN NHẮN ĐẦY ĐỦ -->
+<div id="msgModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;width:100%;max-width:500px;margin:1rem;overflow:hidden;">
+    <div style="background:#1a7f5a;padding:1rem 1.25rem;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div id="mName" style="color:#fff;font-weight:600;font-size:1rem;"></div>
+        <div id="mDate" style="color:rgba(255,255,255,0.7);font-size:0.8rem;margin-top:2px;"></div>
+      </div>
+      <button onclick="closeMsg()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:1rem;">✕</button>
+    </div>
+    <div style="padding:1.25rem;">
+      <div style="display:flex;gap:1.5rem;margin-bottom:1rem;font-size:0.85rem;color:#5f5e5a;">
+        <span>📧 <span id="mEmail"></span></span>
+        <span id="mPhoneWrap">📞 <span id="mPhone"></span></span>
+      </div>
+      <div style="background:#f5fbf8;border-left:3px solid #1a7f5a;border-radius:4px;padding:1rem;font-size:0.9rem;line-height:1.7;color:#2c2c2a;white-space:pre-wrap;max-height:300px;overflow-y:auto;" id="mContent"></div>
+      <div style="display:flex;gap:0.5rem;margin-top:1rem;justify-content:flex-end;">
+        <button id="mReadBtn" class="btn btn--sm btn--outline" onclick="markReadFromModal()">Đánh dấu đã đọc</button>
+        <button class="btn btn--sm btn--danger" onclick="deleteFromModal()">Xóa</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var _currentMsgId = null;
+var _messages = {{{msgJson}}};
+
+function openMsg(id) {
+  var msg = _messages[id];
+  if (!msg) return;
+  _currentMsgId = id;
+  document.getElementById('mName').textContent = msg.full_name;
+  document.getElementById('mDate').textContent = msg.created_at_fmt;
+  document.getElementById('mEmail').textContent = msg.email;
+  document.getElementById('mPhone').textContent = msg.phone || '';
+  document.getElementById('mPhoneWrap').style.display = msg.phone ? '' : 'none';
+  document.getElementById('mContent').textContent = msg.message;
+  document.getElementById('mReadBtn').style.display = msg.is_read ? 'none' : '';
+  document.getElementById('msgModal').style.display = 'flex';
+  if (!msg.is_read) markRead(id);
+}
+
+function closeMsg() {
+  document.getElementById('msgModal').style.display = 'none';
+  _currentMsgId = null;
+}
+
+function markReadFromModal() {
+  if (_currentMsgId) {
+    markRead(_currentMsgId);
+    document.getElementById('mReadBtn').style.display = 'none';
+  }
+}
+
+function deleteFromModal() {
+  if (!_currentMsgId) return;
+  if (!confirm('Xóa tin nhắn này?')) return;
+  var form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/admin/contact/messages/' + _currentMsgId + '/delete';
+  document.body.appendChild(form);
+  form.submit();
+}
+
+document.getElementById('msgModal').addEventListener('click', function(e) {
+  if (e.target === this) closeMsg();
+});
+</script>

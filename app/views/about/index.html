@@ -1,0 +1,79 @@
+<!-- PAGE HEADER -->
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-header__title">Về chúng tôi</h1>
+    <p class="page-header__sub">Hành trình xây dựng nền tảng kỹ năng sống cho thế hệ tương lai</p>
+  </div>
+</section>
+
+<!-- ABOUT INTRO -->
+<section class="section">
+  <div class="container about-intro">
+    <div class="about-intro__visual" aria-hidden="true">
+      <div class="about-intro__shape"></div>
+      <svg width="180" height="180" viewBox="0 0 180 180" fill="none">
+        <circle cx="90" cy="90" r="70" fill="rgba(26,127,90,.07)"/>
+        <circle cx="90" cy="90" r="50" fill="rgba(26,127,90,.1)"/>
+        <path d="M65 90c0-13.807 11.193-25 25-25s25 11.193 25 25" stroke="#1a7f5a" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="90" cy="103" r="12" fill="#1a7f5a" fill-opacity=".7"/>
+        <path d="M68 125c4-8 12-13 22-13s18 5 22 13" stroke="#1a7f5a" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="about-intro__text">
+      <span class="label-tag">Giới thiệu</span>
+      <h2 class="about-intro__title">{{#if about.about_text}}{{about.about_text.title}}{{else}}Chúng tôi là ai?{{/if}}</h2>
+      <p class="about-intro__body">{{#if about.about_text}}{{about.about_text.content}}{{else}}EduVenture là đơn vị chuyên triển khai các chương trình giáo dục kỹ năng sống cho học sinh tiểu học.{{/if}}</p>
+    </div>
+  </div>
+</section>
+
+<!-- MISSION & VISION -->
+<section class="section section--gray">
+  <div class="container">
+    <div class="mv-grid">
+      <div class="mv-card mv-card--mission">
+        <div class="mv-card__icon">🎯</div>
+        <h3 class="mv-card__title">{{#if about.mission}}{{about.mission.title}}{{else}}Sứ mệnh{{/if}}</h3>
+        <p class="mv-card__body">{{#if about.mission}}{{about.mission.content}}{{else}}Trang bị kỹ năng sống thực tiễn cho học sinh tiểu học.{{/if}}</p>
+      </div>
+      <div class="mv-card mv-card--vision">
+        <div class="mv-card__icon">🔭</div>
+        <h3 class="mv-card__title">{{#if about.vision}}{{about.vision.title}}{{else}}Tầm nhìn{{/if}}</h3>
+        <p class="mv-card__body">{{#if about.vision}}{{about.vision.content}}{{else}}Trở thành đơn vị giáo dục kỹ năng sống hàng đầu Việt Nam.{{/if}}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-section">
+  <div class="container stats-grid">
+    <div class="stat-item">
+      <div class="stat-item__num">{{#if about.stats_schools}}{{about.stats_schools.title}}{{else}}120+{{/if}}</div>
+      <div class="stat-item__label">Trường đối tác</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-item__num">{{#if about.stats_students}}{{about.stats_students.title}}{{else}}50.000+{{/if}}</div>
+      <div class="stat-item__label">Học sinh</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-item__num">5</div>
+      <div class="stat-item__label">Khối lớp</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-item__num">{{#if about.stats_years}}{{about.stats_years.title}}{{else}}10+{{/if}}</div>
+      <div class="stat-item__label">Năm kinh nghiệm</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container cta-inner">
+    <div>
+      <h2 class="cta-section__title">Muốn hợp tác cùng chúng tôi?</h2>
+      <p class="cta-section__desc">Liên hệ để biết thêm về chương trình triển khai tại trường bạn.</p>
+    </div>
+    <a href="/lien-he" class="btn btn--white">Liên hệ ngay</a>
+  </div>
+</section>

@@ -1,0 +1,105 @@
+<!-- PAGE HEADER -->
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-header__title">Liên hệ</h1>
+    <p class="page-header__sub">Chúng tôi sẵn sàng lắng nghe và hỗ trợ bạn</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container contact-layout">
+
+    <!-- FORM -->
+    <div class="contact-form-wrap">
+      <h2 class="contact-form-wrap__title">Gửi yêu cầu hỗ trợ</h2>
+      <p class="contact-form-wrap__desc">Điền thông tin bên dưới, chúng tôi sẽ phản hồi trong vòng 24 giờ làm việc.</p>
+
+      <form class="contact-form" action="/lien-he/gui" method="POST">
+        <div class="form-group">
+          <label class="form-label" for="full_name">Họ và tên <span class="required">*</span></label>
+          <input class="form-input" type="text" id="full_name" name="full_name" placeholder="Nguyễn Văn A" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="email">Email <span class="required">*</span></label>
+            <input class="form-input" type="email" id="email" name="email" placeholder="example@email.com" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="phone">Số điện thoại</label>
+            <input class="form-input" type="tel" id="phone" name="phone" placeholder="0912 xxx xxx" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="message">Nội dung yêu cầu <span class="required">*</span></label>
+          <textarea class="form-input form-textarea" id="message" name="message" rows="5" placeholder="Nhập nội dung cần hỗ trợ..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn--primary btn--block btn--lg">Gửi yêu cầu</button>
+      </form>
+    </div>
+
+    <!-- MAP & INFO -->
+    <div class="contact-info">
+      <!-- Map -->
+      <div class="contact-map">
+        {{#if settings.map_embed}}
+        <iframe
+          src="{{settings.map_embed}}"
+          width="100%"
+          height="280"
+          style="border:0;border-radius:12px;"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Bản đồ EduVenture">
+        </iframe>
+        {{else}}
+        <div class="contact-map__placeholder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(26,127,90,.5)" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <p>Chưa cấu hình bản đồ</p>
+        </div>
+        {{/if}}
+      </div>
+
+      <!-- Info -->
+      <div class="contact-details">
+        {{#if settings.address}}
+        <div class="contact-detail-item">
+          <div class="contact-detail-item__icon">📍</div>
+          <div>
+            <div class="contact-detail-item__label">Địa chỉ</div>
+            <div class="contact-detail-item__value">{{settings.address}}</div>
+          </div>
+        </div>
+        {{/if}}
+        {{#if settings.email}}
+        <div class="contact-detail-item">
+          <div class="contact-detail-item__icon">📧</div>
+          <div>
+            <div class="contact-detail-item__label">Email</div>
+            <a class="contact-detail-item__value" href="mailto:{{settings.email}}">{{settings.email}}</a>
+          </div>
+        </div>
+        {{/if}}
+        {{#if settings.phone}}
+        <div class="contact-detail-item">
+          <div class="contact-detail-item__icon">📞</div>
+          <div>
+            <div class="contact-detail-item__label">Điện thoại</div>
+            <a class="contact-detail-item__value" href="tel:{{settings.phone}}">{{settings.phone}}</a>
+          </div>
+        </div>
+        {{/if}}
+        {{#if settings.working_hours}}
+        <div class="contact-detail-item">
+          <div class="contact-detail-item__icon">🕐</div>
+          <div>
+            <div class="contact-detail-item__label">Giờ làm việc</div>
+            <div class="contact-detail-item__value">{{settings.working_hours}}</div>
+          </div>
+        </div>
+        {{/if}}
+      </div>
+    </div>
+
+  </div>
+</section>

@@ -1,0 +1,326 @@
+<div class="admin-page">
+    <div class="admin-topbar">
+        <h1 class="admin-topbar__title">Import danh sách số điện thoại</h1>
+        <a href="/admin/download" class="btn btn--outline">← Quay lại</a>
+    </div>
+
+    {{#if success}}<div class="flash flash--success flash--admin"><span>{{success}}</span><button class="flash__close"
+            onclick="this.parentElement.remove()">✕</button></div>{{/if}}
+    {{#if error}}<div class="flash flash--error flash--admin"><span>{{error}}</span><button class="flash__close"
+            onclick="this.parentElement.remove()">✕</button></div>{{/if}}
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <div id="import-layout" style="display:grid;grid-template-columns:1fr 1.6fr;gap:1.5rem;align-items:start;">
+
+        <!-- CỘT TRÁI -->
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+            <div class="admin-card">
+                <div class="admin-card__header">
+                    <div style="display:flex;align-items:center;gap:.625rem;">
+                        <div style="width:32px;height:32px;border-radius:8px;background:#e8f5ee;display:flex;align-items:center;justify-content:center;">
+                            <svg width="16" height="16" fill="none" stroke="#1a7f5a" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </div>
+                        <span class="admin-card__title">Upload file Excel</span>
+                    </div>
+                </div>
+                <div style="padding:1.5rem;">
+                    <form id="import-form" action="/admin/download/import" method="POST" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:1.25rem;">
+                        <div id="drop-zone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.75rem;padding:2rem 1.5rem;border:2px dashed #c8e6d8;border-radius:10px;cursor:pointer;transition:all .2s;background:#fafcfb;text-align:center;" onclick="document.getElementById('file-input').click()">
+                            <div style="width:48px;height:48px;border-radius:12px;background:#e8f5ee;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+                                <svg width="22" height="22" fill="none" stroke="#1a7f5a" stroke-width="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                            </div>
+                            <div style="pointer-events:none;">
+                                <div id="file-name" style="font-size:.9rem;font-weight:600;color:#1c1c1a;">Chọn file hoặc kéo thả vào đây</div>
+                                <div style="font-size:.8rem;color:#9a9890;margin-top:.25rem;">Hỗ trợ định dạng .xlsx, .xls</div>
+                            </div>
+                            <input id="file-input" type="file" name="file" accept=".xlsx,.xls" required style="display:none;" onchange="handleFile(this.files[0])" />
+                        </div>
+                        <button id="submit-btn" type="submit" class="btn btn--primary" style="width:100%;padding:.75rem;font-size:.9375rem;font-weight:600;border-radius:9px;display:none;align-items:center;justify-content:center;gap:.5rem;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+                            Xác nhận import
+                        </button>
+                        <button id="reset-btn" type="button" onclick="resetFile()" style="display:none;width:100%;padding:.6rem;font-size:.875rem;border-radius:9px;background:transparent;border:1px solid #e8e8e4;color:#5f5e5a;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='#9a9890'" onmouseout="this.style.borderColor='#e8e8e4'">
+                            ↩ Chọn file khác
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-card__header">
+                    <div style="display:flex;align-items:center;gap:.625rem;">
+                        <div style="width:32px;height:32px;border-radius:8px;background:#faeeda;display:flex;align-items:center;justify-content:center;">
+                            <svg width="16" height="16" fill="none" stroke="#ba7517" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        </div>
+                        <span class="admin-card__title">Lưu ý quan trọng</span>
+                    </div>
+                </div>
+                <div style="padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:.75rem;">
+                    <div style="display:flex;gap:.75rem;align-items:flex-start;"><span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#e8f5ee;color:#1a7f5a;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;">1</span><span style="font-size:.875rem;color:#3d3d3a;line-height:1.5;">Cột <strong>Khối lớp</strong>: điền số <strong>1, 2, 3, 4</strong> hoặc <strong>5</strong></span></div>
+                    <div style="display:flex;gap:.75rem;align-items:flex-start;"><span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#e8f5ee;color:#1a7f5a;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;">2</span><span style="font-size:.875rem;color:#3d3d3a;line-height:1.5;">Cột <strong>Số tiết</strong>: điền đúng số tiết của chương trình (VD: 36, 72)</span></div>
+                    <div style="display:flex;gap:.75rem;align-items:flex-start;"><span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#e8f5ee;color:#1a7f5a;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;">3</span><span style="font-size:.875rem;color:#3d3d3a;line-height:1.5;">Cột <strong>Tên trường</strong> có thể để trống</span></div>
+                    <div style="display:flex;gap:.75rem;align-items:flex-start;"><span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#faeeda;color:#ba7517;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;">!</span><span style="font-size:.875rem;color:#3d3d3a;line-height:1.5;">Số điện thoại trùng sẽ được <strong>cập nhật</strong>, không bị lỗi</span></div>
+                    <div style="display:flex;gap:.75rem;align-items:flex-start;"><span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#faeeda;color:#ba7517;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;">!</span><span style="font-size:.875rem;color:#3d3d3a;line-height:1.5;">Dòng thiếu dữ liệu sẽ bị bỏ qua và báo lỗi</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI -->
+        <div id="right-panel" style="height:fit-content;">
+
+            <!-- Hướng dẫn (mặc định) -->
+            <div id="guide-card" class="admin-card">
+                <div class="admin-card__header">
+                    <div style="display:flex;align-items:center;gap:.625rem;">
+                        <div style="width:32px;height:32px;border-radius:8px;background:#e4f0fc;display:flex;align-items:center;justify-content:center;">
+                            <svg width="16" height="16" fill="none" stroke="#1860a5" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                        </div>
+                        <span class="admin-card__title">Hướng dẫn format file Excel</span>
+                    </div>
+                    <span style="font-size:.8rem;color:#9a9890;background:#f5f5f3;padding:.2rem .75rem;border-radius:20px;font-weight:500;">5 cột bắt buộc</span>
+                </div>
+                <div style="padding:1.5rem;">
+                    <p style="margin-bottom:1.25rem;color:#5f5e5a;font-size:.875rem;line-height:1.6;">File Excel phải có đúng <strong style="color:#1c1c1a;">5 cột</strong> theo đúng thứ tự sau. Hàng đầu tiên là tiêu đề (sẽ được bỏ qua khi import).</p>
+                    <div style="border-radius:10px;overflow:hidden;border:1px solid #e8e8e4;margin-bottom:1.5rem;">
+                        <table style="width:100%;border-collapse:collapse;font-size:.875rem;">
+                            <thead><tr style="background:linear-gradient(135deg,#1a7f5a,#0f5e42);">
+                                <th style="padding:.75rem 1rem;text-align:left;color:#fff;font-weight:600;font-size:.8rem;">#</th>
+                                <th style="padding:.75rem 1rem;text-align:left;color:#fff;font-weight:600;font-size:.8rem;">Họ tên</th>
+                                <th style="padding:.75rem 1rem;text-align:left;color:#fff;font-weight:600;font-size:.8rem;">Số điện thoại</th>
+                                <th style="padding:.75rem 1rem;text-align:left;color:#fff;font-weight:600;font-size:.8rem;">Tên trường</th>
+                                <th style="padding:.75rem 1rem;text-align:center;color:#fff;font-weight:600;font-size:.8rem;">Khối lớp</th>
+                                <th style="padding:.75rem 1rem;text-align:center;color:#fff;font-weight:600;font-size:.8rem;">Số tiết</th>
+                            </tr></thead>
+                            <tbody>
+                                <tr style="background:#fff;"><td style="padding:.75rem 1rem;border-bottom:1px solid #f0f0ee;color:#c8c8c4;font-size:.8rem;font-weight:600;">1</td><td style="padding:.75rem 1rem;border-bottom:1px solid #f0f0ee;font-weight:500;">Nguyễn Văn A</td><td style="padding:.75rem 1rem;border-bottom:1px solid #f0f0ee;font-family:monospace;">0912345678</td><td style="padding:.75rem 1rem;border-bottom:1px solid #f0f0ee;">TH Nguyễn Du</td><td style="padding:.75rem 1rem;border-bottom:1px solid #f0f0ee;text-align:center;"><span style="background:#e8f5ee;color:#1a7f5a;font-weight:600;padding:.15rem .6rem;border-radius:4px;font-size:.85rem;">1</span></td><td style="padding:.75rem 1rem;border-bottom:1px solid #f0f0ee;text-align:center;"><span style="background:#e4f0fc;color:#1860a5;font-weight:600;padding:.15rem .6rem;border-radius:4px;font-size:.85rem;">72</span></td></tr>
+                                <tr style="background:#fafaf8;"><td style="padding:.75rem 1rem;border-bottom:1px solid #f0f0ee;color:#c8c8c4;font-size:.8rem;font-weight:600;">2</td><td style="padding:.75rem 1rem;border-bottom:1px solid #f0f0ee;font-weight:500;">Trần Thị B</td><td style="padding:.75rem 1rem;border-bottom:1px solid #f0f0ee;font-family:monospace;">0987654321</td><td style="padding:.75rem 1rem;border-bottom:1px solid #f0f0ee;">TH Lê Lợi</td><td style="padding:.75rem 1rem;border-bottom:1px solid #f0f0ee;text-align:center;"><span style="background:#e8f5ee;color:#1a7f5a;font-weight:600;padding:.15rem .6rem;border-radius:4px;font-size:.85rem;">2</span></td><td style="padding:.75rem 1rem;border-bottom:1px solid #f0f0ee;text-align:center;"><span style="background:#e4f0fc;color:#1860a5;font-weight:600;padding:.15rem .6rem;border-radius:4px;font-size:.85rem;">36</span></td></tr>
+                                <tr style="background:#fff;"><td style="padding:.75rem 1rem;color:#c8c8c4;font-size:.8rem;font-weight:600;">3</td><td style="padding:.75rem 1rem;font-weight:500;">Lê Văn C</td><td style="padding:.75rem 1rem;font-family:monospace;">0909123456</td><td style="padding:.75rem 1rem;color:#b0b0a8;font-style:italic;font-size:.85rem;">(để trống được)</td><td style="padding:.75rem 1rem;text-align:center;"><span style="background:#e8f5ee;color:#1a7f5a;font-weight:600;padding:.15rem .6rem;border-radius:4px;font-size:.85rem;">5</span></td><td style="padding:.75rem 1rem;text-align:center;"><span style="background:#e4f0fc;color:#1860a5;font-weight:600;padding:.15rem .6rem;border-radius:4px;font-size:.85rem;">72</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:.625rem;">
+                        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .875rem;border-radius:8px;background:#f5f5f3;border:1px solid #e8e8e4;font-size:.8rem;"><span style="width:20px;height:20px;border-radius:50%;background:#1a7f5a;color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">A</span><span style="color:#5f5e5a;">Họ tên — <strong style="color:#1c1c1a;">bắt buộc</strong></span></div>
+                        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .875rem;border-radius:8px;background:#f5f5f3;border:1px solid #e8e8e4;font-size:.8rem;"><span style="width:20px;height:20px;border-radius:50%;background:#1a7f5a;color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">B</span><span style="color:#5f5e5a;">Số điện thoại — <strong style="color:#1c1c1a;">bắt buộc</strong></span></div>
+                        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .875rem;border-radius:8px;background:#f5f5f3;border:1px solid #e8e8e4;font-size:.8rem;"><span style="width:20px;height:20px;border-radius:50%;background:#9a9890;color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">C</span><span style="color:#5f5e5a;">Tên trường — <strong style="color:#9a9890;">tùy chọn</strong></span></div>
+                        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .875rem;border-radius:8px;background:#f5f5f3;border:1px solid #e8e8e4;font-size:.8rem;"><span style="width:20px;height:20px;border-radius:50%;background:#1a7f5a;color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">D</span><span style="color:#5f5e5a;">Khối lớp — <strong style="color:#1c1c1a;">1–5</strong></span></div>
+                        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .875rem;border-radius:8px;background:#f5f5f3;border:1px solid #e8e8e4;font-size:.8rem;"><span style="width:20px;height:20px;border-radius:50%;background:#1a7f5a;color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">E</span><span style="color:#5f5e5a;">Số tiết — <strong style="color:#1c1c1a;">36 hoặc 72</strong></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview card (ẩn đến khi có file) -->
+            <div id="preview-card" class="admin-card" style="display:none;">
+                <div class="admin-card__header">
+                    <div style="display:flex;align-items:center;gap:.625rem;">
+                        <div style="width:32px;height:32px;border-radius:8px;background:#e8f5ee;display:flex;align-items:center;justify-content:center;">
+                            <svg width="16" height="16" fill="none" stroke="#1a7f5a" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </div>
+                        <span class="admin-card__title">Xem trước dữ liệu</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:.75rem;">
+                        <span id="preview-count" style="font-size:.8rem;background:#e8f5ee;color:#1a7f5a;padding:.2rem .75rem;border-radius:20px;font-weight:600;"></span>
+                        <span id="preview-error-count" style="font-size:.8rem;background:#fef2f2;color:#dc2626;padding:.2rem .75rem;border-radius:20px;font-weight:600;display:none;"></span>
+                    </div>
+                </div>
+                <div style="padding:.875rem 1.25rem;border-bottom:1px solid #f0f0ee;display:flex;align-items:center;gap:.75rem;">
+                    <div style="flex:1;position:relative;">
+                        <svg width="14" height="14" fill="none" stroke="#9a9890" stroke-width="2" viewBox="0 0 24 24" style="position:absolute;left:.75rem;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input id="preview-search" type="text" placeholder="Tìm kiếm trong danh sách..." oninput="filterPreview(this.value)" style="width:100%;padding:.5rem .75rem .5rem 2.25rem;border:1px solid #e8e8e4;border-radius:8px;font-size:.875rem;outline:none;font-family:inherit;box-sizing:border-box;" onfocus="this.style.borderColor='#1a7f5a'" onblur="this.style.borderColor='#e8e8e4'" />
+                    </div>
+                    <span id="search-result-count" style="font-size:.8rem;color:#9a9890;white-space:nowrap;display:none;"></span>
+                </div>
+                <div style="overflow-x:auto;max-height:420px;overflow-y:auto;">
+                    <table id="preview-table" style="width:100%;border-collapse:collapse;font-size:.875rem;">
+                        <thead style="position:sticky;top:0;z-index:1;">
+                            <tr style="background:linear-gradient(135deg,#1a7f5a,#0f5e42);">
+                                <th style="padding:.65rem .875rem;text-align:left;color:#fff;font-weight:600;font-size:.78rem;white-space:nowrap;">#</th>
+                                <th style="padding:.65rem .875rem;text-align:left;color:#fff;font-weight:600;font-size:.78rem;white-space:nowrap;">Họ tên</th>
+                                <th style="padding:.65rem .875rem;text-align:left;color:#fff;font-weight:600;font-size:.78rem;white-space:nowrap;">Số điện thoại</th>
+                                <th style="padding:.65rem .875rem;text-align:left;color:#fff;font-weight:600;font-size:.78rem;white-space:nowrap;">Tên trường</th>
+                                <th style="padding:.65rem .875rem;text-align:center;color:#fff;font-weight:600;font-size:.78rem;white-space:nowrap;">Khối</th>
+                                <th style="padding:.65rem .875rem;text-align:center;color:#fff;font-weight:600;font-size:.78rem;white-space:nowrap;">Tiết</th>
+                                <th style="padding:.65rem .875rem;text-align:center;color:#fff;font-weight:600;font-size:.78rem;white-space:nowrap;">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="preview-tbody"></tbody>
+                    </table>
+                </div>
+                <div id="preview-errors" style="display:none;padding:1rem 1.25rem;border-top:1px solid #fee2e2;background:#fef9f9;">
+                    <div style="font-size:.8rem;font-weight:600;color:#dc2626;margin-bottom:.5rem;">Dòng có lỗi sẽ bị bỏ qua khi import:</div>
+                    <div id="preview-error-list" style="font-size:.8rem;color:#b91c1c;line-height:1.8;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @media (max-width: 960px) { #import-layout { grid-template-columns: 1fr !important; } }
+        #preview-tbody tr:nth-child(even) { background: #fafaf8; }
+        #preview-tbody tr:nth-child(odd) { background: #fff; }
+        #preview-tbody tr:hover { background: #f0f9f4 !important; }
+        #preview-tbody tr.row-error { background: #fef2f2 !important; }
+        #preview-tbody tr.row-error:hover { background: #fee2e2 !important; }
+        #preview-tbody tr.row-hidden { display: none; }
+    </style>
+
+    <script>
+        var allRows = [];
+
+        function handleFile(file) {
+            if (!file) return;
+            var ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+            if (ext !== '.xlsx' && ext !== '.xls') {
+                alert('Chỉ chấp nhận file .xlsx hoặc .xls');
+                document.getElementById('file-input').value = '';
+                return;
+            }
+            document.getElementById('file-name').textContent = file.name;
+            document.getElementById('drop-zone').style.borderColor = '#1a7f5a';
+            document.getElementById('drop-zone').style.background = '#f0f9f4';
+            document.getElementById('drop-zone').style.borderStyle = 'solid';
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    var data = new Uint8Array(e.target.result);
+                    var wb = XLSX.read(data, { type: 'array' });
+                    var ws = wb.Sheets[wb.SheetNames[0]];
+                    var json = XLSX.utils.sheet_to_json(ws);
+                    renderPreview(json);
+                } catch(err) {
+                    alert('Không thể đọc file: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function renderPreview(json) {
+            allRows = [];
+            var tbody = document.getElementById('preview-tbody');
+            var errors = [];
+            tbody.innerHTML = '';
+
+            for (var i = 0; i < json.length; i++) {
+                var row = json[i];
+                var name   = String(row['Họ tên'] || '').trim();
+                var phone  = String(row['Số điện thoại'] || '').trim().replace(/\s/g, '');
+                var school = String(row['Tên trường'] || '').trim();
+                var lop    = String(row['Khối lớp'] || '').trim();
+                var tiet   = String(row['Số tiết'] || '').trim();
+
+                var rowErrors = [];
+                if (!name)  rowErrors.push('thiếu họ tên');
+                if (!phone) rowErrors.push('thiếu SĐT');
+                if (!lop)   rowErrors.push('thiếu khối lớp');
+                else if (!['1','2','3','4','5'].includes(lop)) rowErrors.push('khối lớp "' + lop + '" không hợp lệ');
+                if (!tiet)  rowErrors.push('thiếu số tiết');
+
+                var isError = rowErrors.length > 0;
+                if (isError) errors.push('Dòng ' + (i + 2) + ': ' + rowErrors.join(', '));
+
+                var tr = document.createElement('tr');
+                tr.className = isError ? 'row-error' : '';
+                tr.dataset.search = [name, phone, school, lop, tiet].join(' ').toLowerCase();
+
+                var statusBadge = isError
+                    ? '<span style="background:#fee2e2;color:#dc2626;font-size:.75rem;font-weight:600;padding:.15rem .6rem;border-radius:4px;white-space:nowrap;">⚠ Lỗi</span>'
+                    : '<span style="background:#e8f5ee;color:#1a7f5a;font-size:.75rem;font-weight:600;padding:.15rem .6rem;border-radius:4px;white-space:nowrap;">✓ Hợp lệ</span>';
+
+                var lopBadge  = lop  ? '<span style="background:#e8f5ee;color:#1a7f5a;font-weight:600;padding:.15rem .55rem;border-radius:4px;font-size:.85rem;">' + lop + '</span>'  : '<span style="color:#d1d5db;">—</span>';
+                var tietBadge = tiet ? '<span style="background:#e4f0fc;color:#1860a5;font-weight:600;padding:.15rem .55rem;border-radius:4px;font-size:.85rem;">' + tiet + '</span>' : '<span style="color:#d1d5db;">—</span>';
+
+                tr.innerHTML =
+                    '<td style="padding:.65rem .875rem;border-bottom:1px solid #f0f0ee;color:#c8c8c4;font-size:.78rem;font-weight:600;">' + (i + 1) + '</td>' +
+                    '<td style="padding:.65rem .875rem;border-bottom:1px solid #f0f0ee;font-weight:500;white-space:nowrap;">' + (name || '<span style="color:#d1d5db;font-style:italic;">trống</span>') + '</td>' +
+                    '<td style="padding:.65rem .875rem;border-bottom:1px solid #f0f0ee;font-family:monospace;font-size:.85rem;">' + (phone || '<span style="color:#d1d5db;font-style:italic;">trống</span>') + '</td>' +
+                    '<td style="padding:.65rem .875rem;border-bottom:1px solid #f0f0ee;color:#5f5e5a;font-size:.85rem;">' + (school || '<span style="color:#d1d5db;">—</span>') + '</td>' +
+                    '<td style="padding:.65rem .875rem;border-bottom:1px solid #f0f0ee;text-align:center;">' + lopBadge + '</td>' +
+                    '<td style="padding:.65rem .875rem;border-bottom:1px solid #f0f0ee;text-align:center;">' + tietBadge + '</td>' +
+                    '<td style="padding:.65rem .875rem;border-bottom:1px solid #f0f0ee;text-align:center;">' + statusBadge + '</td>';
+
+                tbody.appendChild(tr);
+                allRows.push(tr);
+            }
+
+            document.getElementById('guide-card').style.display = 'none';
+            document.getElementById('preview-card').style.display = 'block';
+
+            var validCount = json.length - errors.length;
+            document.getElementById('preview-count').textContent = validCount + ' hợp lệ / ' + json.length + ' dòng';
+
+            if (errors.length > 0) {
+                var errEl = document.getElementById('preview-error-count');
+                errEl.textContent = errors.length + ' lỗi';
+                errEl.style.display = 'inline';
+                document.getElementById('preview-errors').style.display = 'block';
+                document.getElementById('preview-error-list').innerHTML = errors.map(function(e) { return '· ' + e; }).join('<br>');
+            }
+
+            var btn = document.getElementById('submit-btn');
+            btn.style.display = 'flex';
+            if (validCount === 0) { btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed'; }
+            document.getElementById('reset-btn').style.display = 'block';
+        }
+
+        function filterPreview(query) {
+            var q = query.toLowerCase().trim();
+            var visible = 0;
+            allRows.forEach(function(tr) {
+                var match = !q || tr.dataset.search.includes(q);
+                tr.classList.toggle('row-hidden', !match);
+                if (match) visible++;
+            });
+            var countEl = document.getElementById('search-result-count');
+            if (q) { countEl.textContent = visible + ' kết quả'; countEl.style.display = 'inline'; }
+            else countEl.style.display = 'none';
+        }
+
+        function resetFile() {
+            document.getElementById('file-input').value = '';
+            document.getElementById('file-name').textContent = 'Chọn file hoặc kéo thả vào đây';
+            var dz = document.getElementById('drop-zone');
+            dz.style.borderColor = '#c8e6d8'; dz.style.background = '#fafcfb'; dz.style.borderStyle = 'dashed';
+            document.getElementById('preview-card').style.display = 'none';
+            document.getElementById('guide-card').style.display = 'block';
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('reset-btn').style.display = 'none';
+            document.getElementById('preview-error-count').style.display = 'none';
+            document.getElementById('preview-errors').style.display = 'none';
+            document.getElementById('preview-search').value = '';
+            document.getElementById('search-result-count').style.display = 'none';
+            allRows = [];
+        }
+
+        (function() {
+            var zone = document.getElementById('drop-zone');
+            zone.addEventListener('mouseover', function() {
+                if (!document.getElementById('file-input').files.length) { this.style.borderColor = '#1a7f5a'; this.style.background = '#f0f9f4'; }
+            });
+            zone.addEventListener('mouseout', function() {
+                if (!document.getElementById('file-input').files.length) { this.style.borderColor = '#c8e6d8'; this.style.background = '#fafcfb'; }
+            });
+            zone.addEventListener('dragover', function(e) {
+                e.preventDefault(); e.stopPropagation();
+                this.style.borderColor = '#1a7f5a'; this.style.background = '#f0f9f4'; this.style.borderStyle = 'solid';
+            });
+            zone.addEventListener('dragleave', function(e) {
+                e.preventDefault(); e.stopPropagation();
+                if (!document.getElementById('file-input').files.length) { this.style.borderColor = '#c8e6d8'; this.style.background = '#fafcfb'; }
+                this.style.borderStyle = 'dashed';
+            });
+            zone.addEventListener('drop', function(e) {
+                e.preventDefault(); e.stopPropagation();
+                this.style.borderStyle = 'dashed';
+                var files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    var dt = new DataTransfer();
+                    dt.items.add(files[0]);
+                    document.getElementById('file-input').files = dt.files;
+                    handleFile(files[0]);
+                }
+            });
+        })();
+    </script>
+</div>

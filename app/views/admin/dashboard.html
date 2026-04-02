@@ -1,0 +1,84 @@
+<div class="admin-page">
+  <div class="admin-topbar">
+    <h1 class="admin-topbar__title">Dashboard</h1>
+  </div>
+
+  <!-- STATS -->
+  <div class="admin-stats">
+    <div class="admin-stat-card">
+      <div class="admin-stat-card__icon admin-stat-card__icon--green">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+      </div>
+      <div>
+        <div class="admin-stat-card__num">{{totalNews}}</div>
+        <div class="admin-stat-card__label">Tin tức & Chương trình</div>
+      </div>
+    </div>
+    <div class="admin-stat-card">
+      <div class="admin-stat-card__icon admin-stat-card__icon--amber">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </div>
+      <div>
+        <div class="admin-stat-card__num">{{unread}}</div>
+        <div class="admin-stat-card__label">Tin nhắn chưa đọc</div>
+      </div>
+    </div>
+    <div class="admin-stat-card">
+      <div class="admin-stat-card__icon admin-stat-card__icon--blue">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+      <div>
+        <div class="admin-stat-card__num">3</div>
+        <div class="admin-stat-card__label">Link tải xuống</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK LINKS -->
+  <div class="admin-quick-links">
+    <a href="/admin/news/create" class="quick-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Thêm tin mới
+    </a>
+    <a href="/admin/about" class="quick-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Sửa giới thiệu
+    </a>
+    <a href="/admin/download" class="quick-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      Cập nhật link tải
+    </a>
+    <a href="/admin/contact" class="quick-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Cài đặt liên hệ
+    </a>
+  </div>
+
+  <!-- RECENT NEWS -->
+  <div class="admin-card" style="margin-top:1.5rem;">
+    <div class="admin-card__header">
+      <div class="admin-card__title">Tin tức gần đây</div>
+      <a href="/admin/news" class="admin-card__action">Xem tất cả →</a>
+    </div>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Tiêu đề</th>
+          <th>Loại</th>
+          <th>Ngày</th>
+          <th>Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each recentNews}}
+        <tr>
+          <td><a href="/admin/news/{{id}}/edit" class="table-link">{{truncate title 60}}</a></td>
+          <td><span class="badge {{#if (eq category 'program')}}badge--green{{else}}badge--blue{{/if}}">{{#if (eq category 'program')}}Chương trình{{else}}Tin tức{{/if}}</span></td>
+          <td>{{formatDate created_at}}</td>
+          <td><span class="badge {{#if is_visible}}badge--green{{else}}badge--gray{{/if}}">{{#if is_visible}}Hiện{{else}}Ẩn{{/if}}</span></td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+</div>

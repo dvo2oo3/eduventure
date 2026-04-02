@@ -1,0 +1,63 @@
+<!-- PAGE HEADER -->
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-header__title">Tải xuống phần mềm</h1>
+    <p class="page-header__sub">Xác nhận thành công — link tải của bạn đã sẵn sàng</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container" style="max-width:560px;margin:0 auto;">
+    <div class="dl-card dl-card--primary" style="text-align:center;">
+
+      <div style="width:72px;height:72px;background:#e8f5f0;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1a7f5a" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+      </div>
+
+      <h2 style="margin-bottom:.5rem;">Xác nhận thành công!</h2>
+      <p style="color:var(--color-text-secondary);margin-bottom:.5rem;">
+        Xin chào <strong>{{result.name}}</strong>!
+      </p>
+      <p style="color:var(--color-text-secondary);margin-bottom:1.5rem;">
+        Đây là các link tải phần mềm dành cho <strong>{{result.label}}</strong>.
+        Nếu link chính bị giới hạn, hãy dùng link dự phòng.
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.5rem;">
+        {{#if result.url_main}}
+        <a href="{{result.url_main}}" class="btn btn--primary btn--lg" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          {{result.label_main}}
+        </a>
+        {{/if}}
+        {{#if result.url_mirror1}}
+        <a href="{{result.url_mirror1}}" class="btn btn--outline btn--lg" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          {{result.label_mirror1}}
+        </a>
+        {{/if}}
+        {{#if result.url_mirror2}}
+        <a href="{{result.url_mirror2}}" class="btn btn--outline btn--lg" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          {{result.label_mirror2}}
+        </a>
+        {{/if}}
+        {{#if result.url_mirror3}}
+        <a href="{{result.url_mirror3}}" class="btn btn--outline btn--lg" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          {{result.label_mirror3}}
+        </a>
+        {{/if}}
+      </div>
+
+      <p class="dl-card__note">
+        Link tải sẽ mở trong tab mới. Nếu không tự mở, nhấn giữ và chọn "Mở liên kết".
+        Nếu tất cả link đều bị giới hạn, vui lòng liên hệ EduVenture để được hỗ trợ.
+      </p>
+
+      <div style="margin-top:1rem;">
+        <a href="/tai-xuong" style="color:var(--color-text-secondary);font-size:.9rem;">← Quay lại</a>
+      </div>
+    </div>
+  </div>
+</section>

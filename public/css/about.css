@@ -1,0 +1,55 @@
+/* ============================================================
+   about.css — Trang Về chúng tôi
+   ============================================================ */
+
+.about-intro {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+.about-intro__visual {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.about-intro__shape {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(26,127,90,.08), rgba(24,96,165,.08));
+}
+.about-intro__title { font-size: 1.875rem; font-weight: 700; margin-bottom: .875rem; line-height: 1.3; }
+.about-intro__body { font-size: 1rem; color: #3a3a38; line-height: 1.75; }
+
+.mv-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+.mv-card {
+  background: #fff;
+  border: 1px solid #e8e8e4;
+  border-radius: 12px;
+  padding: 2rem;
+}
+.mv-card--mission { border-top: 3px solid #1a7f5a; }
+.mv-card--vision { border-top: 3px solid #1860a5; }
+.mv-card__icon { font-size: 2rem; margin-bottom: .875rem; }
+.mv-card__title { font-size: 1.25rem; font-weight: 700; margin-bottom: .625rem; }
+.mv-card__body { font-size: .9375rem; color: #5f5e5a; line-height: 1.7; }
+
+@media (max-width: 768px) {
+  .about-intro { grid-template-columns: 1fr; }
+  .about-intro__visual { display: none; }
+  .mv-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .about-intro__title { font-size: 1.5rem; }
+  .mv-card { padding: 1.5rem; }
+}

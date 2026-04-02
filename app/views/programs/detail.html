@@ -1,0 +1,64 @@
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+  <div class="container breadcrumb__inner">
+    <a href="/">Trang chủ</a>
+    <span>›</span>
+    <a href="/chuong-trinh">Chương trình</a>
+    <span>›</span>
+    <span>{{truncate news.title 60}}</span>
+  </div>
+</div>
+
+<!-- ARTICLE -->
+<section class="section">
+  <div class="container article-layout">
+    <article class="article">
+      <header class="article__header">
+        <div class="article__meta">
+          {{#if news.category}}<span class="badge {{#if (eq news.category 'program')}}badge--green{{else}}badge--blue{{/if}}">{{#if (eq news.category 'program')}}Chương trình{{else}}Tin tức{{/if}}</span>{{/if}}
+          {{#if news.location}}<span class="badge badge--gray">📍 {{news.location}}</span>{{/if}}
+          {{#if news.grade_level}}<span class="badge badge--gray">{{news.grade_level}}</span>{{/if}}
+        </div>
+        <h1 class="article__title">{{news.title}}</h1>
+        {{#if news.event_date}}
+        <div class="article__date">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          {{formatDate news.event_date}}
+        </div>
+        {{/if}}
+        {{#if news.summary}}
+        <p class="article__lead">{{news.summary}}</p>
+        {{/if}}
+      </header>
+
+      {{#if news.image}}
+      <div class="article__cover">
+        <img src="{{news.image}}" alt="{{news.title}}" />
+      </div>
+      {{/if}}
+
+      <div class="article__content prose">
+        {{{news.content}}}
+      </div>
+
+      <footer class="article__footer">
+        <a href="/chuong-trinh" class="btn btn--outline">← Quay lại danh sách</a>
+        <a href="/lien-he" class="btn btn--primary">Liên hệ hợp tác</a>
+      </footer>
+    </article>
+
+    <!-- SIDEBAR -->
+    <aside class="article-sidebar">
+      <div class="sidebar-widget">
+        <div class="sidebar-widget__title">Tải phần mềm</div>
+        <p class="sidebar-widget__desc">Phần mềm giảng dạy kỹ năng sống dành cho giáo viên tiểu học</p>
+        <a href="/tai-xuong" class="btn btn--primary btn--block">Xem trang tải xuống</a>
+      </div>
+      <div class="sidebar-widget">
+        <div class="sidebar-widget__title">Liên hệ hợp tác</div>
+        <p class="sidebar-widget__desc">Muốn triển khai chương trình tại trường bạn? Liên hệ ngay.</p>
+        <a href="/lien-he" class="btn btn--outline btn--block">Liên hệ ngay</a>
+      </div>
+    </aside>
+  </div>
+</section>

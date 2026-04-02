@@ -1,0 +1,19 @@
+/* ============================================================
+   download.css — Trang Tải xuống
+   ============================================================ */
+
+/* Tất cả styles cho trang Download đã được định nghĩa
+   trong main.css (dl-card, dl-alt-card, aside-box, sysreq-table)
+   File này dành cho override cụ thể nếu cần */
+
+.dl-card .btn--lg {
+  padding: .875rem 2rem;
+  font-size: 1rem;
+}
+
+@media (max-width: 600px) {
+  .dl-card { padding: 1.25rem; }
+  .dl-card .btn--lg { width: 100%; }
+  .dl-card__top { flex-direction: column; align-items: flex-start; }
+  .dl-alt-card { padding: .875rem 1rem; }
+}

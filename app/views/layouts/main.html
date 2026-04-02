@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{title}}</title>
+  <meta name="description" content="{{siteName}} — Chương trình kỹ năng sống cho học sinh tiểu học lớp 1 đến lớp 5" />
+
+  <!-- Favicon -->
+  {{#if siteFaviconUrl}}
+  <link rel="icon" type="image/png" href="{{siteFaviconUrl}}" />
+  <link rel="shortcut icon" href="{{siteFaviconUrl}}" />
+  {{else}}
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  {{/if}}
+
+  <!-- OG / Social share -->
+  <meta property="og:title" content="{{#if siteOgTitle}}{{siteOgTitle}}{{else}}{{title}}{{/if}}" />
+  <meta property="og:description" content="{{#if siteOgDescription}}{{siteOgDescription}}{{else}}{{siteName}} — Chương trình kỹ năng sống cho học sinh tiểu học lớp 1 đến lớp 5{{/if}}" />
+  <meta property="og:type" content="website" />
+  {{#if siteOgImageUrl}}
+  <meta property="og:image" content="{{siteOgImageUrl}}" />
+  {{else if siteLogoUrl}}
+  <meta property="og:image" content="{{siteLogoUrl}}" />
+  {{/if}}
+  <meta property="og:site_name" content="{{siteName}}" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{{#if siteOgTitle}}{{siteOgTitle}}{{else}}{{title}}{{/if}}" />
+  {{#if siteOgImageUrl}}
+  <meta name="twitter:image" content="{{siteOgImageUrl}}" />
+  {{/if}}
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/main.css" />
+  {{#if pageCSS}}<link rel="stylesheet" href="/css/{{pageCSS}}.css" />{{/if}}
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="container navbar__inner">
+      <a href="/" class="navbar__brand">
+        <div class="navbar__logo">
+          {{#if (eq siteLogoMode 'image')}}
+            {{#if siteLogoUrl}}
+            <div style="height:{{#if siteLogoSize}}{{siteLogoSize}}px{{else}}36px{{/if}};width:{{#if siteLogoSize}}{{siteLogoSize}}px{{else}}36px{{/if}};flex-shrink:0;background-image:url('{{siteLogoUrl}}');background-size:{{siteLogoZoom}}%;background-position:{{siteLogoPosition}};background-repeat:no-repeat;"></div>
+            {{else}}
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <rect width="28" height="28" rx="8" fill="#1a7f5a"/>
+              <path d="M7 14c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="14" cy="17" r="3" fill="#fff"/>
+            </svg>
+            {{/if}}
+          {{else}}
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect width="28" height="28" rx="8" fill="#1a7f5a"/>
+            <path d="M7 14c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="14" cy="17" r="3" fill="#fff"/>
+          </svg>
+          {{/if}}
+        </div>
+        {{#if siteLogoText}}<span class="navbar__name">{{siteLogoText}}</span>{{/if}}
+      </a>
+      <nav class="navbar__nav">
+        <a href="/" class="navbar__link {{#if (eq page 'home')}}navbar__link--active{{/if}}">Trang chủ</a>
+        <a href="/ve-chung-toi" class="navbar__link {{#if (eq page 'about')}}navbar__link--active{{/if}}">Về chúng tôi</a>
+        <a href="/chuong-trinh" class="navbar__link {{#if (eq page 'programs')}}navbar__link--active{{/if}}">Chương trình</a>
+        <a href="/tin-tuc" class="navbar__link {{#if (eq page 'news')}}navbar__link--active{{/if}}">Tin tức</a>
+        <a href="/tai-xuong" class="navbar__link {{#if (eq page 'download')}}navbar__link--active{{/if}}">Tải xuống</a>
+        <a href="/lien-he" class="navbar__link navbar__link--cta {{#if (eq page 'contact')}}navbar__link--active{{/if}}">Liên hệ</a>
+      </nav>
+      <button class="navbar__toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="navbar__mobile" id="navMobile">
+      <a href="/" class="navbar__link">Trang chủ</a>
+      <a href="/ve-chung-toi" class="navbar__link">Về chúng tôi</a>
+      <a href="/chuong-trinh" class="navbar__link">Chương trình</a>
+      <a href="/tin-tuc" class="navbar__link {{#if (eq page 'news')}}navbar__link--active{{/if}}">Tin tức</a>
+      <a href="/tai-xuong" class="navbar__link">Tải xuống</a>
+      <a href="/lien-he" class="navbar__link">Liên hệ</a>
+    </div>
+  </header>
+
+  <!-- FLASH MESSAGES -->
+  {{#if flashSuccess}}
+  <div class="flash flash--success">
+    <span>{{flashSuccess}}</span>
+    <button class="flash__close" onclick="this.parentElement.remove()">✕</button>
+  </div>
+  {{/if}}
+  {{#if flashError}}
+  <div class="flash flash--error">
+    <span>{{flashError}}</span>
+    <button class="flash__close" onclick="this.parentElement.remove()">✕</button>
+  </div>
+  {{/if}}
+
+  <!-- PAGE CONTENT -->
+  <main>{{{body}}}</main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <div class="footer__logo">
+          {{#if siteLogoUrl}}
+          <img src="{{siteLogoUrl}}" alt="Logo" style="height:{{#if siteLogoSize}}{{siteLogoSize}}px{{else}}36px{{/if}};width:auto;max-width:160px;object-fit:contain;" />
+          {{else}}
+          <svg width="32" height="32" viewBox="0 0 28 28" fill="none">
+            <rect width="28" height="28" rx="8" fill="#fff" fill-opacity=".15"/>
+            <path d="M7 14c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="14" cy="17" r="3" fill="#fff"/>
+          </svg>
+          {{/if}}
+        </div>
+        <div>
+          <div class="footer__brand-name">{{siteName}}</div>
+          <div class="footer__brand-tagline">Kỹ năng sống cho học sinh tiểu học</div>
+        </div>
+      </div>
+      <div class="footer__links">
+        <div class="footer__col">
+          <div class="footer__col-title">Điều hướng</div>
+          <a href="/">Trang chủ</a>
+          <a href="/ve-chung-toi">Về chúng tôi</a>
+          <a href="/chuong-trinh">Chương trình</a>
+          <a href="/tin-tuc">Tin tức</a>
+          <a href="/tai-xuong">Tải xuống</a>
+          <a href="/lien-he">Liên hệ</a>
+        </div>
+        <div class="footer__col">
+          <div class="footer__col-title">Liên hệ</div>
+          <span>📍 Hà Nội, Việt Nam</span>
+          <span>📧 info@eduventure.vn</span>
+          <span>📞 0243 xxx xxxx</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">© 2025 {{siteName}}. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  {{#if pageJS}}<script src="/js/{{pageJS}}.js"></script>{{/if}}
+</body>
+</html>

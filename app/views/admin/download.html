@@ -1,0 +1,391 @@
+<div class="admin-page">
+  <div class="admin-topbar">
+    <h1 class="admin-topbar__title">Link tải xuống</h1>
+  </div>
+
+  {{#if success}}<div class="flash flash--success flash--admin"><span>{{success}}</span><button class="flash__close" onclick="this.parentElement.remove()">✕</button></div>{{/if}}
+  {{#if error}}<div class="flash flash--error flash--admin"><span>{{error}}</span><button class="flash__close" onclick="this.parentElement.remove()">✕</button></div>{{/if}}
+
+  <!-- ===== GLOBAL PAUSE PANEL ===== -->
+  <div class="admin-card" style="margin-bottom:1.5rem;border:2px solid {{#if downloadPaused}}#dc2626{{else}}#d1d5db{{/if}};">
+    <div class="admin-card__header" style="background:{{#if downloadPaused}}#fef2f2{{else}}#f9fafb{{/if}};">
+      <div style="display:flex;align-items:center;gap:.6rem;">
+        <span style="font-size:1.25rem;">{{#if downloadPaused}}🔴{{else}}🟢{{/if}}</span>
+        <div class="admin-card__title" style="color:{{#if downloadPaused}}#dc2626{{else}}#1a7f5a{{/if}};">
+          Trạng thái tải xuống:
+          <strong>{{#if downloadPaused}}Đang tạm dừng{{else}}Hoạt động bình thường{{/if}}</strong>
+        </div>
+      </div>
+      <button
+        id="btn-global-pause"
+        onclick="toggleGlobalPause(this)"
+        data-paused="{{#if downloadPaused}}1{{else}}0{{/if}}"
+        class="btn btn--sm {{#if downloadPaused}}btn--primary{{else}}btn--danger{{/if}}"
+        style="min-width:140px;">
+        {{#if downloadPaused}}▶ Kích hoạt lại{{else}}⏸ Tạm dừng tất cả{{/if}}
+      </button>
+    </div>
+    <div style="padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem;">
+      <p style="margin:0;font-size:.875rem;color:#6b7280;">
+        Khi <strong>tạm dừng</strong>, toàn bộ người dùng sẽ không thể xác nhận số điện thoại hay tải xuống bất kỳ phần mềm nào. Dùng để thay link hoặc bảo trì hệ thống.
+      </p>
+      <form action="/admin/download/pause-message" method="POST" style="display:flex;gap:.6rem;align-items:flex-end;">
+        <div class="form-group" style="margin:0;flex:1;">
+          <label class="form-label" style="font-size:.8rem;">Nội dung thông báo hiển thị cho người dùng khi tạm dừng</label>
+          <input class="form-input" type="text" name="message" value="{{downloadPauseMessage}}" required
+            placeholder="VD: Hệ thống đang bảo trì, vui lòng quay lại sau..." />
+        </div>
+        <button type="submit" class="btn btn--outline btn--sm" style="white-space:nowrap;">💾 Lưu thông báo</button>
+      </form>
+    </div>
+  </div>
+  <!-- ===== END GLOBAL PAUSE PANEL ===== -->
+
+  <div style="display:grid;grid-template-columns:260px 1fr;gap:1.5rem;align-items:start;">
+
+    <!-- CỘT TRÁI: danh sách + thêm chương trình -->
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+
+      <!-- Thêm chương trình -->
+      <div class="admin-card">
+        <div class="admin-card__header">
+          <div class="admin-card__title">Thêm chương trình</div>
+        </div>
+        <form action="/admin/download/programs/add" method="POST" style="padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Tên chương trình</label>
+            <input class="form-input" type="text" name="name" placeholder="VD: Chương trình 108 tiết" required />
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Số tiết</label>
+            <input class="form-input" type="number" name="tiet" placeholder="108" required />
+          </div>
+          <button type="submit" class="btn btn--primary btn--sm" style="width:100%;">+ Thêm chương trình</button>
+        </form>
+      </div>
+
+      <!-- Danh sách chương trình -->
+      {{#if programs.length}}
+      <div class="admin-card">
+        <div class="admin-card__header">
+          <div class="admin-card__title">Chương trình</div>
+          <span class="badge badge--gray">{{programs.length}}</span>
+        </div>
+        <div style="padding:.5rem;">
+          {{#each programs}}
+          <button type="button" onclick="switchProgram({{id}})" id="ptab-{{id}}"
+            style="width:100%;text-align:left;padding:.625rem .875rem;border:none;background:none;cursor:pointer;border-radius:8px;font-size:.875rem;font-weight:500;color:var(--color-text-secondary);transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
+            <span>{{name}}</span>
+            <span style="font-size:.75rem;color:var(--color-text-secondary);font-weight:400;white-space:nowrap;flex-shrink:0;">{{tiet}} tiết</span>
+          </button>
+          {{/each}}
+        </div>
+      </div>
+      {{/if}}
+
+    </div>
+
+    <!-- CỘT PHẢI: nội dung chương trình được chọn -->
+    <div>
+      {{#if programs.length}}
+      {{#each programs}}
+      <div id="ppanel-{{id}}" style="display:none;">
+        <div class="admin-card">
+
+          <!-- Header panel -->
+<div class="admin-card__header">
+  <div style="display:flex;align-items:center;gap:.75rem;">
+    <div class="admin-stat-card__icon admin-stat-card__icon--green" style="width:36px;height:36px;border-radius:8px;flex-shrink:0;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </div>
+    <!-- Form sửa tên + số tiết inline -->
+    <form action="/admin/download/programs/{{id}}/edit" method="POST" style="display:flex;gap:.5rem;align-items:center;">
+      <input class="form-input" type="text" name="name" value="{{name}}" required style="width:180px;padding:.35rem .6rem;font-size:.875rem;" />
+      <input class="form-input" type="number" name="tiet" value="{{tiet}}" required style="width:75px;padding:.35rem .6rem;font-size:.875rem;" />
+      <button type="submit" class="btn btn--sm btn--outline">Lưu</button>
+    </form>
+  </div>
+  <div style="display:flex;gap:.5rem;align-items:center;">
+    <!-- Toggle tạm dừng theo chương trình -->
+    <button type="button"
+      onclick="toggleProgram({{id}}, this)"
+      data-active="{{is_active}}"
+      class="btn btn--sm {{#if is_active}}btn--outline{{else}}btn--danger{{/if}}">
+      {{#if is_active}}⏸ Tạm dừng CT{{else}}▶ Kích hoạt CT{{/if}}
+    </button>
+    <form action="/admin/download/programs/{{id}}/delete" method="POST" onsubmit="return confirm('Xóa chương trình này?')">
+      <button type="submit" class="btn btn--sm btn--danger">Xóa</button>
+    </form>
+  </div>
+</div>
+          <!-- Form link 5 lớp -->
+          <form action="/admin/download" method="POST" style="padding:1.5rem;">
+            <input type="hidden" name="program_id" value="{{id}}" />
+
+            <!-- Tabs lớp -->
+            <div style="display:flex;gap:.375rem;margin-bottom:1.5rem;align-items:center;flex-wrap:wrap;">
+              <button type="button" onclick="switchGrade({{id}},'lop1')" id="gtab-{{id}}-lop1" class="grade-tab">Lớp 1</button>
+              <button type="button" onclick="switchGrade({{id}},'lop2')" id="gtab-{{id}}-lop2" class="grade-tab">Lớp 2</button>
+              <button type="button" onclick="switchGrade({{id}},'lop3')" id="gtab-{{id}}-lop3" class="grade-tab">Lớp 3</button>
+              <button type="button" onclick="switchGrade({{id}},'lop4')" id="gtab-{{id}}-lop4" class="grade-tab">Lớp 4</button>
+              <button type="button" onclick="switchGrade({{id}},'lop5')" id="gtab-{{id}}-lop5" class="grade-tab">Lớp 5</button>
+              <!-- Nút tạm dừng khối đang chọn -->
+              <button type="button"
+                id="gbtn-pause-{{id}}"
+                onclick="toggleGrade({{id}})"
+                style="margin-left:auto;"
+                class="btn btn--sm btn--outline">
+                ⏸ Tạm dừng khối này
+              </button>
+            </div>
+
+            <!-- Container nội dung lớp -->
+            <div id="gcontainer-{{id}}">
+              <div style="text-align:center;padding:3rem;color:var(--color-text-secondary);">Đang tải...</div>
+            </div>
+
+            <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid #f0f0ee;display:flex;justify-content:flex-end;">
+              <button type="submit" class="btn btn--primary">Lưu link</button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+      {{/each}}
+
+      <!-- Placeholder -->
+      <div id="ppanel-placeholder" class="admin-card" style="display:none;">
+        <div style="padding:5rem;text-align:center;color:var(--color-text-secondary);">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.2;margin-bottom:.875rem;display:block;margin-left:auto;margin-right:auto;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <div style="font-weight:500;margin-bottom:.25rem;">Chọn chương trình</div>
+          <div style="font-size:.875rem;">Chọn một chương trình bên trái để quản lý link tải xuống.</div>
+        </div>
+      </div>
+
+      {{else}}
+      <div class="admin-card">
+        <div style="padding:5rem;text-align:center;color:var(--color-text-secondary);">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.2;margin-bottom:.875rem;display:block;margin-left:auto;margin-right:auto;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <div style="font-weight:500;margin-bottom:.25rem;">Chưa có chương trình nào</div>
+          <div style="font-size:.875rem;">Thêm chương trình ở bên trái để bắt đầu.</div>
+        </div>
+      </div>
+      {{/if}}
+    </div>
+
+  </div>
+</div>
+
+<style>
+.grade-tab {
+  padding: .4rem .875rem;
+  border: 1px solid #e8e8e4;
+  background: #f5f5f3;
+  cursor: pointer;
+  font-size: .8375rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  border-radius: 6px;
+  transition: all .15s;
+  font-family: inherit;
+}
+.grade-tab:hover { background: #ebebea; border-color: #d8d8d4; }
+.grade-tab.active { background: #1a7f5a; color: #fff; border-color: #1a7f5a; font-weight: 600; }
+</style>
+
+<script>
+const cache = {};
+
+function switchProgram(id) {
+  document.querySelectorAll('[id^="ptab-"]').forEach(t => {
+    t.style.background = 'none';
+    t.style.color = 'var(--color-text-secondary)';
+    t.style.fontWeight = '500';
+  });
+  document.querySelectorAll('[id^="ppanel-"]').forEach(p => p.style.display = 'none');
+
+  const tab = document.getElementById('ptab-' + id);
+  tab.style.background = '#e8f5ee';
+  tab.style.color = '#1a7f5a';
+  tab.style.fontWeight = '600';
+
+  document.getElementById('ppanel-' + id).style.display = 'block';
+  loadGrades(id);
+}
+
+async function loadGrades(programId) {
+  if (cache[programId]) {
+    renderGrade(programId, 'lop1', cache[programId]);
+    return;
+  }
+  const res = await fetch(`/admin/download/program/${programId}/links`);
+  const data = await res.json();
+  if (data.ok) {
+    cache[programId] = data.downloads;
+    renderGrade(programId, 'lop1', data.downloads);
+  }
+}
+
+function switchGrade(programId, grade) {
+  if (!cache[programId]) return;
+  renderGrade(programId, grade, cache[programId]);
+}
+
+function renderGrade(programId, grade, downloads) {
+  document.querySelectorAll(`[id^="gtab-${programId}-"]`).forEach(t => t.classList.remove('active'));
+  const activeTab = document.getElementById(`gtab-${programId}-${grade}`);
+  if (activeTab) activeTab.classList.add('active');
+
+  const d = downloads.find(x => x.grade === grade) || {};
+  const g = grade;
+
+  // Cập nhật nút tạm dừng khối
+  const pauseBtn = document.getElementById(`gbtn-pause-${programId}`);
+  if (pauseBtn) {
+    const isActive = d.grade_active !== 0 && d.grade_active !== false && d.grade_active !== '0';
+    pauseBtn.dataset.grade = grade;
+    pauseBtn.dataset.programId = programId;
+    pauseBtn.dataset.active = isActive ? '1' : '0';
+    pauseBtn.textContent = isActive ? '⏸ Tạm dừng khối này' : '▶ Kích hoạt khối này';
+    pauseBtn.className = isActive ? 'btn btn--sm btn--outline' : 'btn btn--sm btn--danger';
+  }
+
+  document.getElementById(`gcontainer-${programId}`).innerHTML = `
+    ${d.grade_active === 0 || d.grade_active === false || d.grade_active === '0'
+      ? `<div style="background:#fff7ed;border:1px solid #f97316;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.875rem;color:#c2410c;">⚠️ Khối <strong>${grade.replace('lop','Lớp ')}</strong> đang tạm dừng — người dùng không thể tải xuống khối này.</div>`
+      : ''}
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.25rem;padding:1.125rem;background:#f9fafb;border-radius:8px;border:1px solid #f0f0ee;">
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Tên hiển thị</label>
+        <input class="form-input" type="text" name="label_${g}" value="${d.label||''}" required placeholder="VD: Phần mềm lớp 1" />
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Phiên bản</label>
+        <input class="form-input" type="text" name="version_${g}" value="${d.version||''}" placeholder="v1.0" />
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Dung lượng</label>
+        <input class="form-input" type="text" name="size_${g}" value="${d.file_size||''}" placeholder="10 GB" />
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.5rem;">
+      ${renderLinkRow(g,'main','#1a7f5a','#f5fbf8','#c1e3d0',d.label_main||'Link chính',d.url_main||'')}
+      ${renderLinkRow(g,'mirror1','#1860a5','#f0f6fd','#b8d4f0',d.label_mirror1||'Link dự phòng 1',d.url_mirror1||'')}
+      ${renderLinkRow(g,'mirror2','#1860a5','#f0f6fd','#b8d4f0',d.label_mirror2||'Link dự phòng 2',d.url_mirror2||'')}
+      ${renderLinkRow(g,'mirror3','#1860a5','#f0f6fd','#b8d4f0',d.label_mirror3||'Link dự phòng 3',d.url_mirror3||'')}
+    </div>
+  `;
+}
+
+function renderLinkRow(grade, key, iconBg, bg, border, label, url) {
+  return `
+    <div style="display:grid;grid-template-columns:210px 1fr;gap:.75rem;align-items:center;background:${bg};border:1px solid ${border};border-radius:8px;padding:.75rem 1rem;">
+      <div style="display:flex;align-items:center;gap:.625rem;">
+        <div style="width:26px;height:26px;border-radius:6px;background:${iconBg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </div>
+        <input class="form-input" type="text" name="label_${key}_${grade}" value="${label}" style="font-size:.85rem;padding:.35rem .6rem;" />
+      </div>
+      <input class="form-input" type="text" name="url_${key}_${grade}" value="${url}" placeholder="https://..." style="font-size:.85rem;" />
+    </div>`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const first = document.querySelector('[id^="ptab-"]');
+  if (first) {
+    switchProgram(first.id.replace('ptab-',''));
+  } else {
+    const ph = document.getElementById('ppanel-placeholder');
+    if (ph) ph.style.display = 'block';
+  }
+});
+async function toggleProgram(id, btn) {
+  const isActive = btn.dataset.active === '1';
+  const action = isActive ? 'tạm dừng' : 'kích hoạt lại';
+  if (!confirm(`Bạn có chắc muốn ${action} chương trình này không?`)) return;
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/admin/download/programs/${id}/toggle`, { method: 'POST' });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.message);
+    const nowActive = !isActive;
+    btn.dataset.active = nowActive ? '1' : '0';
+    btn.textContent = nowActive ? '⏸ Tạm dừng CT' : '▶ Kích hoạt CT';
+    btn.className = nowActive ? 'btn btn--sm btn--outline' : 'btn btn--sm btn--danger';
+  } catch (err) { alert('Lỗi: ' + err.message); }
+  finally { btn.disabled = false; }
+}
+
+async function toggleGrade(programId) {
+  const btn = document.getElementById(`gbtn-pause-${programId}`);
+  if (!btn) return;
+  const grade = btn.dataset.grade;
+  const isActive = btn.dataset.active === '1';
+  const gradeLabel = grade.replace('lop', 'Lớp ');
+  const action = isActive ? 'tạm dừng' : 'kích hoạt lại';
+  if (!confirm(`Bạn có chắc muốn ${action} ${gradeLabel} không?`)) return;
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/admin/download/programs/${programId}/grade/${grade}/toggle`, { method: 'POST' });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.message);
+    const nowActive = !isActive;
+    btn.dataset.active = nowActive ? '1' : '0';
+    btn.textContent = nowActive ? '⏸ Tạm dừng khối này' : '▶ Kích hoạt khối này';
+    btn.className = nowActive ? 'btn btn--sm btn--outline' : 'btn btn--sm btn--danger';
+    // Cập nhật cache và re-render để hiện/ẩn banner
+    if (cache[programId]) {
+      const d = cache[programId].find(x => x.grade === grade);
+      if (d) d.grade_active = nowActive ? 1 : 0;
+      renderGrade(programId, grade, cache[programId]);
+    }
+  } catch (err) { alert('Lỗi: ' + err.message); }
+  finally { btn.disabled = false; }
+}
+
+async function toggleGlobalPause(btn) {
+  const isPaused = btn.dataset.paused === '1';
+  const action = isPaused ? 'kích hoạt lại' : 'tạm dừng toàn bộ';
+  if (!confirm(`Bạn có chắc muốn ${action} chức năng tải xuống không?`)) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Đang xử lý...';
+
+  try {
+    const res = await fetch('/admin/download/pause/toggle', { method: 'POST' });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.message || 'Lỗi không xác định');
+
+    const nowPaused = !isPaused;
+    btn.dataset.paused = nowPaused ? '1' : '0';
+
+    // Cập nhật nút
+    btn.textContent = nowPaused ? '▶ Kích hoạt lại' : '⏸ Tạm dừng tất cả';
+    btn.className = nowPaused ? 'btn btn--sm btn--primary' : 'btn btn--sm btn--danger';
+
+    // Cập nhật tiêu đề trạng thái
+    const card = btn.closest('.admin-card');
+    const header = card.querySelector('.admin-card__header');
+    const titleEl = header.querySelector('.admin-card__title');
+    const iconEl = header.querySelector('span[style*="font-size:1.25rem"]');
+
+    if (nowPaused) {
+      card.style.borderColor = '#dc2626';
+      header.style.background = '#fef2f2';
+      titleEl.style.color = '#dc2626';
+      titleEl.innerHTML = 'Trạng thái tải xuống: <strong>Đang tạm dừng</strong>';
+      if (iconEl) iconEl.textContent = '🔴';
+    } else {
+      card.style.borderColor = '#d1d5db';
+      header.style.background = '#f9fafb';
+      titleEl.style.color = '#1a7f5a';
+      titleEl.innerHTML = 'Trạng thái tải xuống: <strong>Hoạt động bình thường</strong>';
+      if (iconEl) iconEl.textContent = '🟢';
+    }
+  } catch (err) {
+    alert('Lỗi: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>

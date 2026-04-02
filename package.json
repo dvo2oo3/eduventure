@@ -1,0 +1,25 @@
+{
+  "name": "eduventure",
+  "version": "1.0.0",
+  "description": "EduVenture - Kỹ năng sống cho học sinh tiểu học",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-flash": "^0.1.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-handlebars": "^7.1.2",
+    "express-session": "^1.17.3",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.6.0",
+    "nodemailer": "^6.9.4",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

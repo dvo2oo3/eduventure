@@ -1,0 +1,58 @@
+<!-- PAGE HEADER -->
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-header__title">Tin tức</h1>
+    <p class="page-header__sub">Cập nhật các hoạt động và thông tin mới nhất từ EduVenture</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+
+    {{#if rows}}
+    <div class="event-list">
+      {{#each rows}}
+      <article class="event-item">
+        <div class="event-item__date">
+          <div class="event-item__day">{{#if event_date}}{{formatDate event_date}}{{/if}}</div>
+        </div>
+        <div class="event-item__body">
+          <div class="event-item__meta">
+            {{#if location}}<span class="badge badge--green">📍 {{location}}</span>{{/if}}
+            {{#if grade_level}}<span class="badge badge--gray">{{grade_level}}</span>{{/if}}
+          </div>
+          <h3 class="event-item__title">
+            <a href="/tin-tuc/{{slug}}">{{title}}</a>
+          </h3>
+          <p class="event-item__summary">{{truncate summary 160}}</p>
+        </div>
+        <div class="event-item__action">
+          <a href="/tin-tuc/{{slug}}" class="btn btn--sm btn--outline">Xem chi tiết →</a>
+        </div>
+      </article>
+      {{/each}}
+    </div>
+
+    {{#if (ne totalPages 1)}}
+    <div class="pagination">
+      {{#if (ne currentPage 1)}}
+      <a href="/tin-tuc?page={{dec currentPage}}" class="pagination__btn">&laquo; Trước</a>
+      {{/if}}
+      {{#each (range 1 totalPages)}}
+      <a href="/tin-tuc?page={{this}}" class="pagination__btn {{#if (eq this ../currentPage)}}pagination__btn--active{{/if}}">{{this}}</a>
+      {{/each}}
+      {{#if (ne currentPage totalPages)}}
+      <a href="/tin-tuc?page={{inc currentPage}}" class="pagination__btn">Tiếp &raquo;</a>
+      {{/if}}
+    </div>
+    {{/if}}
+
+    {{else}}
+    <div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <p>Chưa có tin tức nào.</p>
+    </div>
+    {{/if}}
+
+  </div>
+</section>

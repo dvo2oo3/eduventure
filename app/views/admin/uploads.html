@@ -1,0 +1,360 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Quản lý Uploads</h1>
+    <p class="page-desc">Xem và xóa các file ảnh đã tải lên server</p>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="uploads-stats" id="statsBar">
+  <div class="ustat-card">
+    <div class="ustat-icon ustat-icon--blue">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+    </div>
+    <div>
+      <div class="ustat-num" id="totalFiles">—</div>
+      <div class="ustat-label">Tổng file</div>
+    </div>
+  </div>
+  <div class="ustat-card">
+    <div class="ustat-icon ustat-icon--green">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <div>
+      <div class="ustat-num" id="totalSize">—</div>
+      <div class="ustat-label">Dung lượng</div>
+    </div>
+  </div>
+  <div class="ustat-card">
+    <div class="ustat-icon ustat-icon--orange">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+    </div>
+    <div>
+      <div class="ustat-num" id="selectedCount">0</div>
+      <div class="ustat-label">Đã chọn</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="uploads-toolbar">
+  <div class="uploads-filters">
+    <button class="uf-tab active" data-folder="all">Tất cả</button>
+    <button class="uf-tab" data-folder="news">Tin tức</button>
+    <button class="uf-tab" data-folder="media">Banner/Logo</button>
+    <button class="uf-tab" data-folder="content">Nội dung</button>
+    <button class="uf-tab" data-type="video">🎬 Video</button>
+    <button class="uf-tab" data-type="image">🖼 Ảnh</button>
+  </div>
+  <div class="uploads-actions">
+    <button class="btn-uaction btn-uaction--danger" id="btnBulkDelete" disabled onclick="bulkDelete()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
+      Xóa đã chọn (<span id="bulkCount">0</span>)
+    </button>
+    <button class="btn-uaction" id="btnSelectAll" onclick="toggleSelectAll()">Chọn tất cả</button>
+  </div>
+</div>
+
+<!-- GRID -->
+<div class="uploads-grid" id="uploadsGrid">
+  <div class="uploads-loading">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+    <p>Đang tải...</p>
+  </div>
+</div>
+
+<!-- MODAL XEM ẢNH -->
+<div class="umodal-overlay" id="imgModal" onclick="closeModal(event)">
+  <div class="umodal">
+    <button class="umodal-close" onclick="document.getElementById('imgModal').classList.remove('open'); const v=document.getElementById('modalVideo'); v.pause(); v.src='';">✕</button>
+    <div id="modalMedia" style="background:#111;">
+      <img id="modalImg" src="" alt="" style="display:none;" />
+      <video id="modalVideo" src="" controls style="width:100%;max-height:400px;display:none;"></video>
+    </div>
+    <div class="umodal-info">
+      <div id="modalName" class="umodal-name"></div>
+      <div id="modalMeta" class="umodal-meta"></div>
+      <button class="btn-udelete-modal" id="modalDeleteBtn" onclick="deleteFromModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
+        Xóa file này
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ── Stats ── */
+.uploads-stats{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.ustat-card{display:flex;align-items:center;gap:.85rem;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:.9rem 1.25rem;min-width:160px;flex:1;}
+.ustat-icon{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ustat-icon--blue{background:#eff6ff;color:#3b82f6;}
+.ustat-icon--green{background:#f0fdf4;color:#22c55e;}
+.ustat-icon--orange{background:#fff7ed;color:#f97316;}
+.ustat-num{font-size:1.35rem;font-weight:700;color:#111827;line-height:1.2;}
+.ustat-label{font-size:.78rem;color:#6b7280;margin-top:1px;}
+
+/* ── Toolbar ── */
+.uploads-toolbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap;}
+.uploads-filters{display:flex;gap:.4rem;background:#f3f4f6;border-radius:9px;padding:3px;}
+.uf-tab{border:none;background:transparent;padding:.4rem .9rem;border-radius:7px;font-size:.83rem;font-weight:500;color:#6b7280;cursor:pointer;transition:all .15s;}
+.uf-tab.active{background:#fff;color:#111827;box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.uploads-actions{display:flex;gap:.6rem;align-items:center;}
+.btn-uaction{border:1px solid #d1d5db;background:#fff;padding:.45rem .9rem;border-radius:7px;font-size:.82rem;font-weight:500;color:#374151;cursor:pointer;display:flex;align-items:center;gap:.4rem;transition:all .15s;}
+.btn-uaction:hover{background:#f9fafb;}
+.btn-uaction--danger{border-color:#fca5a5;color:#dc2626;background:#fff5f5;}
+.btn-uaction--danger:not(:disabled):hover{background:#fef2f2;}
+.btn-uaction:disabled{opacity:.45;cursor:not-allowed;}
+
+/* ── Grid ── */
+.uploads-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;}
+.uploads-loading,.uploads-empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 2rem;color:#9ca3af;gap:.75rem;}
+.uploads-loading svg,.uploads-empty svg{opacity:.4;}
+.uploads-loading p,.uploads-empty p{font-size:.9rem;}
+.spin{animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── Card ── */
+.ucard{position:relative;border-radius:10px;overflow:hidden;border:2px solid #e5e7eb;background:#fff;cursor:pointer;transition:border-color .15s,box-shadow .15s;}
+.ucard:hover{border-color:#3b82f6;box-shadow:0 2px 8px rgba(59,130,246,.15);}
+.ucard.selected{border-color:#3b82f6;background:#eff6ff;}
+.ucard__thumb{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:#f3f4f6;}
+.ucard__check{position:absolute;top:6px;left:6px;width:20px;height:20px;border-radius:5px;border:2px solid #fff;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.ucard.selected .ucard__check{background:#3b82f6;border-color:#3b82f6;}
+.ucard__check svg{display:none;color:#fff;}
+.ucard.selected .ucard__check svg{display:block;}
+.ucard__folder{position:absolute;top:6px;right:6px;font-size:.65rem;font-weight:600;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.55);color:#fff;}
+.ucard__info{padding:.5rem .65rem .6rem;}
+.ucard__name{font-size:.72rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;}
+.ucard__size{font-size:.68rem;color:#9ca3af;margin-top:1px;}
+.ucard__del{position:absolute;bottom:6px;right:6px;width:26px;height:26px;border-radius:6px;background:rgba(220,38,38,.85);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s;}
+.ucard:hover .ucard__del{opacity:1;}
+.ucard__del svg{color:#fff;}
+
+/* ── Modal ── */
+.umodal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:none;align-items:center;justify-content:center;padding:1rem;}
+.umodal-overlay.open{display:flex;}
+.umodal{background:#fff;border-radius:14px;overflow:hidden;max-width:600px;width:100%;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.umodal img{width:100%;max-height:400px;object-fit:contain;background:#f3f4f6;display:block;}
+.umodal-close{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1;}
+.umodal-info{padding:1rem 1.25rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+.umodal-name{font-weight:600;font-size:.9rem;color:#111827;word-break:break-all;}
+.umodal-meta{font-size:.8rem;color:#6b7280;margin-top:3px;}
+.btn-udelete-modal{background:#dc2626;color:#fff;border:none;padding:.45rem 1rem;border-radius:7px;font-size:.82rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:.4rem;white-space:nowrap;}
+.btn-udelete-modal:hover{background:#b91c1c;}
+</style>
+
+<script>
+let allFiles = [];
+let currentFolder = 'all';
+let selectedFiles = new Set();
+let modalCurrentFile = null;
+
+async function loadFiles() {
+  try {
+    const res = await fetch('/admin/uploads/list');
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.message);
+    const VIDEO_EXT = ['.mp4', '.webm', '.ogg', '.mov'];
+    allFiles = data.files.map(f => ({
+      ...f,
+      isVideo: VIDEO_EXT.includes(f.name.slice(f.name.lastIndexOf('.')).toLowerCase())
+    }));
+    renderStats(data.stats);
+    renderGrid();
+  } catch (e) {
+    document.getElementById('uploadsGrid').innerHTML =
+      '<div class="uploads-empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>Lỗi tải dữ liệu: ' + e.message + '</p></div>';
+  }
+}
+
+function renderStats(stats) {
+  document.getElementById('totalFiles').textContent = stats.totalFiles.toLocaleString();
+  document.getElementById('totalSize').textContent = formatSize(stats.totalSize);
+}
+
+function renderGrid() {
+  selectedFiles.clear();
+  updateSelection();
+  let filtered;
+  if (currentFolder === 'all') filtered = allFiles;
+  else if (currentFolder === '__video') filtered = allFiles.filter(f => f.isVideo);
+  else if (currentFolder === '__image') filtered = allFiles.filter(f => !f.isVideo);
+  else filtered = allFiles.filter(f => f.folder === currentFolder);
+  const grid = document.getElementById('uploadsGrid');
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="uploads-empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg><p>Không có file nào</p></div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(f => `
+    <div class="ucard" id="card-${f.id}" onclick="selectCard(event, '${f.id}')">
+      ${f.isVideo
+        ? `<video class="ucard__thumb" src="${f.url}" preload="metadata" muted style="object-fit:cover;background:#111;"></video>
+           <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.55);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;pointer-events:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg></div>`
+        : `<img class="ucard__thumb" src="${f.url}" alt="${f.name}" loading="lazy" onerror="this.style.background='#e5e7eb'">`
+      }
+      <div class="ucard__check"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg></div>
+      <div class="ucard__folder">${f.folder}</div>
+      <div class="ucard__info">
+        <div class="ucard__name" title="${f.name}">${f.name}</div>
+        <div class="ucard__size">${formatSize(f.size)}</div>
+      </div>
+      <button class="ucard__del" onclick="deleteSingle(event, '${f.id}', '${f.folder}', '${f.name}')" title="Xóa">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+function selectCard(e, id) {
+  // Nếu click vào nút xóa thì bỏ qua
+  if (e.target.closest('.ucard__del')) return;
+  // Nếu click vào checkbox area thì toggle select
+  if (e.target.closest('.ucard__check') || e.shiftKey || e.ctrlKey || e.metaKey) {
+    toggleSelect(id);
+    return;
+  }
+  // Click thường → mở modal
+  const f = allFiles.find(x => x.id === id);
+  if (f) openModal(f);
+}
+
+function toggleSelect(id) {
+  if (selectedFiles.has(id)) selectedFiles.delete(id);
+  else selectedFiles.add(id);
+  document.getElementById('card-' + id)?.classList.toggle('selected', selectedFiles.has(id));
+  updateSelection();
+}
+
+function toggleSelectAll() {
+  let filtered;
+  if (currentFolder === 'all') filtered = allFiles;
+  else if (currentFolder === '__video') filtered = allFiles.filter(f => f.isVideo);
+  else if (currentFolder === '__image') filtered = allFiles.filter(f => !f.isVideo);
+  else filtered = allFiles.filter(f => f.folder === currentFolder);
+  if (selectedFiles.size === filtered.length) {
+    selectedFiles.clear();
+    filtered.forEach(f => document.getElementById('card-' + f.id)?.classList.remove('selected'));
+  } else {
+    filtered.forEach(f => { selectedFiles.add(f.id); document.getElementById('card-' + f.id)?.classList.add('selected'); });
+  }
+  updateSelection();
+}
+
+function updateSelection() {
+  const n = selectedFiles.size;
+  document.getElementById('selectedCount').textContent = n;
+  document.getElementById('bulkCount').textContent = n;
+  document.getElementById('btnBulkDelete').disabled = n === 0;
+  let filtered;
+  if (currentFolder === 'all') filtered = allFiles;
+  else if (currentFolder === '__video') filtered = allFiles.filter(f => f.isVideo);
+  else if (currentFolder === '__image') filtered = allFiles.filter(f => !f.isVideo);
+  else filtered = allFiles.filter(f => f.folder === currentFolder);
+  document.getElementById('btnSelectAll').textContent = selectedFiles.size === filtered.length && filtered.length > 0 ? 'Bỏ chọn tất cả' : 'Chọn tất cả';
+}
+
+async function deleteSingle(e, id, folder, name) {
+  e.stopPropagation();
+  if (!confirm(`Xóa file "${name}"?`)) return;
+  const res = await fetch('/admin/uploads/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ files: [{ id, folder }] })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    allFiles = allFiles.filter(f => f.id !== id);
+    document.getElementById('card-' + id)?.remove();
+    selectedFiles.delete(id);
+    updateStats();
+    updateSelection();
+  } else alert('Lỗi: ' + data.message);
+}
+
+async function bulkDelete() {
+  if (!selectedFiles.size) return;
+  if (!confirm(`Xóa ${selectedFiles.size} file đã chọn?`)) return;
+  const toDelete = allFiles.filter(f => selectedFiles.has(f.id)).map(f => ({ id: f.id, folder: f.folder }));
+  const res = await fetch('/admin/uploads/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ files: toDelete })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    allFiles = allFiles.filter(f => !selectedFiles.has(f.id));
+    selectedFiles.forEach(id => document.getElementById('card-' + id)?.remove());
+    selectedFiles.clear();
+    updateStats();
+    updateSelection();
+  } else alert('Lỗi: ' + data.message);
+}
+
+function updateStats() {
+  const shown = currentFolder === 'all' ? allFiles : allFiles.filter(f => f.folder === currentFolder);
+  document.getElementById('totalFiles').textContent = allFiles.length.toLocaleString();
+  document.getElementById('totalSize').textContent = formatSize(allFiles.reduce((s, f) => s + f.size, 0));
+}
+
+function openModal(f) {
+  modalCurrentFile = f;
+  const img = document.getElementById('modalImg');
+  const vid = document.getElementById('modalVideo');
+  if (f.isVideo) {
+    img.style.display = 'none'; img.src = '';
+    vid.style.display = ''; vid.src = f.url;
+  } else {
+    vid.style.display = 'none'; vid.src = '';
+    img.style.display = ''; img.src = f.url;
+  }
+  document.getElementById('modalName').textContent = f.name;
+  document.getElementById('modalMeta').textContent = `${f.folder} • ${formatSize(f.size)}`;
+  document.getElementById('imgModal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('imgModal')) {
+    document.getElementById('imgModal').classList.remove('open');
+    const vid = document.getElementById('modalVideo');
+    vid.pause(); vid.src = '';
+  }
+}
+
+async function deleteFromModal() {
+  if (!modalCurrentFile) return;
+  if (!confirm(`Xóa file "${modalCurrentFile.name}"?`)) return;
+  const f = modalCurrentFile;
+  const res = await fetch('/admin/uploads/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ files: [{ id: f.id, folder: f.folder }] })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    allFiles = allFiles.filter(x => x.id !== f.id);
+    document.getElementById('card-' + f.id)?.remove();
+    updateStats(); updateSelection();
+    document.getElementById('imgModal').classList.remove('open');
+  } else alert('Lỗi: ' + data.message);
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+}
+
+// Tab filter
+document.querySelectorAll('.uf-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.uf-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (btn.dataset.type === 'video') currentFolder = '__video';
+    else if (btn.dataset.type === 'image') currentFolder = '__image';
+    else currentFolder = btn.dataset.folder;
+    renderGrid();
+  });
+});
+
+loadFiles();
+</script>

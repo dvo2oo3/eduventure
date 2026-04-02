@@ -1,0 +1,282 @@
+<div class="admin-page">
+  <div class="admin-topbar">
+    <div>
+      <h1 class="admin-topbar__title">{{#if item}}Sửa bài viết{{else}}Thêm bài viết mới{{/if}}</h1>
+      <p style="font-size:.85rem;color:#6b7280;margin-top:.2rem;">{{#if item}}Chỉnh sửa nội dung bài viết{{else}}Tạo tin tức hoặc chương trình mới{{/if}}</p>
+    </div>
+    <a href="/admin/news" class="btn btn--outline">← Quay lại danh sách</a>
+  </div>
+
+  {{#if error}}<div class="flash flash--error flash--admin"><span>{{error}}</span><button class="flash__close" onclick="this.parentElement.remove()">✕</button></div>{{/if}}
+
+  <form action="/admin/news/{{#if item}}{{item.id}}/edit{{else}}create{{/if}}" method="POST" enctype="multipart/form-data">
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:1.5rem;align-items:start;">
+
+      <!-- CỘT TRÁI: Nội dung chính -->
+      <div style="display:flex;flex-direction:column;gap:1.25rem;">
+
+        <!-- Tiêu đề -->
+        <div class="admin-card">
+          <div class="admin-card__header">
+            <div class="admin-card__title">Thông tin bài viết</div>
+          </div>
+          <div style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem;">
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Tiêu đề <span style="color:#dc2626;">*</span></label>
+              <input class="form-input" type="text" name="title"
+                value="{{#if item}}{{item.title}}{{/if}}"
+                required placeholder="Nhập tiêu đề bài viết..." />
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Tóm tắt</label>
+              <textarea class="form-input form-textarea" name="summary" rows="3"
+                placeholder="Mô tả ngắn hiển thị ngoài danh sách...">{{#if item}}{{item.summary}}{{/if}}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nội dung chi tiết -->
+        <div class="admin-card">
+          <div class="admin-card__header">
+            <div class="admin-card__title">Nội dung chi tiết</div>
+            <span style="font-size:.78rem;color:#9ca3af;">Hỗ trợ ảnh, video, bảng, liên kết</span>
+          </div>
+          <div style="padding:1.25rem;">
+            <textarea name="content" id="content" rows="20">{{#if item}}{{item.content}}{{/if}}</textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CỘT PHẢI: Cài đặt & Ảnh đại diện -->
+      <div style="display:flex;flex-direction:column;gap:1.25rem;">
+
+        <!-- Nút lưu -->
+        <div class="admin-card">
+          <div style="padding:1.25rem;display:flex;flex-direction:column;gap:.75rem;">
+            <button type="submit" class="btn btn--primary" style="width:100%;justify-content:center;">
+              {{#if item}}💾 Lưu thay đổi{{else}}✅ Thêm bài viết{{/if}}
+            </button>
+            <a href="/admin/news" class="btn btn--outline" style="width:100%;justify-content:center;text-align:center;">Hủy</a>
+            <div style="border-top:1px solid #e8e8e4;padding-top:.75rem;display:flex;flex-direction:column;gap:.5rem;">
+              <label class="checkbox-label">
+                <input type="checkbox" name="is_visible" value="1"
+                  {{#if item}}{{#if item.is_visible}}checked{{/if}}{{else}}checked{{/if}} />
+                <span>Hiển thị công khai</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="is_pinned" value="1"
+                  {{#if item}}{{#if item.is_pinned}}checked{{/if}}{{/if}} />
+                <span>Ghim lên trang chủ</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phân loại -->
+        <div class="admin-card">
+          <div class="admin-card__header">
+            <div class="admin-card__title">Phân loại</div>
+          </div>
+          <div style="padding:1.25rem;display:flex;flex-direction:column;gap:.875rem;">
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Loại bài viết</label>
+              <select class="form-input form-select" name="category">
+                <option value="highlight" {{#if item}}{{#if (eq item.category 'highlight')}}selected{{/if}}{{/if}}>📌 Tin nổi bật</option>
+                <option value="program"   {{#if item}}{{#if (eq item.category 'program')}}selected{{/if}}{{/if}}>📚 Chương trình</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Ngày sự kiện</label>
+              <input class="form-input" type="date" name="event_date"
+                value="{{#if item}}{{formatDateInput item.event_date}}{{/if}}" />
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Địa điểm</label>
+              <input class="form-input" type="text" name="location"
+                value="{{#if item}}{{item.location}}{{/if}}"
+                placeholder="VD: Hà Nội, Hải Dương..." />
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Khối lớp</label>
+              <input class="form-input" type="text" name="grade_level"
+                value="{{#if item}}{{item.grade_level}}{{/if}}"
+                placeholder="VD: Lớp 1–3, Tất cả..." />
+            </div>
+          </div>
+        </div>
+
+        <!-- Ảnh đại diện -->
+        <div class="admin-card">
+          <div class="admin-card__header">
+            <div class="admin-card__title">Ảnh đại diện</div>
+          </div>
+          <div style="padding:1.25rem;display:flex;flex-direction:column;gap:.875rem;">
+
+            <!-- Preview -->
+            <div id="img-preview-wrap" style="{{#if item.image}}{{else}}display:none;{{/if}}border-radius:8px;overflow:hidden;border:1px solid #e8e8e4;background:#f9fafb;">
+              <img id="img-preview"
+                src="{{#if item}}{{item.image}}{{/if}}"
+                alt="Preview"
+                style="width:100%;max-height:180px;object-fit:cover;display:block;" />
+            </div>
+
+            <!-- Tab chọn kiểu -->
+            <div style="display:flex;background:#f3f4f6;border-radius:8px;padding:3px;gap:3px;">
+              <button type="button" id="tab-upload" onclick="switchImgTab('upload')"
+                style="flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:#fff;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,.1);">
+                📁 Tải từ máy
+              </button>
+              <button type="button" id="tab-url" onclick="switchImgTab('url')"
+                style="flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;">
+                🔗 Nhập URL
+              </button>
+            </div>
+
+            <div id="pane-upload">
+              <label style="display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:1.25rem;border:2px dashed #d1d5db;border-radius:8px;cursor:pointer;transition:border-color .15s;" id="upload-label">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span style="font-size:.82rem;color:#6b7280;">Nhấn để chọn ảnh</span>
+                <span style="font-size:.73rem;color:#9ca3af;">JPG, PNG, WEBP, GIF — tối đa 5MB</span>
+                <input type="file" name="image_file" accept="image/*" onchange="previewImg(this)" style="display:none;" />
+              </label>
+            </div>
+
+            <div id="pane-url" style="display:none;">
+              <input class="form-input" type="text" name="image" id="image-url-input"
+                value="{{#if item}}{{item.image}}{{/if}}"
+                placeholder="https://..."
+                oninput="previewUrl(this.value)" />
+              <div style="font-size:.75rem;color:#9ca3af;margin-top:.35rem;">Dán link ảnh từ internet</div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+function switchImgTab(tab) {
+  const isUpload = tab === 'upload';
+  document.getElementById('pane-upload').style.display = isUpload ? '' : 'none';
+  document.getElementById('pane-url').style.display   = isUpload ? 'none' : '';
+  document.getElementById('tab-upload').style.cssText = isUpload
+    ? 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:#fff;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,.1);'
+    : 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;';
+  document.getElementById('tab-url').style.cssText = isUpload
+    ? 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;'
+    : 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:#fff;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,.1);';
+  if (!isUpload) document.querySelector('[name=image_file]').value = '';
+}
+
+function previewImg(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('img-preview').src = e.target.result;
+      document.getElementById('img-preview-wrap').style.display = '';
+    };
+    reader.readAsDataURL(input.files[0]);
+    // Đổi label upload
+    const label = document.getElementById('upload-label');
+    label.style.borderColor = '#1a7f5a';
+    label.querySelector('span').textContent = input.files[0].name;
+  }
+}
+
+function previewUrl(val) {
+  const wrap = document.getElementById('img-preview-wrap');
+  const img  = document.getElementById('img-preview');
+  if (val.trim()) { img.src = val.trim(); wrap.style.display = ''; }
+  else wrap.style.display = 'none';
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+tinymce.init({
+  selector: '#content',
+  language_url: 'https://cdn.jsdelivr.net/npm/tinymce-i18n@23.10.9/langs6/vi.js',
+  language: 'vi',
+  height: 520,
+  menubar: false,
+  plugins: ['advlist','autolink','lists','link','image','media','charmap','preview',
+            'searchreplace','visualblocks','fullscreen','table','code','wordcount'],
+  toolbar: [
+    'undo redo | blocks | bold italic underline | forecolor backcolor | alignleft aligncenter alignright alignjustify',
+    'bullist numlist | link image | media | table | code fullscreen'
+  ],
+  toolbar_mode: 'wrap',
+
+  // ── Ảnh ─────────────────────────────────────────────────
+  image_advtab: true,
+  automatic_uploads: true,
+  images_upload_url: '/admin/upload-image',
+  images_upload_credentials: true,
+
+  // ── Video ────────────────────────────────────────────────
+  media_live_embeds: true,
+  media_alt_source: false,
+  media_poster: false,
+
+  video_template_callback: function(data) {
+    return '<video width="' + data.width + '" height="' + data.height + '" controls="controls" style="max-width:100%;">'
+      + '<source src="' + data.source + '" type="' + data.sourcemime + '">'
+      + '</video>';
+  },
+
+  // File picker: upload ảnh + video từ máy tính
+  file_picker_types: 'image media',
+  file_picker_callback: function(callback, value, meta) {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+
+    if (meta.filetype === 'image') {
+      input.setAttribute('accept', 'image/*');
+    } else {
+      input.setAttribute('accept', 'video/mp4,video/webm,video/ogg,video/mov');
+    }
+
+    input.onchange = function() {
+      const file = this.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const isVideo = meta.filetype === 'media';
+      const uploadUrl = isVideo ? '/admin/upload-video' : '/admin/upload-image';
+
+      // Hiện loading
+      const toast = document.createElement('div');
+      toast.textContent = isVideo ? '⏳ Đang upload video...' : '⏳ Đang upload ảnh...';
+      toast.style.cssText = 'position:fixed;bottom:2rem;right:2rem;background:#1a7f5a;color:#fff;padding:.75rem 1.25rem;border-radius:10px;font-size:.875rem;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,.2);';
+      document.body.appendChild(toast);
+
+      fetch(uploadUrl, { method: 'POST', body: formData, credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(data => {
+          document.body.removeChild(toast);
+          if (data.location) {
+            callback(data.location, { title: file.name });
+          } else {
+            alert('Upload thất bại: ' + (data.error || 'Lỗi không xác định'));
+          }
+        })
+        .catch(() => {
+          document.body.removeChild(toast);
+          alert('Lỗi kết nối khi upload file');
+        });
+    };
+
+    input.click();
+  },
+
+  content_style: 'body { font-family: "Be Vietnam Pro", sans-serif; font-size: 15px; line-height: 1.7; color: #1c1c1a; padding: 1rem; } img { max-width: 100%; height: auto; border-radius: 6px; } video { max-width: 100%; height: auto; border-radius: 6px; }',
+
+  setup: function(editor) {
+    editor.on('change', function() { editor.save(); });
+  }
+});
+</script>
