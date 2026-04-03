@@ -31,24 +31,22 @@ const ContactController = {
 
       await ContactModel.saveMessage({ full_name, email, phone, message });
 
-      try {
-        await transporter.sendMail({
-          from: `"EduVenture Website" <${process.env.MAIL_USER}>`,
-          to: process.env.MAIL_TO,
-          subject: `[EduVenture] Yêu cầu hỗ trợ từ ${full_name}`,
-          html: `
-            <h2>Yêu cầu hỗ trợ mới</h2>
-            <p><strong>Họ tên:</strong> ${full_name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Điện thoại:</strong> ${phone || 'Không cung cấp'}</p>
-            <hr/>
-            <p><strong>Nội dung:</strong></p>
-            <p>${message.replace(/\n/g, '<br>')}</p>
-          `
-        });
-      } catch (mailErr) {
+      transporter.sendMail({
+        from: `"EduVenture Website" <${process.env.MAIL_USER}>`,
+        to: process.env.MAIL_TO,
+        subject: `[EduVenture] Yêu cầu hỗ trợ từ ${full_name}`,
+        html: `
+          <h2>Yêu cầu hỗ trợ mới</h2>
+          <p><strong>Họ tên:</strong> ${full_name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Điện thoại:</strong> ${phone || 'Không cung cấp'}</p>
+          <hr/>
+          <p><strong>Nội dung:</strong></p>
+          <p>${message.replace(/\n/g, '<br>')}</p>
+        `
+      }).catch(mailErr => {
         console.error('Lỗi gửi mail (không ảnh hưởng):', mailErr.message);
-      }
+      });
 
       req.flash('success', 'Yêu cầu của bạn đã được gửi thành công! Chúng tôi sẽ phản hồi trong vòng 24h.');
       res.redirect('/lien-he');
