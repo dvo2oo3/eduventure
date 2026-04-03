@@ -40,33 +40,62 @@
 
     <!-- TIN NHẮN -->
     <div class="admin-card">
-      <div class="admin-card__header">
+      <div class="admin-card__header" style="flex-wrap:wrap;gap:.5rem;">
         <div class="admin-card__title">
           Tin nhắn từ người dùng
           {{#if unread}}<span class="badge badge--amber" style="margin-left:8px;">{{unread}} chưa đọc</span>{{/if}}
         </div>
+        <span id="selectedCount" style="display:none;font-size:.8rem;color:#1a7f5a;font-weight:600;margin-left:auto;"></span>
       </div>
-      <div class="msg-list">
+
+      <!-- Thanh tìm kiếm + nút xóa nhiều -->
+      <div style="padding:.75rem 1.25rem;border-bottom:1px solid #f0f0ee;display:flex;gap:.5rem;align-items:center;">
+        <form method="GET" action="/admin/contact" style="flex:1;display:flex;gap:.5rem;" id="searchForm">
+          <input class="form-input" type="text" name="q" value="{{q}}" placeholder="Tìm theo tên, email, SĐT, nội dung..." style="flex:1;padding:.45rem .75rem;font-size:.875rem;" />
+          <button type="submit" class="btn btn--sm btn--outline">Tìm</button>
+          {{#if q}}<a href="/admin/contact" class="btn btn--sm btn--ghost">✕ Xóa bộ lọc</a>{{/if}}
+        </form>
+        <button id="btnBulkDelete" class="btn btn--sm btn--danger" style="display:none;" onclick="bulkDelete()">🗑 Xóa đã chọn</button>
+      </div>
+
+      <!-- Chọn tất cả -->
+      <div id="selectAllBar" style="padding:.5rem 1.25rem;background:#f9fdf9;border-bottom:1px solid #f0f0ee;display:flex;align-items:center;gap:.6rem;">
+        <input type="checkbox" id="chkAll" onchange="toggleAll(this)" style="width:15px;height:15px;accent-color:#1a7f5a;cursor:pointer;" />
+        <label for="chkAll" style="font-size:.82rem;color:#666;cursor:pointer;user-select:none;">Chọn tất cả trang này</label>
+      </div>
+
+      <div class="msg-list" id="msgList">
         {{#each messages}}
-        <div class="msg-item {{#unless is_read}}msg-item--unread{{/unless}}" id="msg-{{id}}"
-          style="cursor:pointer;"
-          onclick="openMsg({{id}})">
-          <div class="msg-item__header">
-            <div class="msg-item__name">
-              {{#unless is_read}}<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1a7f5a;margin-right:6px;vertical-align:middle;"></span>{{/unless}}
-              {{full_name}}
+        <div class="msg-item {{#unless is_read}}msg-item--unread{{/unless}}" id="msg-{{id}}" style="display:flex;align-items:flex-start;gap:.6rem;padding:.85rem 1.25rem;border-bottom:1px solid #f5f5f3;cursor:pointer;" onclick="openMsg({{id}}, event)">
+          <input type="checkbox" class="msg-chk" data-id="{{id}}" onclick="event.stopPropagation();updateBulkBar()" style="margin-top:3px;width:15px;height:15px;accent-color:#1a7f5a;flex-shrink:0;cursor:pointer;" />
+          <div style="flex:1;min-width:0;">
+            <div class="msg-item__header">
+              <div class="msg-item__name">
+                {{#unless is_read}}<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1a7f5a;margin-right:6px;vertical-align:middle;"></span>{{/unless}}
+                {{full_name}}
+              </div>
+              <div class="msg-item__date">{{formatDate created_at}}</div>
             </div>
-            <div class="msg-item__date">{{formatDate created_at}}</div>
+            <div class="msg-item__email">{{email}}{{#if phone}} · {{phone}}{{/if}}</div>
+            <p class="msg-item__text">{{truncate message 120}}</p>
           </div>
-          <div class="msg-item__email">{{email}}{{#if phone}} · {{phone}}{{/if}}</div>
-          <p class="msg-item__text">{{truncate message 120}}</p>
         </div>
         {{else}}
         <div class="empty-state" style="padding:2rem;">
-          <p>Chưa có tin nhắn nào.</p>
+          <p>{{#if q}}Không tìm thấy tin nhắn nào khớp với "{{q}}".{{else}}Chưa có tin nhắn nào.{{/if}}</p>
         </div>
         {{/each}}
       </div>
+
+      <!-- Phân trang tin nhắn -->
+      {{#if (gt totalPages 1)}}
+      <div class="pagination" style="padding:.75rem 1.25rem;">
+        {{#each (range 1 totalPages)}}
+        <a href="/admin/contact?page={{this}}{{#if ../q}}&q={{../q}}{{/if}}"
+           class="pagination__btn {{#if (eq this ../page)}}pagination__btn--active{{/if}}">{{this}}</a>
+        {{/each}}
+      </div>
+      {{/if}}
     </div>
 
   </div>
@@ -100,7 +129,8 @@
 var _currentMsgId = null;
 var _messages = {{{msgJson}}};
 
-function openMsg(id) {
+function openMsg(id, e) {
+  if (e && e.target && e.target.type === 'checkbox') return;
   var msg = _messages[id];
   if (!msg) return;
   _currentMsgId = id;
@@ -140,4 +170,55 @@ function deleteFromModal() {
 document.getElementById('msgModal').addEventListener('click', function(e) {
   if (e.target === this) closeMsg();
 });
+
+// --- Bulk delete ---
+function getCheckedIds() {
+  return Array.from(document.querySelectorAll('.msg-chk:checked')).map(function(c){ return parseInt(c.dataset.id); });
+}
+
+function updateBulkBar() {
+  var ids = getCheckedIds();
+  var btn = document.getElementById('btnBulkDelete');
+  var cnt = document.getElementById('selectedCount');
+  if (ids.length > 0) {
+    btn.style.display = '';
+    cnt.style.display = '';
+    cnt.textContent = 'Đã chọn ' + ids.length + ' tin';
+  } else {
+    btn.style.display = 'none';
+    cnt.style.display = 'none';
+  }
+  // sync chkAll
+  var all = document.querySelectorAll('.msg-chk');
+  document.getElementById('chkAll').checked = all.length > 0 && ids.length === all.length;
+}
+
+function toggleAll(chk) {
+  document.querySelectorAll('.msg-chk').forEach(function(c){ c.checked = chk.checked; });
+  updateBulkBar();
+}
+
+function bulkDelete() {
+  var ids = getCheckedIds();
+  if (!ids.length) return;
+  if (!confirm('Xóa ' + ids.length + ' tin nhắn đã chọn?')) return;
+  fetch('/admin/contact/messages/bulk-delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids: ids })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.ok) {
+      ids.forEach(function(id){ var el = document.getElementById('msg-' + id); if (el) el.remove(); });
+      updateBulkBar();
+      // Show flash-like message
+      var fl = document.createElement('div');
+      fl.className = 'flash flash--success';
+      fl.innerHTML = '<span>' + d.message + '</span><button class="flash__close" onclick="this.parentElement.remove()">✕</button>';
+      document.querySelector('.admin-page').prepend(fl);
+      setTimeout(function(){ fl.remove(); }, 3000);
+    } else {
+      alert(d.message);
+    }
+  });
+}
 </script>

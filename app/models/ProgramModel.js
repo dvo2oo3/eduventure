@@ -162,7 +162,7 @@ const ProgramModel = {
   // ---- GLOBAL DOWNLOAD PAUSE ----
   async getDownloadPauseStatus() {
     const [rows] = await db.query(
-      "SELECT setting_value FROM contact_settings WHERE setting_key IN ('download_paused', 'download_pause_message') ORDER BY setting_key"
+      "SELECT setting_key, setting_value FROM contact_settings WHERE setting_key IN ('download_paused', 'download_pause_message')"
     );
     // Trả về object { paused: bool, message: string }
     const map = {};

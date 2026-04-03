@@ -2,6 +2,7 @@ const express = require('express');
 const session = require('express-session');
 const flash = require('connect-flash');
 const { engine } = require('express-handlebars');
+const Handlebars = require('handlebars');
 const path = require('path');
 require('dotenv').config();
 
@@ -41,11 +42,17 @@ app.engine('html', engine({
       if (!str) return '';
       return str.length > len ? str.substring(0, len) + '...' : str;
     },
-    json: (obj) => JSON.stringify(obj),
+    json: (obj) => new Handlebars.SafeString(JSON.stringify(obj)),
     activeMenu: (current, target) => current === target ? 'active' : '',
     gradeNum: (g) => g ? g.replace('lop', '') : '',
     length: (arr) => (arr && arr.length) ? arr.length : 0,
-    gt: (a, b) => a > b
+    gt: (a, b) => a > b,
+    includes: (arr, val) => Array.isArray(arr) ? arr.includes(val) : false,
+    canAccess: function(perms, perm) { return Array.isArray(perms) && perms.includes(perm); },
+    permLabel: function(perm) {
+      const labels = { news:'📝 Viết tin tức', about:'ℹ️ Về chúng tôi', media:'🖼️ Banner & Logo', uploads:'📁 Uploads', download:'📥 Link tải xuống', phones:'📋 Danh sách SĐT', contact:'💬 Tin nhắn' };
+      return labels[perm] || perm;
+    }
   }
 }));
 app.set('view engine', 'html');
@@ -68,6 +75,9 @@ app.use(async (req, res, next) => {
   res.locals.flashSuccess = req.flash('success')[0] || null;
   res.locals.flashError = req.flash('error')[0] || null;
   res.locals.isAdmin = !!req.session.adminId;
+  res.locals.adminRole = req.session.adminRole || 'staff';
+  res.locals.isSuperAdmin = req.session.adminRole === 'superadmin';
+  res.locals.adminPermissions = req.session.adminPermissions || [];
   res.locals.activeMenu = '';
   try {
     const AboutModel = require('./app/models/AboutModel');
@@ -101,6 +111,9 @@ app.use(async (req, res, next) => {
     res.locals.siteEventZoom = about?.event_zoom?.content || '100';
     res.locals.siteBannerTextColor = about?.banner_text_color?.content || '#ffffff';
     res.locals.siteEventTextColor = about?.event_text_color?.content || '#ffffff';
+    res.locals.siteFacebookUrl = about?.facebook_url?.content || '';
+    res.locals.siteZaloUrl = about?.zalo_url?.content || '';
+    res.locals.siteBannerOverlayOpacity = about?.banner_overlay_opacity?.content || '45';
   } catch(e) {}
   next();
 });

@@ -1,0 +1,270 @@
+<div class="admin-page">
+  <div class="admin-topbar">
+    <h1 class="admin-topbar__title">Quản lý tài khoản</h1>
+    <button class="btn btn--primary" onclick="openCreateModal()">+ Thêm tài khoản</button>
+  </div>
+
+  <!-- DANH SÁCH TÀI KHOẢN -->
+  <div class="admin-card">
+    <div class="admin-card__header">
+      <div class="admin-card__title">Danh sách tài khoản ({{accounts.length}})</div>
+    </div>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Họ tên</th>
+          <th>Email</th>
+          <th>Chức vụ</th>
+          <th>Quyền được phép</th>
+          <th style="text-align:right">Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each accounts}}
+        <tr>
+          <td>
+            <div style="font-weight:600;color:#1a1a1a;">{{name}}</div>
+            {{#if (eq id ../currentId)}}<div style="font-size:.75rem;color:#1a7f5a;">← Tài khoản của bạn</div>{{/if}}
+          </td>
+          <td style="color:#555;font-size:.875rem;">{{email}}</td>
+          <td>
+            {{#if (eq role 'superadmin')}}
+            <span class="badge badge--green" style="font-size:.8rem;">👑 Super Admin</span>
+            {{else}}
+            <span class="badge badge--blue" style="font-size:.8rem;">👤 Nhân viên</span>
+            {{/if}}
+          </td>
+          <td>
+            {{#if (eq role 'superadmin')}}
+            <span style="font-size:.8rem;color:#1a7f5a;font-style:italic;">Toàn quyền</span>
+            {{else}}
+              {{#if permissions.length}}
+              <div style="display:flex;flex-wrap:wrap;gap:.3rem;">
+                {{#each permissions}}
+                <span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:4px;padding:1px 7px;font-size:.75rem;">{{permLabel this}}</span>
+                {{/each}}
+              </div>
+              {{else}}
+              <span style="font-size:.8rem;color:#aaa;">Chưa có quyền nào</span>
+              {{/if}}
+            {{/if}}
+          </td>
+          <td>
+            <div class="table-actions">
+              {{#unless (eq id ../currentId)}}
+              <button class="btn btn--sm btn--outline" onclick="openEditModal({{json this}})">Sửa</button>
+              <button class="btn btn--sm btn--outline" onclick="openResetPwdModal({{id}}, '{{name}}')">🔑 Mật khẩu</button>
+              <form action="/admin/accounts/{{id}}/delete" method="POST" style="display:inline;"
+                onsubmit="return confirm('Xóa tài khoản {{name}}? Không thể hoàn tác.')">
+                <button type="submit" class="btn btn--sm btn--danger">Xóa</button>
+              </form>
+              {{else}}
+              <span style="font-size:.8rem;color:#aaa;">—</span>
+              {{/unless}}
+            </div>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL TẠO TÀI KHOẢN -->
+<div id="createModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:#fff;border-radius:12px;width:100%;max-width:540px;overflow:hidden;max-height:90vh;overflow-y:auto;">
+    <div style="background:#1a7f5a;padding:1rem 1.25rem;display:flex;justify-content:space-between;align-items:center;">
+      <div style="color:#fff;font-weight:600;font-size:1rem;">Thêm tài khoản mới</div>
+      <button onclick="closeModal('createModal')" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;">✕</button>
+    </div>
+    <form action="/admin/accounts/create" method="POST" style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem;">
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Họ và tên <span style="color:#e53e3e">*</span></label>
+        <input class="form-input" type="text" name="name" required placeholder="Nguyễn Văn A" />
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Email <span style="color:#e53e3e">*</span></label>
+        <input class="form-input" type="email" name="email" required placeholder="example@eduventure.vn" />
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Mật khẩu <span style="color:#e53e3e">*</span></label>
+        <input class="form-input" type="password" name="password" required placeholder="Tối thiểu 6 ký tự" minlength="6" />
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Chức vụ</label>
+        <select class="form-input" name="role" id="createRole" onchange="togglePerms('createPerms', this.value)">
+          <option value="staff">👤 Nhân viên (phân quyền thủ công)</option>
+          <option value="superadmin">👑 Super Admin (toàn quyền)</option>
+        </select>
+      </div>
+      <div id="createPerms" class="form-group" style="margin:0;">
+        <label class="form-label">Quyền truy cập</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;background:#f9fdf9;border:1px solid #e2f0e8;border-radius:8px;padding:.75rem;">
+          {{#each allPermissions}}
+          <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.875rem;color:#333;">
+            <input type="checkbox" name="permissions" value="{{this}}" style="accent-color:#1a7f5a;width:15px;height:15px;" />
+            {{permLabel this}}
+          </label>
+          {{/each}}
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;padding-top:.5rem;border-top:1px solid #f0f0ee;">
+        <button type="button" onclick="closeModal('createModal')" class="btn btn--outline">Hủy</button>
+        <button type="submit" class="btn btn--primary">Tạo tài khoản</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL SỬA TÀI KHOẢN -->
+<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:#fff;border-radius:12px;width:100%;max-width:540px;overflow:hidden;max-height:90vh;overflow-y:auto;">
+    <div style="background:#1a7f5a;padding:1rem 1.25rem;display:flex;justify-content:space-between;align-items:center;">
+      <div style="color:#fff;font-weight:600;font-size:1rem;">Chỉnh sửa tài khoản</div>
+      <button onclick="closeModal('editModal')" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;">✕</button>
+    </div>
+    <form id="editForm" method="POST" style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem;">
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Họ và tên</label>
+        <input class="form-input" type="text" name="name" id="editName" required />
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" name="email" id="editEmail" required />
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Chức vụ</label>
+        <select class="form-input" name="role" id="editRole" onchange="togglePerms('editPerms', this.value)">
+          <option value="staff">👤 Nhân viên (phân quyền thủ công)</option>
+          <option value="superadmin">👑 Super Admin (toàn quyền)</option>
+        </select>
+      </div>
+      <div id="editPerms" class="form-group" style="margin:0;">
+        <label class="form-label">Quyền truy cập</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;background:#f9fdf9;border:1px solid #e2f0e8;border-radius:8px;padding:.75rem;" id="editPermsGrid">
+          {{#each allPermissions}}
+          <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.875rem;color:#333;">
+            <input type="checkbox" class="edit-perm-chk" name="permissions" value="{{this}}" style="accent-color:#1a7f5a;width:15px;height:15px;" />
+            {{permLabel this}}
+          </label>
+          {{/each}}
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;padding-top:.5rem;border-top:1px solid #f0f0ee;">
+        <button type="button" onclick="closeModal('editModal')" class="btn btn--outline">Hủy</button>
+        <button type="submit" class="btn btn--primary">Lưu thay đổi</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL ĐẶT LẠI MẬT KHẨU -->
+<div id="resetPwdModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:#fff;border-radius:12px;width:100%;max-width:420px;overflow:hidden;">
+    <div style="background:#1a7f5a;padding:1rem 1.25rem;display:flex;justify-content:space-between;align-items:center;">
+      <div style="color:#fff;font-weight:600;font-size:1rem;">Đặt lại mật khẩu — <span id="resetPwdName"></span></div>
+      <button onclick="closeModal('resetPwdModal')" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;">✕</button>
+    </div>
+    <div style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem;">
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Mật khẩu mới</label>
+        <input class="form-input" type="password" id="newPwdInput" placeholder="Tối thiểu 6 ký tự" minlength="6" />
+      </div>
+      <div id="resetPwdMsg" style="display:none;font-size:.85rem;padding:.5rem .75rem;border-radius:6px;"></div>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+        <button onclick="closeModal('resetPwdModal')" class="btn btn--outline">Hủy</button>
+        <button onclick="doResetPassword()" class="btn btn--primary">Đặt lại mật khẩu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var _resetPwdId = null;
+var _allPerms = {{json allPermissions}};
+
+// Label hiển thị cho quyền
+var PERM_LABELS = {
+  news: '📝 Viết tin tức',
+  about: 'ℹ️ Về chúng tôi',
+  media: '🖼️ Banner & Logo',
+  uploads: '📁 Quản lý Uploads',
+  download: '📥 Link tải xuống',
+  phones: '📋 Danh sách SĐT',
+  contact: '💬 Xem tin nhắn',
+};
+
+function openCreateModal() {
+  document.getElementById('createModal').style.display = 'flex';
+  togglePerms('createPerms', 'staff');
+}
+
+function openEditModal(account) {
+  var form = document.getElementById('editForm');
+  form.action = '/admin/accounts/' + account.id + '/update';
+  document.getElementById('editName').value = account.name;
+  document.getElementById('editEmail').value = account.email;
+  document.getElementById('editRole').value = account.role;
+  // Set checkboxes
+  var chks = document.querySelectorAll('.edit-perm-chk');
+  chks.forEach(function(c) {
+    c.checked = account.permissions.includes(c.value);
+  });
+  togglePerms('editPerms', account.role);
+  document.getElementById('editModal').style.display = 'flex';
+}
+
+function openResetPwdModal(id, name) {
+  _resetPwdId = id;
+  document.getElementById('resetPwdName').textContent = name;
+  document.getElementById('newPwdInput').value = '';
+  document.getElementById('resetPwdMsg').style.display = 'none';
+  document.getElementById('resetPwdModal').style.display = 'flex';
+}
+
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+function togglePerms(containerId, role) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  el.style.display = role === 'superadmin' ? 'none' : '';
+}
+
+function doResetPassword() {
+  var pwd = document.getElementById('newPwdInput').value;
+  var msgEl = document.getElementById('resetPwdMsg');
+  if (!pwd || pwd.length < 6) {
+    msgEl.style.display = '';
+    msgEl.style.background = '#fef2f2';
+    msgEl.style.color = '#dc2626';
+    msgEl.textContent = 'Mật khẩu phải có ít nhất 6 ký tự.';
+    return;
+  }
+  fetch('/admin/accounts/' + _resetPwdId + '/reset-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ new_password: pwd })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    msgEl.style.display = '';
+    if (d.ok) {
+      msgEl.style.background = '#f0fdf4';
+      msgEl.style.color = '#15803d';
+      msgEl.textContent = d.message;
+      setTimeout(function(){ closeModal('resetPwdModal'); }, 1500);
+    } else {
+      msgEl.style.background = '#fef2f2';
+      msgEl.style.color = '#dc2626';
+      msgEl.textContent = d.message;
+    }
+  });
+}
+
+// Close modals on backdrop click
+['createModal','editModal','resetPwdModal'].forEach(function(id){
+  document.getElementById(id).addEventListener('click', function(e){
+    if (e.target === this) closeModal(id);
+  });
+});
+</script>

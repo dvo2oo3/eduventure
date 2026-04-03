@@ -4,13 +4,59 @@
     <a href="/admin/news/create" class="btn btn--primary">+ Thêm tin mới</a>
   </div>
 
+  <!-- BỘ LỌC -->
+  <div class="admin-card" style="margin-bottom:1rem;">
+    <form method="GET" action="/admin/news" id="filterForm" style="padding:1rem 1.25rem;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;">
+
+      <input class="form-input" type="text" name="q" value="{{filter.q}}"
+        placeholder="Tìm tiêu đề, mô tả..."
+        style="flex:1;min-width:160px;padding:.45rem .75rem;font-size:.875rem;" />
+
+      <select name="category" class="form-input" style="max-width:170px;padding:.45rem .75rem;font-size:.875rem;" onchange="this.form.submit()">
+        <option value="">Tất cả loại</option>
+        <option value="highlight" {{#if (eq filter.category 'highlight')}}selected{{/if}}>📌 Tin nổi bật</option>
+        <option value="program"   {{#if (eq filter.category 'program')}}selected{{/if}}>📚 Chương trình</option>
+      </select>
+
+      <select name="status" class="form-input" style="max-width:160px;padding:.45rem .75rem;font-size:.875rem;" onchange="this.form.submit()">
+        <option value="">Tất cả trạng thái</option>
+        <option value="visible" {{#if (eq filter.status 'visible')}}selected{{/if}}>Đang hiện</option>
+        <option value="hidden"  {{#if (eq filter.status 'hidden')}}selected{{/if}}>Đang ẩn</option>
+        <option value="pinned"  {{#if (eq filter.status 'pinned')}}selected{{/if}}>Đang ghim</option>
+      </select>
+
+      <div style="display:flex;align-items:center;gap:.35rem;">
+        <span style="font-size:.82rem;color:#888;white-space:nowrap;">Từ ngày</span>
+        <input type="date" name="date_from" value="{{filter.date_from}}"
+          class="form-input" style="padding:.42rem .6rem;font-size:.875rem;max-width:150px;"
+          onchange="this.form.submit()" />
+      </div>
+      <div style="display:flex;align-items:center;gap:.35rem;">
+        <span style="font-size:.82rem;color:#888;white-space:nowrap;">Đến ngày</span>
+        <input type="date" name="date_to" value="{{filter.date_to}}"
+          class="form-input" style="padding:.42rem .6rem;font-size:.875rem;max-width:150px;"
+          onchange="this.form.submit()" />
+      </div>
+
+      <button type="submit" class="btn btn--sm btn--outline">Lọc</button>
+      {{#if hasFilter}}
+      <a href="/admin/news" class="btn btn--sm btn--ghost">✕ Xóa bộ lọc</a>
+      {{/if}}
+    </form>
+    {{#if hasFilter}}
+    <div style="padding:0 1.25rem .6rem;font-size:.82rem;color:#888;">
+      Tìm thấy <strong>{{total}}</strong> kết quả
+    </div>
+    {{/if}}
+  </div>
+
   <div class="admin-card">
     <table class="admin-table">
       <thead>
         <tr>
           <th style="width:40%">Tiêu đề</th>
           <th>Loại</th>
-          <th>Ngày sự kiện</th>
+          <th>Ngày tạo</th>
           <th>Trạng thái</th>
           <th>Ghim</th>
           <th style="text-align:right">Hành động</th>
@@ -22,8 +68,12 @@
           <td>
             <a href="/admin/news/{{id}}/edit" class="table-link">{{truncate title 70}}</a>
           </td>
-          <td><span class="badge {{#if (eq category 'program')}}badge--green{{else}}badge--blue{{/if}}">{{#if (eq category 'program')}}Chương trình{{else}}Tin tức{{/if}}</span></td>
-          <td>{{#if event_date}}{{formatDate event_date}}{{else}}—{{/if}}</td>
+          <td>
+            <span class="badge {{#if (eq category 'program')}}badge--green{{else}}badge--blue{{/if}}">
+              {{#if (eq category 'program')}}Chương trình{{else}}Tin nổi bật{{/if}}
+            </span>
+          </td>
+          <td>{{#if created_at}}{{formatDate created_at}}{{else}}—{{/if}}</td>
           <td>
             <button class="toggle-btn {{#if is_visible}}toggle-btn--on{{else}}toggle-btn--off{{/if}}"
               onclick="toggleField({{id}},'visible',this)"
@@ -47,15 +97,22 @@
             </div>
           </td>
         </tr>
+        {{else}}
+        <tr>
+          <td colspan="6" style="text-align:center;padding:2rem;color:#888;">
+            {{#if hasFilter}}Không có tin nào khớp bộ lọc.{{else}}Chưa có tin tức nào.{{/if}}
+          </td>
+        </tr>
         {{/each}}
       </tbody>
     </table>
 
     <!-- PAGINATION -->
-    {{#if (ne totalPages 1)}}
+    {{#if (gt totalPages 1)}}
     <div class="pagination" style="padding:1rem 1.25rem;">
       {{#each (range 1 totalPages)}}
-      <a href="/admin/news?page={{this}}" class="pagination__btn {{#if (eq this ../page)}}pagination__btn--active{{/if}}">{{this}}</a>
+      <a href="/admin/news?page={{this}}{{#if ../filter.q}}&q={{../filter.q}}{{/if}}{{#if ../filter.category}}&category={{../filter.category}}{{/if}}{{#if ../filter.status}}&status={{../filter.status}}{{/if}}{{#if ../filter.date_from}}&date_from={{../filter.date_from}}{{/if}}{{#if ../filter.date_to}}&date_to={{../filter.date_to}}{{/if}}"
+         class="pagination__btn {{#if (eq this ../page)}}pagination__btn--active{{/if}}">{{this}}</a>
       {{/each}}
     </div>
     {{/if}}

@@ -465,3 +465,195 @@ async function toggleGlobalPause(btn) {
   }
 }
 </script>
+<!-- ===== BẢNG TRẠNG THÁI TẠM DỪNG ===== -->
+<div id="status-panel" class="admin-card" style="margin-top:1.5rem;">
+  <div class="admin-card__header" style="cursor:pointer;user-select:none;" onclick="toggleStatusPanel()">
+    <div style="display:flex;align-items:center;gap:.6rem;">
+      <span id="status-panel-icon" style="font-size:1.1rem;">📋</span>
+      <div class="admin-card__title">Bảng trạng thái tạm dừng</div>
+      <span id="status-badge-paused" style="display:none;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:999px;font-size:.75rem;font-weight:600;padding:2px 10px;"></span>
+    </div>
+    <span id="status-panel-toggle" style="font-size:.8rem;color:var(--color-text-secondary);">▼ Thu gọn</span>
+  </div>
+  <div id="status-panel-body" style="padding:1.25rem;">
+    <div id="status-table-wrap">
+      <div style="text-align:center;padding:2rem;color:var(--color-text-secondary);font-size:.875rem;">Đang tải...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var _panelOpen = true;
+
+  function toggleStatusPanel() {
+    _panelOpen = !_panelOpen;
+    document.getElementById('status-panel-body').style.display = _panelOpen ? '' : 'none';
+    document.getElementById('status-panel-toggle').textContent = _panelOpen ? '▼ Thu gọn' : '▶ Mở rộng';
+  }
+  window.toggleStatusPanel = toggleStatusPanel;
+
+  function renderStatusTable(programs, downloads, globalPaused) {
+    var grades = ['lop1','lop2','lop3','lop4','lop5'];
+    var gradeLabels = {lop1:'Lớp 1',lop2:'Lớp 2',lop3:'Lớp 3',lop4:'Lớp 4',lop5:'Lớp 5'};
+
+    // Đếm số mục đang tạm dừng
+    var pausedCount = 0;
+    if (globalPaused) pausedCount++;
+    programs.forEach(function(p) {
+      if (!p.is_active) pausedCount++;
+      grades.forEach(function(g) {
+        var dl = (downloads[p.id] || []).find(function(d){ return d.grade === g; });
+        if (dl && !dl.grade_active) pausedCount++;
+      });
+    });
+
+    // Cập nhật badge
+    var badge = document.getElementById('status-badge-paused');
+    if (pausedCount > 0) {
+      badge.textContent = pausedCount + ' đang tạm dừng';
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+
+    if (programs.length === 0) {
+      document.getElementById('status-table-wrap').innerHTML =
+        '<div style="text-align:center;padding:2rem;color:var(--color-text-secondary);font-size:.875rem;">Chưa có chương trình nào.</div>';
+      return;
+    }
+
+    var html = '<div style="overflow-x:auto;">';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:.875rem;">';
+
+    // Header
+    html += '<thead><tr style="background:#f9fafb;">';
+    html += '<th style="text-align:left;padding:.6rem .875rem;border-bottom:2px solid #e5e7eb;font-weight:600;color:#374151;white-space:nowrap;">Chương trình</th>';
+    html += '<th style="text-align:center;padding:.6rem .5rem;border-bottom:2px solid #e5e7eb;font-weight:600;color:#374151;">Trạng thái CT</th>';
+    grades.forEach(function(g) {
+      html += '<th style="text-align:center;padding:.6rem .5rem;border-bottom:2px solid #e5e7eb;font-weight:600;color:#374151;">' + gradeLabels[g] + '</th>';
+    });
+    html += '</tr></thead><tbody>';
+
+    programs.forEach(function(p, idx) {
+      var rowBg = idx % 2 === 0 ? '#ffffff' : '#fafafa';
+      var programActive = p.is_active == 1 || p.is_active === true;
+
+      html += '<tr style="background:' + rowBg + ';">';
+
+      // Tên chương trình
+      html += '<td style="padding:.65rem .875rem;border-bottom:1px solid #f0f0ee;font-weight:500;white-space:nowrap;">';
+      html += '<div>' + p.name + '</div>';
+      html += '<div style="font-size:.75rem;color:var(--color-text-secondary);">' + p.tiet + ' tiết</div>';
+      html += '</td>';
+
+      // Trạng thái chương trình
+      html += '<td style="text-align:center;padding:.65rem .5rem;border-bottom:1px solid #f0f0ee;">';
+      if (!programActive) {
+        html += '<span style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:999px;font-size:.75rem;font-weight:600;padding:3px 10px;white-space:nowrap;">⏸ Tạm dừng</span>';
+      } else {
+        html += '<span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:999px;font-size:.75rem;font-weight:600;padding:3px 10px;white-space:nowrap;">✓ Hoạt động</span>';
+      }
+      html += '</td>';
+
+      // Từng khối
+      grades.forEach(function(g) {
+        var dl = (downloads[p.id] || []).find(function(d){ return d.grade === g; });
+        html += '<td style="text-align:center;padding:.65rem .5rem;border-bottom:1px solid #f0f0ee;">';
+        if (!dl) {
+          html += '<span style="color:#d1d5db;font-size:.8rem;">—</span>';
+        } else if (!programActive) {
+          // CT tạm dừng → khối cũng bị ảnh hưởng
+          html += '<span style="color:#f87171;font-size:.8rem;" title="Chương trình đang tạm dừng">⊘</span>';
+        } else if (dl.grade_active == 0 || dl.grade_active === false) {
+          html += '<span style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:4px;font-size:.75rem;font-weight:600;padding:2px 8px;white-space:nowrap;">⏸</span>';
+        } else {
+          html += '<span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:4px;font-size:.75rem;padding:2px 8px;white-space:nowrap;">✓</span>';
+        }
+        html += '</td>';
+      });
+
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+
+    // Chú thích
+    html += '<div style="margin-top:.875rem;display:flex;gap:1.25rem;flex-wrap:wrap;font-size:.8rem;color:var(--color-text-secondary);">';
+    html += '<span><span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:4px;padding:1px 7px;font-weight:600;">✓</span> Hoạt động</span>';
+    html += '<span><span style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:4px;padding:1px 7px;font-weight:600;">⏸</span> Tạm dừng khối</span>';
+    html += '<span><span style="color:#f87171;">⊘</span> Bị ảnh hưởng do CT tạm dừng</span>';
+    html += '<span><span style="color:#d1d5db;">—</span> Chưa có dữ liệu</span>';
+    html += '</div>';
+
+    document.getElementById('status-table-wrap').innerHTML = html;
+  }
+
+  // Load dữ liệu tất cả chương trình khi trang load
+  async function loadStatusTable() {
+    try {
+      var programBtns = document.querySelectorAll('[id^="ptab-"]');
+      var programIds = Array.from(programBtns).map(function(b){ return b.id.replace('ptab-',''); });
+
+      if (programIds.length === 0) {
+        document.getElementById('status-table-wrap').innerHTML =
+          '<div style="text-align:center;padding:2rem;color:var(--color-text-secondary);font-size:.875rem;">Chưa có chương trình nào.</div>';
+        return;
+      }
+
+      // Lấy downloads cho tất cả chương trình
+      var downloadsMap = {};
+      await Promise.all(programIds.map(async function(id) {
+        var res = await fetch('/admin/download/program/' + id + '/links');
+        var data = await res.json();
+        if (data.ok) downloadsMap[id] = data.downloads;
+      }));
+
+      // Lấy thông tin programs từ DOM (đã render sẵn trong Handlebars)
+      var programs = programIds.map(function(id) {
+        var btn = document.getElementById('ptab-' + id);
+        var nameEl = btn.querySelector('span:first-child');
+        var tietEl = btn.querySelector('span:last-child');
+        // Lấy is_active từ nút toggle trong panel
+        var toggleBtn = document.querySelector('#ppanel-' + id + ' [data-active]');
+        var isActive = toggleBtn ? (toggleBtn.dataset.active === '1' || toggleBtn.dataset.active === 'true' || toggleBtn.dataset.active === '1') : true;
+        return {
+          id: id,
+          name: nameEl ? nameEl.textContent.trim() : 'CT ' + id,
+          tiet: tietEl ? tietEl.textContent.replace(' tiết','').trim() : '',
+          is_active: isActive ? 1 : 0
+        };
+      });
+
+      var globalPaused = document.getElementById('btn-global-pause').dataset.paused === '1';
+      renderStatusTable(programs, downloadsMap, globalPaused);
+    } catch(e) {
+      document.getElementById('status-table-wrap').innerHTML =
+        '<div style="color:#dc2626;font-size:.875rem;">Lỗi tải trạng thái: ' + e.message + '</div>';
+    }
+  }
+
+  // Cập nhật bảng sau mỗi lần toggle
+  var _origToggleProgram = window.toggleProgram;
+  window.toggleProgram = async function(id, btn) {
+    await _origToggleProgram(id, btn);
+    loadStatusTable();
+  };
+
+  var _origToggleGrade = window.toggleGrade;
+  window.toggleGrade = async function(programId) {
+    await _origToggleGrade(programId);
+    loadStatusTable();
+  };
+
+  var _origToggleGlobalPause = window.toggleGlobalPause;
+  window.toggleGlobalPause = async function(btn) {
+    await _origToggleGlobalPause(btn);
+    loadStatusTable();
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(loadStatusTable, 300);
+  });
+})();
+</script>

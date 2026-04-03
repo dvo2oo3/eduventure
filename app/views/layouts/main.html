@@ -137,6 +137,18 @@
           <span>📍 Hà Nội, Việt Nam</span>
           <span>📧 info@eduventure.vn</span>
           <span>📞 0243 xxx xxxx</span>
+          {{#if siteFacebookUrl}}
+          <a href="{{siteFacebookUrl}}" target="_blank" rel="noopener" class="footer__social-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            Facebook
+          </a>
+          {{/if}}
+          {{#if siteZaloUrl}}
+          <a href="{{siteZaloUrl}}" target="_blank" rel="noopener" class="footer__social-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;"><rect x="2" y="5" width="20" height="14" rx="3"/><text x="12" y="15.5" text-anchor="middle" font-size="7" font-weight="bold" fill="#1a7f5a" font-family="Arial">Zalo</text></svg>
+            Zalo
+          </a>
+          {{/if}}
         </div>
       </div>
     </div>

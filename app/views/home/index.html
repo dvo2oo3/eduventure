@@ -2,7 +2,8 @@
 {{#if siteBannerActive}}
 <section class="hero"
   style="background-image:url('{{siteBannerUrl}}');background-size:{{siteBannerZoom}}%;background-position:{{siteBannerPosition}};position:relative;">
-  <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
+  <div id="heroOverlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.45);" data-opacity="{{#if siteBannerOverlayOpacity}}{{siteBannerOverlayOpacity}}{{else}}45{{/if}}"></div>
+  <script>!function(){var o=document.getElementById('heroOverlay');if(o){var v=parseInt(o.dataset.opacity||'45');o.style.background='rgba(0,0,0,'+(v/100)+')'}}()</script>
   <div class="container hero__inner" style="position:relative;z-index:1;">
     <div class="hero__content">
       <div class="hero__badge">Kỹ năng sống · Lớp 1 → Lớp 5</div>

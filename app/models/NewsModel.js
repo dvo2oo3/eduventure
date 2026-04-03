@@ -55,13 +55,23 @@ const NewsModel = {
   },
 
   // ---- Admin ----
-  async getAll({ page = 1, limit = 10 } = {}) {
+  async getAll({ page = 1, limit = 10, category = '', q = '', status = '', date_from = '', date_to = '' } = {}) {
     const offset = (page - 1) * limit;
+    const conditions = [];
+    const params = [];
+    if (category) { conditions.push('category = ?'); params.push(category); }
+    if (q) { conditions.push('(title LIKE ? OR summary LIKE ?)'); params.push(`%${q}%`, `%${q}%`); }
+    if (status === 'visible') { conditions.push('is_visible = 1'); }
+    else if (status === 'hidden') { conditions.push('is_visible = 0'); }
+    else if (status === 'pinned') { conditions.push('is_pinned = 1'); }
+    if (date_from) { conditions.push('DATE(created_at) >= ?'); params.push(date_from); }
+    if (date_to) { conditions.push('DATE(created_at) <= ?'); params.push(date_to); }
+    const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
     const [rows] = await db.query(
-      'SELECT * FROM news ORDER BY created_at DESC LIMIT ? OFFSET ?',
-      [limit, offset]
+      `SELECT * FROM news ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
     );
-    const [[{ total }]] = await db.query('SELECT COUNT(*) as total FROM news');
+    const [[{ total }]] = await db.query(`SELECT COUNT(*) as total FROM news ${where}`, params);
     return { rows, total, page, limit, totalPages: Math.ceil(total / limit) };
   },
 

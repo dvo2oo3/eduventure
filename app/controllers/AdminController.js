@@ -70,6 +70,9 @@ const AdminController = {
     req.session.adminId = admin.id;
     req.session.adminName = admin.name;
     req.session.adminEmail = admin.email;
+    req.session.adminRole = admin.role || 'staff';
+    const rawPerms = admin.permissions || '';
+    req.session.adminPermissions = admin.role === 'superadmin' ? require('../models/AdminModel').ALL_PERMISSIONS : rawPerms.split(',').filter(Boolean);
     res.redirect('/admin/dashboard');
   },
 
@@ -95,14 +98,16 @@ const AdminController = {
 
   // ---- TIN NỔI BẬT / CHƯƠNG TRÌNH ----
   async newsList(req, res) {
-    const { page = 1 } = req.query;
-    const data = await NewsModel.getAll({ page: parseInt(page) });
+    const { page = 1, category = '', q = '', status = '', date_from = '', date_to = '' } = req.query;
+    const data = await NewsModel.getAll({ page: parseInt(page), category, q, status, date_from, date_to });
     res.render('admin/news', {
       layout: 'admin',
       title: 'Quản lý tin tức — Admin',
       admin: { name: req.session.adminName },
       activeMenu: 'news',
       ...data,
+      filter: { category, q, status, date_from, date_to },
+      hasFilter: !!(category || q || status || date_from || date_to),
       success: req.flash('success'),
       error: req.flash('error')
     });
@@ -420,7 +425,11 @@ const AdminController = {
   // ---- CONTACT SETTINGS ----
   async contactSettingPage(req, res) {
     const settings = await ContactModel.getSettings();
-    const { rows: messages, unread, total } = await ContactModel.getMessages();
+    const q = (req.query.q || '').trim();
+    const page = parseInt(req.query.page) || 1;
+    const { rows: messages, unread, total, totalPages } = q
+      ? await ContactModel.searchMessages({ q, page })
+      : await ContactModel.getMessages({ page });
     // Tạo map id -> message đầy đủ cho modal (bao gồm nội dung gốc)
     const msgMap = {};
     messages.forEach(m => {
@@ -442,6 +451,9 @@ const AdminController = {
       messages,
       unread,
       total,
+      totalPages,
+      page,
+      q,
       msgJson: JSON.stringify(msgMap),
       success: req.flash('success'),
       error: req.flash('error')
@@ -472,6 +484,17 @@ const AdminController = {
     await ContactModel.deleteMessage(req.params.id);
     req.flash('success', 'Đã xóa tin nhắn.');
     res.redirect('/admin/contact');
+  },
+
+  async contactMessageBulkDelete(req, res) {
+    try {
+      const { ids } = req.body;
+      if (!ids || !ids.length) return res.json({ ok: false, message: 'Không có tin nhắn nào được chọn.' });
+      const count = await ContactModel.deleteMany(ids.map(Number));
+      res.json({ ok: true, message: `Đã xóa ${count} tin nhắn.` });
+    } catch (e) {
+      res.json({ ok: false, message: e.message });
+    }
   },
   changePasswordPage(req, res) {
     res.render('admin/change-password', {
@@ -598,6 +621,90 @@ const AdminController = {
       res.json({ ok: false, message: err.message });
     }
   },
+
+  // ---- QUẢN LÝ TÀI KHOẢN ----
+  async accountsPage(req, res) {
+    const accounts = await AdminModel.getAll();
+    res.render('admin/accounts', {
+      layout: 'admin',
+      title: 'Quản lý tài khoản — Admin',
+      admin: { name: req.session.adminName, email: req.session.adminEmail },
+      activeMenu: 'accounts',
+      currentId: req.session.adminId,
+      accounts,
+      allPermissions: AdminModel.ALL_PERMISSIONS,
+      success: req.flash('success'),
+      error: req.flash('error')
+    });
+  },
+
+  async accountCreate(req, res) {
+    try {
+      const { name, email, password, role } = req.body;
+      const permissions = Array.isArray(req.body.permissions) ? req.body.permissions : (req.body.permissions ? [req.body.permissions] : []);
+      if (!name || !email || !password) {
+        req.flash('error', 'Vui lòng điền đầy đủ họ tên, email và mật khẩu.');
+        return res.redirect('/admin/accounts');
+      }
+      const existing = await AdminModel.findByEmail(email);
+      if (existing) {
+        req.flash('error', 'Email này đã được sử dụng.');
+        return res.redirect('/admin/accounts');
+      }
+      await AdminModel.create({ name, email, password, role, permissions });
+      req.flash('success', 'Tạo tài khoản thành công!');
+      res.redirect('/admin/accounts');
+    } catch (e) {
+      req.flash('error', 'Lỗi: ' + e.message);
+      res.redirect('/admin/accounts');
+    }
+  },
+
+  async accountUpdate(req, res) {
+    try {
+      const { id } = req.params;
+      // Không cho sửa chính mình thành non-superadmin nếu là superadmin duy nhất
+      const { name, email, role } = req.body;
+      const permissions = Array.isArray(req.body.permissions) ? req.body.permissions : (req.body.permissions ? [req.body.permissions] : []);
+      await AdminModel.update(id, { name, email, role, permissions });
+      req.flash('success', 'Cập nhật tài khoản thành công!');
+      res.redirect('/admin/accounts');
+    } catch (e) {
+      req.flash('error', 'Lỗi: ' + e.message);
+      res.redirect('/admin/accounts');
+    }
+  },
+
+  async accountResetPassword(req, res) {
+    try {
+      const { id } = req.params;
+      const { new_password } = req.body;
+      if (!new_password || new_password.length < 6) {
+        return res.json({ ok: false, message: 'Mật khẩu phải có ít nhất 6 ký tự.' });
+      }
+      await AdminModel.resetPassword(id, new_password);
+      res.json({ ok: true, message: 'Đặt lại mật khẩu thành công!' });
+    } catch (e) {
+      res.json({ ok: false, message: e.message });
+    }
+  },
+
+  async accountDelete(req, res) {
+    try {
+      const { id } = req.params;
+      if (parseInt(id) === req.session.adminId) {
+        req.flash('error', 'Không thể xóa tài khoản đang đăng nhập.');
+        return res.redirect('/admin/accounts');
+      }
+      await AdminModel.delete(id);
+      req.flash('success', 'Đã xóa tài khoản.');
+      res.redirect('/admin/accounts');
+    } catch (e) {
+      req.flash('error', 'Lỗi: ' + e.message);
+      res.redirect('/admin/accounts');
+    }
+  },
+
 };
 
 module.exports = AdminController;
@@ -620,7 +727,7 @@ const AdminControllerExtension = {
   async mediaUpdate(req, res) {
     try {
       const AboutModel = require('../models/AboutModel');
-      for (const key of ['site_name', 'banner_title', 'banner_subtitle', 'logo_mode', 'logo_text', 'logo_size', 'banner_position', 'banner_zoom', 'logo_position', 'logo_zoom', 'event_position', 'event_zoom', 'event_banner_title', 'event_banner_link', 'banner_text_color', 'event_text_color', 'favicon_shape', 'favicon_position', 'og_title', 'og_description']) {
+      for (const key of ['site_name', 'banner_title', 'banner_subtitle', 'logo_mode', 'logo_text', 'logo_size', 'banner_position', 'banner_zoom', 'logo_position', 'logo_zoom', 'event_position', 'event_zoom', 'event_banner_title', 'event_banner_link', 'banner_text_color', 'event_text_color', 'favicon_shape', 'favicon_position', 'og_title', 'og_description', 'facebook_url', 'zalo_url', 'banner_overlay_opacity']) {
         if (req.body[key] !== undefined) await AboutModel.upsert(key, { title: null, content: req.body[key] });
       }
       await AboutModel.upsert('banner_active', { title: null, content: req.body.banner_active === '1' ? '1' : '0' });
