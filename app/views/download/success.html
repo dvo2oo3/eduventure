@@ -1,79 +1,239 @@
-<section class="page-header">
-  <div class="container">
-    <h1 class="page-header__title">Tải xuống phần mềm</h1>
-    <p class="page-header__sub">Xác nhận thành công — link tải của bạn đã sẵn sàng</p>
-  </div>
-</section>
+<style>
+.success-wrap {
+  min-height: 80vh;
+  padding: 3rem 1rem 4rem;
+  background: linear-gradient(160deg, #f0faf5 0%, #fff 60%);
+}
+.success-inner { max-width: 580px; margin: 0 auto; }
 
-<section class="section">
-  <div class="container" style="max-width:600px;margin:0 auto;">
+/* Header */
+.success-hero { text-align: center; margin-bottom: 2.5rem; }
+.success-icon-ring {
+  width: 72px; height: 72px;
+  background: #fff;
+  border: 2px solid var(--green-100);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.25rem;
+  box-shadow: 0 0 0 8px var(--green-50);
+}
+.success-title { font-size: 1.625rem; font-weight: 800; color: var(--gray-900); margin-bottom: .5rem; }
+.success-sub { color: var(--gray-600); font-size: .9375rem; line-height: 1.6; }
 
-    <!-- Header xác nhận -->
-    <div style="text-align:center;margin-bottom:2rem;">
-      <div style="width:72px;height:72px;background:#e8f5f0;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1a7f5a" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+/* Grade pills nav */
+.grade-nav {
+  display: flex; gap: .5rem; flex-wrap: wrap; justify-content: center;
+  margin-bottom: 1.5rem;
+}
+.grade-pill {
+  padding: .4rem .9rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--gray-100);
+  background: #fff;
+  font-size: .8125rem; font-weight: 600;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: all .18s;
+}
+.grade-pill:hover { border-color: var(--green-500); color: var(--green-500); }
+.grade-pill.active { background: var(--green-500); border-color: var(--green-500); color: #fff; }
+
+/* Card */
+.grade-panel { display: none; }
+.grade-panel.active { display: block; }
+
+.dl-main-card {
+  background: #fff;
+  border: 1.5px solid var(--gray-100);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,.06);
+  margin-bottom: 1rem;
+}
+.dl-main-card__header {
+  background: linear-gradient(135deg, var(--green-500) 0%, #22a06b 100%);
+  padding: 1.5rem 1.5rem 1.25rem;
+  color: #fff;
+  display: flex; align-items: center; gap: 1rem;
+}
+.dl-main-card__icon {
+  width: 48px; height: 48px;
+  background: rgba(255,255,255,.2);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.dl-main-card__grade { font-size: .75rem; font-weight: 700; opacity: .8; letter-spacing: .05em; text-transform: uppercase; margin-bottom: .2rem; }
+.dl-main-card__name { font-size: 1.0625rem; font-weight: 700; }
+.dl-main-card__body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: .625rem; }
+
+/* Link buttons */
+.dl-btn {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .8rem 1.1rem;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: .9rem; font-weight: 600;
+  transition: all .18s;
+  border: 1.5px solid transparent;
+}
+.dl-btn__left { display: flex; align-items: center; gap: .6rem; }
+.dl-btn__badge {
+  font-size: .65rem; font-weight: 700;
+  padding: .15rem .45rem;
+  border-radius: 4px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.dl-btn--primary {
+  background: var(--green-500);
+  color: #fff;
+  border-color: var(--green-500);
+  box-shadow: 0 2px 8px rgba(26,127,90,.2);
+}
+.dl-btn--primary:hover {
+  background: var(--green-600);
+  border-color: var(--green-600);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(26,127,90,.3);
+}
+.dl-btn--primary .dl-btn__badge { background: rgba(255,255,255,.25); color: #fff; }
+
+.dl-btn--mirror {
+  background: var(--gray-50);
+  color: var(--gray-600);
+  border-color: var(--gray-100);
+}
+.dl-btn--mirror:hover {
+  background: var(--green-50);
+  border-color: var(--green-500);
+  color: var(--green-600);
+}
+.dl-btn--mirror .dl-btn__badge { background: var(--gray-100); color: var(--gray-600); }
+
+/* Footer note */
+.success-note {
+  text-align: center;
+  font-size: .8rem;
+  color: var(--gray-400);
+  margin-bottom: 1.75rem;
+  line-height: 1.6;
+}
+.success-back {
+  display: flex; justify-content: center;
+}
+.success-back a {
+  display: inline-flex; align-items: center; gap: .4rem;
+  color: var(--gray-600); font-size: .875rem; text-decoration: none;
+  padding: .5rem .875rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--gray-100);
+  transition: all .15s;
+}
+.success-back a:hover { border-color: var(--green-500); color: var(--green-500); background: var(--green-50); }
+</style>
+
+<div class="success-wrap">
+  <div class="success-inner">
+
+    <!-- Hero -->
+    <div class="success-hero">
+      <div class="success-icon-ring">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--green-500)" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
       </div>
-      <h2 style="margin-bottom:.4rem;">Xác nhận thành công!</h2>
-      <p style="color:var(--gray-600);">
-        Xin chào <strong>{{name}}</strong>!
+      <h2 class="success-title">Xác nhận thành công!</h2>
+      <p class="success-sub">
+        Xin chào <strong style="color:var(--gray-900);">{{name}}</strong>!
         {{#if multiGrade}}
-        Bạn có quyền tải <strong>{{grades.length}} khối lớp</strong> dưới đây.
+        Bạn có quyền tải <strong style="color:var(--green-500);">{{grades.length}} khối lớp</strong>.<br>Chọn khối bên dưới để xem link tải.
         {{else}}
-        Đây là link tải phần mềm của bạn.
+        Link tải phần mềm của bạn đã sẵn sàng.
         {{/if}}
       </p>
     </div>
 
-    <!-- Từng khối lớp -->
-    {{#each grades}}
-    <div class="dl-card {{#if @first}}dl-card--primary{{/if}}" style="margin-bottom:1.25rem;">
-      <div class="dl-card__badge">{{gradeName}}</div>
-      <div class="dl-card__top" style="margin-top:.5rem;">
-        <div class="dl-card__icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a7f5a" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </div>
-        <div>
-          <div class="dl-card__name">{{label}}</div>
-          <div class="dl-card__info">Nhấn link bên dưới để tải xuống</div>
-        </div>
-      </div>
+    <!-- Tab pills -->
+    {{#if multiGrade}}
+    <div class="grade-nav" id="gradeNav">
+      {{#each grades}}
+      <button class="grade-pill {{#if @first}}active{{/if}}" onclick="switchGrade({{@index}}, this)">{{gradeName}}</button>
+      {{/each}}
+    </div>
+    {{/if}}
 
-      <div style="display:flex;flex-direction:column;gap:.6rem;margin-top:1rem;">
-        {{#if url_main}}
-        <a href="{{url_main}}" class="btn btn--primary" target="_blank" rel="noopener">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          {{label_main}}
-        </a>
-        {{/if}}
-        {{#if url_mirror1}}
-        <a href="{{url_mirror1}}" class="btn btn--outline" target="_blank" rel="noopener">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          {{label_mirror1}}
-        </a>
-        {{/if}}
-        {{#if url_mirror2}}
-        <a href="{{url_mirror2}}" class="btn btn--outline" target="_blank" rel="noopener">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          {{label_mirror2}}
-        </a>
-        {{/if}}
-        {{#if url_mirror3}}
-        <a href="{{url_mirror3}}" class="btn btn--outline" target="_blank" rel="noopener">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          {{label_mirror3}}
-        </a>
-        {{/if}}
+    <!-- Panels -->
+    {{#each grades}}
+    <div class="grade-panel {{#if @first}}active{{/if}}" id="panel-{{@index}}">
+      <div class="dl-main-card">
+        <div class="dl-main-card__header">
+          <div class="dl-main-card__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <div>
+            <div class="dl-main-card__grade">{{gradeName}}</div>
+            <div class="dl-main-card__name">{{label}}</div>
+          </div>
+        </div>
+        <div class="dl-main-card__body">
+          {{#if url_main}}
+          <a href="{{url_main}}" target="_blank" rel="noopener" class="dl-btn dl-btn--primary">
+            <span class="dl-btn__left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              {{label_main}}
+            </span>
+            <span class="dl-btn__badge">Chính</span>
+          </a>
+          {{/if}}
+          {{#if url_mirror1}}
+          <a href="{{url_mirror1}}" target="_blank" rel="noopener" class="dl-btn dl-btn--mirror">
+            <span class="dl-btn__left">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              {{label_mirror1}}
+            </span>
+            <span class="dl-btn__badge">Dự phòng</span>
+          </a>
+          {{/if}}
+          {{#if url_mirror2}}
+          <a href="{{url_mirror2}}" target="_blank" rel="noopener" class="dl-btn dl-btn--mirror">
+            <span class="dl-btn__left">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              {{label_mirror2}}
+            </span>
+            <span class="dl-btn__badge">Dự phòng</span>
+          </a>
+          {{/if}}
+          {{#if url_mirror3}}
+          <a href="{{url_mirror3}}" target="_blank" rel="noopener" class="dl-btn dl-btn--mirror">
+            <span class="dl-btn__left">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              {{label_mirror3}}
+            </span>
+            <span class="dl-btn__badge">Dự phòng</span>
+          </a>
+          {{/if}}
+        </div>
       </div>
     </div>
     {{/each}}
 
-    <p style="font-size:.85rem;color:var(--gray-600);text-align:center;margin-bottom:1.5rem;">
-      Link tải sẽ mở trong tab mới. Nếu tất cả link đều bị giới hạn, vui lòng liên hệ EduVenture.
-    </p>
+    <p class="success-note">Link tải sẽ mở trong tab mới. Nếu tất cả link đều bị giới hạn, vui lòng liên hệ EduVenture.</p>
 
-    <div style="text-align:center;">
-      <a href="/tai-xuong" style="color:var(--gray-600);font-size:.9rem;">← Quay lại</a>
+    <div class="success-back">
+      <a href="/tai-xuong">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+        Quay lại
+      </a>
     </div>
 
   </div>
-</section>
+</div>
+
+<script>
+function switchGrade(index, el) {
+  document.querySelectorAll('.grade-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.grade-pill').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + index).classList.add('active');
+  el.classList.add('active');
+}
+</script>
