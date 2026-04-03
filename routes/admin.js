@@ -60,6 +60,8 @@ router.post('/contact/settings', AdminController.contactSettingUpdate);
 router.post('/contact/messages/:id/read', AdminController.contactMessageRead);
 router.post('/contact/messages/:id/delete', AdminController.contactMessageDelete)
 router.post('/contact/messages/bulk-delete', express.json(), AdminController.contactMessageBulkDelete);
+router.get('/settings/profile', AdminController.profilePage);
+router.post('/settings/profile', AdminController.profileUpdate);
 router.get('/settings/password', AdminController.changePasswordPage);
 router.post('/settings/password', AdminController.changePasswordPost);
 

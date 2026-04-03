@@ -64,6 +64,13 @@ const AdminModel = {
     return bcrypt.compare(plain, hash);
   },
 
+  async updateProfile(id, { name, email }) {
+    await db.query(
+      'UPDATE admin_users SET name = ?, email = ? WHERE id = ?',
+      [name, email, id]
+    );
+  },
+
   async changePassword(id, newPassword) {
     const hash = await bcrypt.hash(newPassword, 10);
     await db.query('UPDATE admin_users SET password = ? WHERE id = ?', [hash, id]);

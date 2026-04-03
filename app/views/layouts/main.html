@@ -45,7 +45,7 @@
         <div class="navbar__logo">
           {{#if (eq siteLogoMode 'image')}}
             {{#if siteLogoUrl}}
-            <div style="height:{{#if siteLogoSize}}{{siteLogoSize}}px{{else}}36px{{/if}};width:{{#if siteLogoSize}}{{siteLogoSize}}px{{else}}36px{{/if}};flex-shrink:0;background-image:url('{{siteLogoUrl}}');background-size:{{siteLogoZoom}}%;background-position:{{siteLogoPosition}};background-repeat:no-repeat;"></div>
+            <div style="height:{{siteLogoSize}}px;width:{{siteLogoSize}}px;flex-shrink:0;background-image:url('{{siteLogoUrl}}');background-size:{{siteLogoZoom}}%;background-position:{{siteLogoPosition}};background-repeat:no-repeat;"></div>
             {{else}}
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
               <rect width="28" height="28" rx="8" fill="#1a7f5a"/>
@@ -108,7 +108,7 @@
       <div class="footer__brand">
         <div class="footer__logo">
           {{#if siteLogoUrl}}
-          <img src="{{siteLogoUrl}}" alt="Logo" style="height:{{#if siteLogoSize}}{{siteLogoSize}}px{{else}}36px{{/if}};width:auto;max-width:160px;object-fit:contain;" />
+          <img src="{{siteLogoUrl}}" alt="Logo" style="height:{{siteLogoSize}}px;width:auto;max-width:160px;object-fit:contain;" />
           {{else}}
           <svg width="32" height="32" viewBox="0 0 28 28" fill="none">
             <rect width="28" height="28" rx="8" fill="#fff" fill-opacity=".15"/>

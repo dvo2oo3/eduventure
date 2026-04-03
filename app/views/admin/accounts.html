@@ -52,7 +52,7 @@
           <td>
             <div class="table-actions">
               {{#unless (eq id ../currentId)}}
-              <button class="btn btn--sm btn--outline" onclick="openEditModal({{json this}})">Sửa</button>
+              <button class="btn btn--sm btn--outline edit-btn" data-id="{{id}}">Sửa</button>
               <button class="btn btn--sm btn--outline" onclick="openResetPwdModal({{id}}, '{{name}}')">🔑 Mật khẩu</button>
               <form action="/admin/accounts/{{id}}/delete" method="POST" style="display:inline;"
                 onsubmit="return confirm('Xóa tài khoản {{name}}? Không thể hoàn tác.')">
@@ -124,6 +124,7 @@
       <button onclick="closeModal('editModal')" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;">✕</button>
     </div>
     <form id="editForm" method="POST" style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem;">
+      <input type="hidden" name="_permsSubmitted" value="1">
       <div class="form-group" style="margin:0;">
         <label class="form-label">Họ và tên</label>
         <input class="form-input" type="text" name="name" id="editName" required />
@@ -179,6 +180,7 @@
   </div>
 </div>
 
+<script>var _ACCOUNTS_DATA_ = {{{json accounts}}};</script>
 <script>
 var _resetPwdId = null;
 var _allPerms = {{json allPermissions}};
@@ -194,6 +196,19 @@ var PERM_LABELS = {
   contact: '💬 Xem tin nhắn',
 };
 
+// Dữ liệu accounts từ server (tránh lỗi HTML-escape khi dùng data-attribute)
+var _accountsMap = {};
+_ACCOUNTS_DATA_.forEach(function(a) { _accountsMap[a.id] = a; });
+
+// Event delegation cho nút Sửa
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.edit-btn');
+  if (btn) {
+    var account = _accountsMap[parseInt(btn.getAttribute('data-id'))];
+    if (account) openEditModal(account);
+  }
+});
+
 function openCreateModal() {
   document.getElementById('createModal').style.display = 'flex';
   togglePerms('createPerms', 'staff');
@@ -205,11 +220,20 @@ function openEditModal(account) {
   document.getElementById('editName').value = account.name;
   document.getElementById('editEmail').value = account.email;
   document.getElementById('editRole').value = account.role;
+
+  // Chuẩn hóa permissions thành array string
+  var perms = account.permissions;
+  if (!perms) perms = [];
+  if (typeof perms === 'string') perms = perms.split(',').filter(Boolean);
+  // Đảm bảo là array of strings
+  perms = perms.map(function(p) { return String(p); });
+
   // Set checkboxes
   var chks = document.querySelectorAll('.edit-perm-chk');
   chks.forEach(function(c) {
-    c.checked = account.permissions.includes(c.value);
+    c.checked = perms.indexOf(c.value) !== -1;
   });
+
   togglePerms('editPerms', account.role);
   document.getElementById('editModal').style.display = 'flex';
 }

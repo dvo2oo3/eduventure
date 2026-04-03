@@ -1,0 +1,194 @@
+<div class="admin-page">
+  <div class="admin-topbar">
+    <h1 class="admin-topbar__title">Tài khoản của tôi</h1>
+    <p style="color:var(--color-text-secondary);font-size:.9rem;margin-top:.25rem;">Quản lý thông tin cá nhân và bảo mật</p>
+  </div>
+
+  <!-- Tab nav -->
+  <div style="display:flex;gap:.5rem;margin-bottom:1.75rem;border-bottom:1.5px solid var(--color-border);">
+    <button class="profile-tab profile-tab--active" data-tab="info" onclick="switchTab('info')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Thông tin tài khoản
+    </button>
+    <button class="profile-tab" data-tab="password" onclick="switchTab('password')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Đổi mật khẩu
+    </button>
+  </div>
+
+  <!-- TAB: Thông tin tài khoản -->
+  <div id="tab-info">
+    {{#if successInfo}}<div class="alert alert--success" style="margin-bottom:1rem;">{{successInfo}}</div>{{/if}}
+    {{#if errorInfo}}<div class="alert alert--error" style="margin-bottom:1rem;">{{errorInfo}}</div>{{/if}}
+
+    <div class="admin-card" style="max-width:520px;">
+      <!-- Avatar / initials -->
+      <div style="display:flex;align-items:center;gap:1.25rem;padding:1.5rem 1.5rem 0;">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--color-primary);color:#fff;font-size:1.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;" id="avatar-initials">
+          {{admin.name.[0]}}
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:1.1rem;" id="display-name">{{admin.name}}</div>
+          <div style="color:var(--color-text-secondary);font-size:.85rem;">{{admin.email}}</div>
+          <div style="margin-top:.3rem;">
+            {{#if isSuperAdmin}}
+            <span style="background:#fef3c7;color:#92400e;font-size:.75rem;font-weight:600;padding:.15rem .6rem;border-radius:999px;">Superadmin</span>
+            {{else}}
+            <span style="background:#e0f2fe;color:#0369a1;font-size:.75rem;font-weight:600;padding:.15rem .6rem;border-radius:999px;">Staff</span>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+
+      <form method="POST" action="/admin/settings/profile" style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
+        <div class="form-group">
+          <label style="font-weight:500;margin-bottom:.35rem;display:block;">Họ và tên</label>
+          <input type="text" name="name" class="form-control" value="{{admin.name}}" required
+            oninput="document.getElementById('avatar-initials').textContent=this.value[0]||'A';document.getElementById('display-name').textContent=this.value||'Admin';">
+        </div>
+        <div class="form-group">
+          <label style="font-weight:500;margin-bottom:.35rem;display:block;">Email</label>
+          <input type="email" name="email" class="form-control" value="{{admin.email}}" required>
+          <p style="font-size:.8rem;color:var(--color-text-secondary);margin-top:.35rem;">Email dùng để đăng nhập vào hệ thống.</p>
+        </div>
+        <div style="display:flex;gap:.75rem;margin-top:.25rem;">
+          <button type="submit" class="btn btn--primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+            Lưu thay đổi
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TAB: Đổi mật khẩu -->
+  <div id="tab-password" style="display:none;">
+    {{#if successPw}}<div class="alert alert--success" style="margin-bottom:1rem;">{{successPw}}</div>{{/if}}
+    {{#if errorPw}}<div class="alert alert--error" style="margin-bottom:1rem;">{{errorPw}}</div>{{/if}}
+
+    <div class="admin-card" style="max-width:520px;">
+      <div style="padding:1.5rem 1.5rem 0;">
+        <h3 style="font-weight:700;font-size:1rem;margin-bottom:.25rem;">Thay đổi mật khẩu</h3>
+        <p style="font-size:.85rem;color:var(--color-text-secondary);">Mật khẩu mới phải có ít nhất 6 ký tự.</p>
+      </div>
+
+      <form method="POST" action="/admin/settings/password" style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;" id="pw-form">
+        <div class="form-group">
+          <label style="font-weight:500;margin-bottom:.35rem;display:block;">Mật khẩu hiện tại</label>
+          <div style="position:relative;">
+            <input type="password" name="current_password" class="form-control" required id="cur-pw" style="padding-right:2.75rem;">
+            <button type="button" onclick="togglePw('cur-pw',this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--color-text-secondary);">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label style="font-weight:500;margin-bottom:.35rem;display:block;">Mật khẩu mới</label>
+          <div style="position:relative;">
+            <input type="password" name="new_password" class="form-control" required minlength="6" id="new-pw" style="padding-right:2.75rem;" oninput="checkStrength(this.value)">
+            <button type="button" onclick="togglePw('new-pw',this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--color-text-secondary);">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <!-- Strength bar -->
+          <div style="margin-top:.5rem;display:flex;gap:.3rem;" id="strength-bars">
+            <div style="height:4px;flex:1;border-radius:2px;background:#e5e7eb;" id="bar1"></div>
+            <div style="height:4px;flex:1;border-radius:2px;background:#e5e7eb;" id="bar2"></div>
+            <div style="height:4px;flex:1;border-radius:2px;background:#e5e7eb;" id="bar3"></div>
+            <div style="height:4px;flex:1;border-radius:2px;background:#e5e7eb;" id="bar4"></div>
+          </div>
+          <p style="font-size:.78rem;color:var(--color-text-secondary);margin-top:.3rem;" id="strength-label"></p>
+        </div>
+        <div class="form-group">
+          <label style="font-weight:500;margin-bottom:.35rem;display:block;">Xác nhận mật khẩu mới</label>
+          <div style="position:relative;">
+            <input type="password" name="confirm_password" class="form-control" required minlength="6" id="confirm-pw" style="padding-right:2.75rem;" oninput="checkMatch()">
+            <button type="button" onclick="togglePw('confirm-pw',this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--color-text-secondary);">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <p style="font-size:.78rem;margin-top:.3rem;display:none;" id="match-msg"></p>
+        </div>
+        <button type="submit" class="btn btn--primary" style="margin-top:.25rem;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Đổi mật khẩu
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+.profile-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .6rem 1rem;
+  border: none;
+  background: none;
+  font-size: .9rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1.5px;
+  transition: color .15s, border-color .15s;
+}
+.profile-tab--active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+.profile-tab:hover { color: var(--color-primary); }
+</style>
+
+<script>
+// Switch tabs
+function switchTab(tab) {
+  document.getElementById('tab-info').style.display = tab === 'info' ? '' : 'none';
+  document.getElementById('tab-password').style.display = tab === 'password' ? '' : 'none';
+  document.querySelectorAll('.profile-tab').forEach(btn => {
+    btn.classList.toggle('profile-tab--active', btn.dataset.tab === tab);
+  });
+}
+
+// Auto-open password tab if there's a pw flash
+{{#if successPw}}switchTab('password');{{/if}}
+{{#if errorPw}}switchTab('password');{{/if}}
+
+// Toggle password visibility
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// Password strength
+function checkStrength(val) {
+  const bars = [document.getElementById('bar1'), document.getElementById('bar2'), document.getElementById('bar3'), document.getElementById('bar4')];
+  const label = document.getElementById('strength-label');
+  let score = 0;
+  if (val.length >= 6) score++;
+  if (val.length >= 10) score++;
+  if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score++;
+  if (/[0-9]/.test(val) && /[^a-zA-Z0-9]/.test(val)) score++;
+  const colors = ['#ef4444','#f97316','#eab308','#22c55e'];
+  const labels = ['Rất yếu','Yếu','Trung bình','Mạnh'];
+  bars.forEach((b, i) => b.style.background = i < score ? colors[score - 1] : '#e5e7eb');
+  label.textContent = val.length ? labels[score - 1] || '' : '';
+  label.style.color = score > 0 ? colors[score - 1] : '';
+}
+
+// Confirm match
+function checkMatch() {
+  const nw = document.getElementById('new-pw').value;
+  const cf = document.getElementById('confirm-pw').value;
+  const msg = document.getElementById('match-msg');
+  msg.style.display = cf ? '' : 'none';
+  if (cf && nw === cf) {
+    msg.textContent = '✓ Mật khẩu khớp';
+    msg.style.color = '#22c55e';
+  } else if (cf) {
+    msg.textContent = '✗ Mật khẩu không khớp';
+    msg.style.color = '#ef4444';
+  }
+}
+</script>

@@ -516,41 +516,75 @@ const AdminController = {
       res.json({ ok: false, message: e.message });
     }
   },
-  changePasswordPage(req, res) {
-    res.render('admin/change-password', {
+  async profilePage(req, res) {
+    const admin = await AdminModel.findById(req.session.adminId);
+    res.render('admin/profile', {
       layout: 'admin',
-      title: 'Đổi mật khẩu — Admin',
-      admin: { name: req.session.adminName },
-      activeMenu: 'password',
-      success: req.flash('success'),
-      error: req.flash('error')
+      title: 'Tài khoản của tôi — Admin',
+      admin: { name: admin.name, email: admin.email },
+      isSuperAdmin: req.session.adminRole === 'superadmin',
+      activeMenu: 'profile',
+      successInfo: req.flash('successInfo'),
+      errorInfo: req.flash('errorInfo'),
+      successPw: req.flash('successPw'),
+      errorPw: req.flash('errorPw'),
     });
+  },
+
+  async profileUpdate(req, res) {
+    try {
+      const { name, email } = req.body;
+      if (!name || !email) {
+        req.flash('errorInfo', 'Vui lòng điền đầy đủ họ tên và email.');
+        return res.redirect('/admin/settings/profile');
+      }
+      // Kiểm tra email trùng với tài khoản khác
+      const existing = await AdminModel.findByEmail(email);
+      if (existing && existing.id !== req.session.adminId) {
+        req.flash('errorInfo', 'Email này đã được sử dụng bởi tài khoản khác.');
+        return res.redirect('/admin/settings/profile');
+      }
+      await AdminModel.updateProfile(req.session.adminId, { name, email });
+      // Cập nhật session
+      req.session.adminName = name;
+      req.session.adminEmail = email;
+      req.flash('successInfo', 'Cập nhật thông tin thành công!');
+      res.redirect('/admin/settings/profile');
+    } catch (err) {
+      console.error(err);
+      req.flash('errorInfo', 'Lỗi: ' + err.message);
+      res.redirect('/admin/settings/profile');
+    }
+  },
+
+  changePasswordPage(req, res) {
+    res.redirect('/admin/settings/profile');
   },
 
   async changePasswordPost(req, res) {
     try {
       const { current_password, new_password, confirm_password } = req.body;
       if (new_password !== confirm_password) {
-        req.flash('error', 'Mật khẩu mới không khớp!');
-        return res.redirect('/admin/settings/password');
+        req.flash('errorPw', 'Mật khẩu mới không khớp!');
+        return res.redirect('/admin/settings/profile');
       }
       if (new_password.length < 6) {
-        req.flash('error', 'Mật khẩu mới phải ít nhất 6 ký tự!');
-        return res.redirect('/admin/settings/password');
+        req.flash('errorPw', 'Mật khẩu mới phải ít nhất 6 ký tự!');
+        return res.redirect('/admin/settings/profile');
       }
       const admin = await AdminModel.findByEmail(req.session.adminEmail);
       const ok = await AdminModel.verifyPassword(current_password, admin.password);
       if (!ok) {
-        req.flash('error', 'Mật khẩu hiện tại không đúng!');
-        return res.redirect('/admin/settings/password');
+        req.flash('errorPw', 'Mật khẩu hiện tại không đúng!');
+        return res.redirect('/admin/settings/profile');
       }
       await AdminModel.changePassword(admin.id, new_password);
-      req.flash('success', 'Đổi mật khẩu thành công!');
-      res.redirect('/admin/settings/password');
+      req.flash('successPw', 'Đổi mật khẩu thành công!');
+      res.redirect('/admin/settings/profile');
     } catch (err) {
       console.error(err);
-      req.flash('error', 'Lỗi: ' + err.message);
-      res.redirect('/admin/settings/password');
+      req.flash('errorPw', 'Lỗi: ' + err.message);
+      res.redirect('/admin/settings/profile');
     }
   },
   async downloadImportPage(req, res) {
@@ -683,9 +717,15 @@ const AdminController = {
   async accountUpdate(req, res) {
     try {
       const { id } = req.params;
-      // Không cho sửa chính mình thành non-superadmin nếu là superadmin duy nhất
       const { name, email, role } = req.body;
-      const permissions = Array.isArray(req.body.permissions) ? req.body.permissions : (req.body.permissions ? [req.body.permissions] : []);
+      // Nếu form gửi lên (_permsSubmitted=1) mà không check checkbox nào
+      // thì req.body.permissions là undefined → permissions = []
+      let permissions = [];
+      if (req.body.permissions) {
+        permissions = Array.isArray(req.body.permissions)
+          ? req.body.permissions
+          : [req.body.permissions];
+      }
       await AdminModel.update(id, { name, email, role, permissions });
       req.flash('success', 'Cập nhật tài khoản thành công!');
       res.redirect('/admin/accounts');

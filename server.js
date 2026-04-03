@@ -99,7 +99,9 @@ app.use(async (req, res, next) => {
     res.locals.siteOgImageUrl = about?.og_image_url?.content || null;
     res.locals.siteOgTitle = about?.og_title?.content || null;
     res.locals.siteOgDescription = about?.og_description?.content || null;
-    res.locals.siteLogoSize = about?.logo_size?.content || '36';
+    const rawLogoSize = about?.logo_size?.content;
+    const parsedLogoSize = Number.isFinite(Number(rawLogoSize)) ? Number(rawLogoSize) : parseInt(rawLogoSize, 10);
+    res.locals.siteLogoSize = Number.isFinite(parsedLogoSize) && parsedLogoSize > 0 ? parsedLogoSize : 36;
     res.locals.siteLogoPosition = about?.logo_position?.content || '50% 50%';
     res.locals.siteLogoZoom = about?.logo_zoom?.content || '100';
     res.locals.siteEventBannerActive = about?.event_banner_active?.content === '1';
