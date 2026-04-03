@@ -10,7 +10,7 @@
       <div class="admin-card__header">
         <div class="admin-card__title">Thông tin liên hệ & Bản đồ</div>
       </div>
-      <form action="/admin/contact/settings" method="POST" class="admin-form">
+      <form action="/admin/contact/settings" method="POST" class="admin-form" onsubmit="ajaxForm(this);return false;">
         <div class="form-group">
           <label class="form-label">Địa chỉ</label>
           <textarea class="form-input form-textarea" name="address" rows="2">{{settings.address}}</textarea>

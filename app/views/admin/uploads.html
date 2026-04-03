@@ -256,10 +256,11 @@ function updateSelection() {
 async function deleteSingle(e, id, folder, name) {
   e.stopPropagation();
   if (!confirm(`Xóa file "${name}"?`)) return;
+  const file = allFiles.find(f => f.id === id);
   const res = await fetch('/admin/uploads/delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ files: [{ id, folder }] })
+    body: JSON.stringify({ files: [{ id, folder, url: file?.url }] })
   });
   const data = await res.json();
   if (data.ok) {
@@ -274,7 +275,7 @@ async function deleteSingle(e, id, folder, name) {
 async function bulkDelete() {
   if (!selectedFiles.size) return;
   if (!confirm(`Xóa ${selectedFiles.size} file đã chọn?`)) return;
-  const toDelete = allFiles.filter(f => selectedFiles.has(f.id)).map(f => ({ id: f.id, folder: f.folder }));
+  const toDelete = allFiles.filter(f => selectedFiles.has(f.id)).map(f => ({ id: f.id, folder: f.folder, url: f.url }));
   const res = await fetch('/admin/uploads/delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

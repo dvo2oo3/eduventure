@@ -66,64 +66,54 @@ router.post('/media', uploadMedia, AdminController.mediaUpdate);
 router.post('/media/clear-image', AdminController.mediaClearImage);
 
 
-// Upload ảnh cho TinyMCE
+// Upload ảnh cho TinyMCE → R2
 const multerContent = require('multer');
-const pathContent = require('path');
-const fsContent = require('fs');
 const uploadContentMiddleware = multerContent({
-  storage: multerContent.diskStorage({
-    destination: (req, file, cb) => {
-      const dir = pathContent.join(__dirname, '../public/uploads/content');
-      if (!fsContent.existsSync(dir)) fsContent.mkdirSync(dir, { recursive: true });
-      cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-      const ext = pathContent.extname(file.originalname);
-      cb(null, 'img-' + Date.now() + ext);
-    }
-  }),
+  storage: multerContent.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = ['.jpg','.jpeg','.png','.webp','.gif'];
-    allowed.includes(pathContent.extname(file.originalname).toLowerCase()) ? cb(null, true) : cb(new Error('Chỉ chấp nhận ảnh!'));
+    allowed.includes(require('path').extname(file.originalname).toLowerCase()) ? cb(null, true) : cb(new Error('Chỉ chấp nhận ảnh!'));
   }
 }).single('file');
 
 router.post('/upload-image', (req, res) => {
-  uploadContentMiddleware(req, res, (err) => {
+  uploadContentMiddleware(req, res, async (err) => {
     if (err) return res.status(400).json({ error: err.message });
     if (!req.file) return res.status(400).json({ error: 'Không có file' });
-    res.json({ location: '/uploads/content/' + req.file.filename });
+    try {
+      const { uploadToR2 } = require('../config/r2');
+      const url = await uploadToR2(req.file.buffer, req.file.originalname, 'content');
+      res.json({ location: url });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
   });
 });
 
-// Upload video cho TinyMCE
+// Upload video cho TinyMCE → R2
 const uploadVideoMiddleware = multerContent({
-  storage: multerContent.diskStorage({
-    destination: (req, file, cb) => {
-      const dir = pathContent.join(__dirname, '../public/uploads/content');
-      if (!fsContent.existsSync(dir)) fsContent.mkdirSync(dir, { recursive: true });
-      cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-      const ext = pathContent.extname(file.originalname);
-      cb(null, 'video-' + Date.now() + ext);
-    }
-  }),
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
+  storage: multerContent.memoryStorage(),
+  limits: { fileSize: 200 * 1024 * 1024 }, // 200MB
   fileFilter: (req, file, cb) => {
     const allowed = ['.mp4', '.webm', '.ogg', '.mov'];
-    allowed.includes(pathContent.extname(file.originalname).toLowerCase())
+    allowed.includes(require('path').extname(file.originalname).toLowerCase())
       ? cb(null, true)
       : cb(new Error('Chỉ chấp nhận file video (mp4, webm, ogg, mov)!'));
   }
 }).single('file');
 
 router.post('/upload-video', (req, res) => {
-  uploadVideoMiddleware(req, res, (err) => {
+  uploadVideoMiddleware(req, res, async (err) => {
     if (err) return res.status(400).json({ error: err.message });
     if (!req.file) return res.status(400).json({ error: 'Không có file' });
-    res.json({ location: '/uploads/content/' + req.file.filename });
+    try {
+      const { uploadToR2 } = require('../config/r2');
+      const url = await uploadToR2(req.file.buffer, req.file.originalname, 'content');
+      res.json({ location: url });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
   });
 });
 

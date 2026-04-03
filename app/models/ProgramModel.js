@@ -67,10 +67,11 @@ const ProgramModel = {
        FROM authorized_phones ap
        JOIN programs p ON ap.program_id = p.id
        JOIN program_downloads pd ON pd.program_id = p.id AND pd.grade = ap.grade
-       WHERE ap.phone = ?`,
+       WHERE ap.phone = ?
+       ORDER BY ap.grade`,
       [phone]
     );
-    return rows[0] || null;
+    return rows;
   },
 
   async getAllPhones({ search = '', grade = '', program_id = '' } = {}) {
@@ -116,7 +117,7 @@ const ProgramModel = {
     for (const row of rows) {
       try {
         await db.query(
-          'INSERT INTO authorized_phones (phone, grade, program_id, name, school) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE grade=VALUES(grade), program_id=VALUES(program_id), name=VALUES(name), school=VALUES(school)',
+          'INSERT INTO authorized_phones (phone, grade, program_id, name, school) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), school=VALUES(school)',
           [row.phone, row.grade, row.program_id, row.name, row.school || null]
         );
         success++;

@@ -8,24 +8,14 @@ const XLSX = require('xlsx');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const upload = multer({ storage: multer.memoryStorage() });
+const { uploadToR2, deleteFromR2, listFilesFromR2 } = require('../../config/r2');
 
-const UPLOAD_FOLDERS = {
-  news:    path.join(__dirname, '../../public/uploads/news'),
-  media:   path.join(__dirname, '../../public/uploads/media'),
-  content: path.join(__dirname, '../../public/uploads/content'),
-};
+// Tất cả file đều giữ trong RAM, rồi đẩy lên R2
+const memStorage = multer.memoryStorage();
 
-const storageNews = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, '../../public/uploads/news')),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `news-${Date.now()}${ext}`);
-  }
-});
 const uploadNews = multer({
-  storage: storageNews,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  storage: memStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
     const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
     const ext = path.extname(file.originalname).toLowerCase();
@@ -33,24 +23,13 @@ const uploadNews = multer({
   }
 }).single('image_file');
 
-const storageMedia = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../../public/uploads/media');
-    require('fs').mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${Date.now()}${ext}`);
-  }
-});
 const uploadMedia = multer({
-  storage: storageMedia,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  storage: memStorage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB (cho video)
   fileFilter: (req, file, cb) => {
-    const allowed = ['.jpg','.jpeg','.png','.webp','.gif'];
+    const allowed = ['.jpg','.jpeg','.png','.webp','.gif','.mp4','.webm','.mov','.ogg'];
     const ext = path.extname(file.originalname).toLowerCase();
-    allowed.includes(ext) ? cb(null, true) : cb(new Error('Chỉ chấp nhận ảnh!'));
+    allowed.includes(ext) ? cb(null, true) : cb(new Error('Định dạng file không được hỗ trợ!'));
   }
 }).fields([
   { name: 'banner_file', maxCount: 1 },
@@ -147,7 +126,8 @@ const AdminController = {
         const { title, summary, content, category, location, grade_level, event_date, is_visible, is_pinned } = req.body;
         const slug = makeSlug(title);
         // Ưu tiên file upload, nếu không có thì dùng URL nhập tay
-        const image = req.file ? '/uploads/news/' + req.file.filename : (req.body.image || null);
+        let image = req.body.image || null;
+        if (req.file) image = await uploadToR2(req.file.buffer, req.file.originalname, 'news');
         await NewsModel.create({ title, slug, summary, content, image, category, location, grade_level, event_date, is_visible: !!is_visible, is_pinned: !!is_pinned });
         req.flash('success', 'Thêm tin thành công!');
         res.redirect('/admin/news');
@@ -182,7 +162,7 @@ const AdminController = {
         // Nếu upload file mới thì dùng file, không thì dùng URL nhập tay, không thì giữ ảnh cũ
         let image;
         if (req.file) {
-          image = '/uploads/news/' + req.file.filename;
+          image = await uploadToR2(req.file.buffer, req.file.originalname, 'news');
         } else if (req.body.image !== undefined && req.body.image !== '') {
           image = req.body.image;
         } else {
@@ -237,12 +217,10 @@ const AdminController = {
           await AboutModel.upsert(key, { title: req.body[`${key}_title`] || null, content: req.body[key] });
         }
       }
-      req.flash('success', 'Cập nhật giới thiệu thành công!');
-      res.redirect('/admin/about');
+      res.json({ ok: true, message: 'Cập nhật giới thiệu thành công!' });
     } catch (err) {
       console.error(err);
-      req.flash('error', 'Lỗi cập nhật: ' + err.message);
-      res.redirect('/admin/about');
+      res.json({ ok: false, message: err.message });
     }
   },
 
@@ -278,15 +256,12 @@ const AdminController = {
     try {
       const { message } = req.body;
       if (!message || !message.trim()) {
-        req.flash('error', 'Nội dung thông báo không được để trống.');
-        return res.redirect('/admin/download');
+        return res.json({ ok: false, message: 'Nội dung thông báo không được để trống.' });
       }
       await ProgramModel.updateDownloadPauseMessage(message.trim());
-      req.flash('success', 'Đã cập nhật nội dung thông báo tạm dừng.');
-      res.redirect('/admin/download');
+      res.json({ ok: true, message: 'Đã cập nhật nội dung thông báo!' });
     } catch (err) {
-      req.flash('error', 'Lỗi: ' + err.message);
-      res.redirect('/admin/download');
+      res.json({ ok: false, message: err.message });
     }
   },
 
@@ -301,52 +276,46 @@ const AdminController = {
 
   async downloadUpdate(req, res) {
     try {
-      const { program_id } = req.body;
-      const grades = ['lop1', 'lop2', 'lop3', 'lop4', 'lop5'];
-      for (const grade of grades) {
-        await ProgramModel.updateDownload(program_id, grade, {
-          label: req.body[`label_${grade}`],
-          version: req.body[`version_${grade}`],
-          file_size: req.body[`size_${grade}`],
-          url_main: req.body[`url_main_${grade}`],
-          label_main: req.body[`label_main_${grade}`],
-          url_mirror1: req.body[`url_mirror1_${grade}`],
-          label_mirror1: req.body[`label_mirror1_${grade}`],
-          url_mirror2: req.body[`url_mirror2_${grade}`],
-          label_mirror2: req.body[`label_mirror2_${grade}`],
-          url_mirror3: req.body[`url_mirror3_${grade}`],
-          label_mirror3: req.body[`label_mirror3_${grade}`],
-        });
+      const { program_id, grade } = req.body;
+      if (!program_id || !grade) {
+        return res.json({ ok: false, message: 'Thiếu program_id hoặc grade' });
       }
-      req.flash('success', 'Cập nhật link thành công!');
-      res.redirect('/admin/download');
+      await ProgramModel.updateDownload(program_id, grade, {
+        label:         req.body[`label_${grade}`],
+        version:       req.body[`version_${grade}`],
+        file_size:     req.body[`size_${grade}`],
+        url_main:      req.body[`url_main_${grade}`],
+        label_main:    req.body[`label_main_${grade}`],
+        url_mirror1:   req.body[`url_mirror1_${grade}`],
+        label_mirror1: req.body[`label_mirror1_${grade}`],
+        url_mirror2:   req.body[`url_mirror2_${grade}`],
+        label_mirror2: req.body[`label_mirror2_${grade}`],
+        url_mirror3:   req.body[`url_mirror3_${grade}`],
+        label_mirror3: req.body[`label_mirror3_${grade}`],
+      });
+      res.json({ ok: true, message: 'Đã lưu link thành công!' });
     } catch (err) {
       console.error(err);
-      req.flash('error', 'Lỗi: ' + err.message);
-      res.redirect('/admin/download');
+      res.json({ ok: false, message: err.message });
     }
   },
 
   async downloadAddProgram(req, res) {
     try {
       const { name, tiet } = req.body;
-      await ProgramModel.create(name, parseInt(tiet));
-      req.flash('success', `Đã thêm chương trình ${name}!`);
-      res.redirect('/admin/download');
+      const newProgram = await ProgramModel.create(name, parseInt(tiet));
+      res.json({ ok: true, message: `Đã thêm chương trình ${name}!`, id: newProgram });
     } catch (err) {
-      req.flash('error', 'Lỗi: ' + err.message);
-      res.redirect('/admin/download');
+      res.json({ ok: false, message: err.message });
     }
   },
 
   async downloadDeleteProgram(req, res) {
     try {
       await ProgramModel.delete(req.params.id);
-      req.flash('success', 'Đã xóa chương trình!');
-      res.redirect('/admin/download');
+      res.json({ ok: true, message: 'Đã xóa chương trình!' });
     } catch (err) {
-      req.flash('error', 'Lỗi: ' + err.message);
-      res.redirect('/admin/download');
+      res.json({ ok: false, message: err.message });
     }
   },
 
@@ -405,11 +374,9 @@ const AdminController = {
     try {
       const { name, tiet } = req.body;
       await ProgramModel.updateProgram(req.params.id, name, parseInt(tiet));
-      req.flash('success', 'Đã cập nhật chương trình!');
-      res.redirect('/admin/download');
+      res.json({ ok: true, message: 'Đã cập nhật chương trình!' });
     } catch (err) {
-      req.flash('error', 'Lỗi: ' + err.message);
-      res.redirect('/admin/download');
+      res.json({ ok: false, message: err.message });
     }
   },
 
@@ -489,12 +456,10 @@ const AdminController = {
           await ContactModel.updateSetting(key, req.body[key]);
         }
       }
-      req.flash('success', 'Cập nhật thông tin liên hệ thành công!');
-      res.redirect('/admin/contact');
+      res.json({ ok: true, message: 'Cập nhật thông tin liên hệ thành công!' });
     } catch (err) {
       console.error(err);
-      req.flash('error', 'Lỗi cập nhật: ' + err.message);
-      res.redirect('/admin/contact');
+      res.json({ ok: false, message: err.message });
     }
   },
 
@@ -660,14 +625,26 @@ const AdminControllerExtension = {
       }
       await AboutModel.upsert('banner_active', { title: null, content: req.body.banner_active === '1' ? '1' : '0' });
       await AboutModel.upsert('event_banner_active', { title: null, content: req.body.event_banner_active === '1' ? '1' : '0' });
-      if (req.files?.banner_file?.[0]) await AboutModel.upsert('banner_url', { title: null, content: '/uploads/media/' + req.files.banner_file[0].filename });
-      if (req.files?.logo_file?.[0]) await AboutModel.upsert('logo_url', { title: null, content: '/uploads/media/' + req.files.logo_file[0].filename });
-      if (req.files?.event_banner_file?.[0]) await AboutModel.upsert('event_banner_url', { title: null, content: '/uploads/media/' + req.files.event_banner_file[0].filename });
-      // Favicon: file đã được crop bởi canvas ở client
-      if (req.files?.favicon_file?.[0]) {
-        await AboutModel.upsert('favicon_url', { title: null, content: '/uploads/media/' + req.files.favicon_file[0].filename });
+      if (req.files?.banner_file?.[0]) {
+        const f = req.files.banner_file[0];
+        await AboutModel.upsert('banner_url', { title: null, content: await uploadToR2(f.buffer, f.originalname, 'media') });
       }
-      if (req.files?.og_image_file?.[0]) await AboutModel.upsert('og_image_url', { title: null, content: '/uploads/media/' + req.files.og_image_file[0].filename });
+      if (req.files?.logo_file?.[0]) {
+        const f = req.files.logo_file[0];
+        await AboutModel.upsert('logo_url', { title: null, content: await uploadToR2(f.buffer, f.originalname, 'media') });
+      }
+      if (req.files?.event_banner_file?.[0]) {
+        const f = req.files.event_banner_file[0];
+        await AboutModel.upsert('event_banner_url', { title: null, content: await uploadToR2(f.buffer, f.originalname, 'media') });
+      }
+      if (req.files?.favicon_file?.[0]) {
+        const f = req.files.favicon_file[0];
+        await AboutModel.upsert('favicon_url', { title: null, content: await uploadToR2(f.buffer, f.originalname, 'media') });
+      }
+      if (req.files?.og_image_file?.[0]) {
+        const f = req.files.og_image_file[0];
+        await AboutModel.upsert('og_image_url', { title: null, content: await uploadToR2(f.buffer, f.originalname, 'media') });
+      }
       req.flash('success', 'Cập nhật thành công!');
       res.redirect('/admin/media');
     } catch (e) {
@@ -707,27 +684,7 @@ const AdminControllerExtension = {
 
   async uploadsListApi(req, res) {
     try {
-      const ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp4', '.webm', '.ogg', '.mov'];
-      const files = [];
-      for (const [folder, dir] of Object.entries(UPLOAD_FOLDERS)) {
-        fs.mkdirSync(dir, { recursive: true });
-        const names = fs.readdirSync(dir);
-        for (const name of names) {
-          const ext = path.extname(name).toLowerCase();
-          if (!ALLOWED_EXT.includes(ext)) continue;
-          const fullPath = path.join(dir, name);
-          const stat = fs.statSync(fullPath);
-          files.push({
-            id:    `${folder}__${name}`,
-            folder,
-            name,
-            url:   `/uploads/${folder}/${name}`,
-            size:  stat.size,
-            mtime: stat.mtimeMs,
-          });
-        }
-      }
-      files.sort((a, b) => b.mtime - a.mtime);
+      const files = await listFilesFromR2();
       const totalSize = files.reduce((s, f) => s + f.size, 0);
       res.json({ ok: true, files, stats: { totalFiles: files.length, totalSize } });
     } catch (e) {
@@ -741,14 +698,30 @@ const AdminControllerExtension = {
       if (!files || !files.length) return res.json({ ok: false, message: 'Không có file nào' });
       let deleted = 0;
       const errors = [];
-      for (const { id, folder } of files) {
-        if (!UPLOAD_FOLDERS[folder]) { errors.push(`Folder không hợp lệ: ${folder}`); continue; }
-        const name = id.replace(`${folder}__`, '');
-        if (name.includes('/') || name.includes('\\') || name.includes('..')) {
-          errors.push(`Tên file không hợp lệ: ${name}`); continue;
+      for (const file of files) {
+        try {
+          // File R2: có url bắt đầu bằng http
+          if (file.url && file.url.startsWith('http')) {
+            await deleteFromR2(file.url);
+            deleted++;
+          }
+          // File local cũ: có id dạng "folder__filename"
+          else if (file.id && file.id.includes('__')) {
+            const [folder, ...nameParts] = file.id.split('__');
+            const name = nameParts.join('__');
+            const UPLOAD_FOLDERS = {
+              news:    require('path').join(__dirname, '../../public/uploads/news'),
+              media:   require('path').join(__dirname, '../../public/uploads/media'),
+              content: require('path').join(__dirname, '../../public/uploads/content'),
+            };
+            if (UPLOAD_FOLDERS[folder]) {
+              const filePath = require('path').join(UPLOAD_FOLDERS[folder], name);
+              if (require('fs').existsSync(filePath)) { require('fs').unlinkSync(filePath); deleted++; }
+            }
+          }
+        } catch (e) {
+          errors.push(e.message);
         }
-        const filePath = path.join(UPLOAD_FOLDERS[folder], name);
-        if (fs.existsSync(filePath)) { fs.unlinkSync(filePath); deleted++; }
       }
       res.json({ ok: true, deleted, errors });
     } catch (e) {

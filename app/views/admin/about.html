@@ -3,7 +3,7 @@
     <h1 class="admin-topbar__title">Quản lý Về chúng tôi</h1>
   </div>
 
-  <form action="/admin/about" method="POST">
+  <form action="/admin/about" method="POST" onsubmit="ajaxForm(this,{btn:this.querySelector('[type=submit]')});return false;">
 
     <div class="about-grid">
 

@@ -29,7 +29,7 @@
       <p style="margin:0;font-size:.875rem;color:#6b7280;">
         Khi <strong>tạm dừng</strong>, toàn bộ người dùng sẽ không thể xác nhận số điện thoại hay tải xuống bất kỳ phần mềm nào. Dùng để thay link hoặc bảo trì hệ thống.
       </p>
-      <form action="/admin/download/pause-message" method="POST" style="display:flex;gap:.6rem;align-items:flex-end;">
+      <form action="/admin/download/pause-message" method="POST" style="display:flex;gap:.6rem;align-items:flex-end;" onsubmit="ajaxForm(this);return false;">
         <div class="form-group" style="margin:0;flex:1;">
           <label class="form-label" style="font-size:.8rem;">Nội dung thông báo hiển thị cho người dùng khi tạm dừng</label>
           <input class="form-input" type="text" name="message" value="{{downloadPauseMessage}}" required
@@ -51,7 +51,7 @@
         <div class="admin-card__header">
           <div class="admin-card__title">Thêm chương trình</div>
         </div>
-        <form action="/admin/download/programs/add" method="POST" style="padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem;">
+        <form action="/admin/download/programs/add" method="POST" style="padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem;" onsubmit="addProgram(this);return false;">
           <div class="form-group" style="margin:0;">
             <label class="form-label">Tên chương trình</label>
             <input class="form-input" type="text" name="name" placeholder="VD: Chương trình 108 tiết" required />
@@ -99,7 +99,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     </div>
     <!-- Form sửa tên + số tiết inline -->
-    <form action="/admin/download/programs/{{id}}/edit" method="POST" style="display:flex;gap:.5rem;align-items:center;">
+    <form action="/admin/download/programs/{{id}}/edit" method="POST" style="display:flex;gap:.5rem;align-items:center;" onsubmit="ajaxForm(this);return false;">
       <input class="form-input" type="text" name="name" value="{{name}}" required style="width:180px;padding:.35rem .6rem;font-size:.875rem;" />
       <input class="form-input" type="number" name="tiet" value="{{tiet}}" required style="width:75px;padding:.35rem .6rem;font-size:.875rem;" />
       <button type="submit" class="btn btn--sm btn--outline">Lưu</button>
@@ -119,8 +119,9 @@
   </div>
 </div>
           <!-- Form link 5 lớp -->
-          <form action="/admin/download" method="POST" style="padding:1.5rem;">
+          <form id="form-{{id}}" action="/admin/download" method="POST" style="padding:1.5rem;" onsubmit="saveLinks(event, {{id}})">
             <input type="hidden" name="program_id" value="{{id}}" />
+            <input type="hidden" name="grade" id="active-grade-{{id}}" value="lop1" />
 
             <!-- Tabs lớp -->
             <div style="display:flex;gap:.375rem;margin-bottom:1.5rem;align-items:center;flex-wrap:wrap;">
@@ -144,8 +145,9 @@
               <div style="text-align:center;padding:3rem;color:var(--color-text-secondary);">Đang tải...</div>
             </div>
 
-            <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid #f0f0ee;display:flex;justify-content:flex-end;">
-              <button type="submit" class="btn btn--primary">Lưu link</button>
+            <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid #f0f0ee;display:flex;justify-content:flex-end;align-items:center;gap:1rem;">
+              <span id="save-msg-{{id}}" style="font-size:.875rem;display:none;"></span>
+              <button type="submit" class="btn btn--primary" id="save-btn-{{id}}">Lưu link</button>
             </div>
           </form>
 
@@ -228,6 +230,9 @@ async function loadGrades(programId) {
 
 function switchGrade(programId, grade) {
   if (!cache[programId]) return;
+  // Cập nhật hidden input grade
+  const gradeInput = document.getElementById(`active-grade-${programId}`);
+  if (gradeInput) gradeInput.value = grade;
   renderGrade(programId, grade, cache[programId]);
 }
 
@@ -288,6 +293,77 @@ function renderLinkRow(grade, key, iconBg, bg, border, label, url) {
       </div>
       <input class="form-input" type="text" name="url_${key}_${grade}" value="${url}" placeholder="https://..." style="font-size:.85rem;" />
     </div>`;
+}
+
+async function saveLinks(e, programId) {
+  e.preventDefault();
+  const form = document.getElementById(`form-${programId}`);
+  const btn = document.getElementById(`save-btn-${programId}`);
+  const msg = document.getElementById(`save-msg-${programId}`);
+  btn.disabled = true;
+  btn.textContent = 'Đang lưu...';
+  msg.style.display = 'none';
+  try {
+    const formData = new FormData(form);
+    const res = await fetch('/admin/download', {
+      method: 'POST',
+      body: new URLSearchParams(formData)
+    });
+    const data = await res.json();
+    if (data.ok) {
+      // Cập nhật cache với dữ liệu mới
+      const grade = formData.get('grade');
+      if (cache[programId]) {
+        const d = cache[programId].find(x => x.grade === grade) || {};
+        d.label        = formData.get(`label_${grade}`);
+        d.version      = formData.get(`version_${grade}`);
+        d.file_size    = formData.get(`size_${grade}`);
+        d.url_main     = formData.get(`url_main_${grade}`);
+        d.label_main   = formData.get(`label_main_${grade}`);
+        d.url_mirror1  = formData.get(`url_mirror1_${grade}`);
+        d.label_mirror1= formData.get(`label_mirror1_${grade}`);
+        d.url_mirror2  = formData.get(`url_mirror2_${grade}`);
+        d.label_mirror2= formData.get(`label_mirror2_${grade}`);
+        d.url_mirror3  = formData.get(`url_mirror3_${grade}`);
+        d.label_mirror3= formData.get(`label_mirror3_${grade}`);
+      }
+      showSaveMsg(msg, true, '✓ Lưu thành công!');
+    } else {
+      showSaveMsg(msg, false, '✗ Lỗi: ' + data.message);
+    }
+  } catch (err) {
+    showSaveMsg(msg, false, '✗ Lỗi kết nối');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Lưu link';
+  }
+}
+
+function showSaveMsg(msg, ok, text) {
+  msg.textContent = text;
+  msg.style.display = 'inline-flex';
+  msg.style.alignItems = 'center';
+  msg.style.padding = '.45rem 1rem';
+  msg.style.borderRadius = '6px';
+  msg.style.fontWeight = '600';
+  msg.style.fontSize = '.9rem';
+  msg.style.background = ok ? '#e8f5ee' : '#fef2f2';
+  msg.style.color = ok ? '#1a7f5a' : '#dc2626';
+  msg.style.border = ok ? '1px solid #c1e3d0' : '1px solid #fca5a5';
+  clearTimeout(msg._timer);
+  msg._timer = setTimeout(() => {
+    msg.style.opacity = '0';
+    msg.style.transition = 'opacity .4s';
+    setTimeout(() => { msg.style.display = 'none'; msg.style.opacity = '1'; msg.style.transition = ''; }, 400);
+  }, 5000);
+}
+
+async function addProgram(form) {
+  const data = await ajaxForm(form);
+  if (data.ok) {
+    // Reload trang để hiện chương trình mới trong sidebar
+    setTimeout(() => location.reload(), 800);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
