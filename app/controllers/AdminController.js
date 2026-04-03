@@ -234,6 +234,7 @@ const AdminController = {
     const programs = await ProgramModel.getAll();
     const downloads = programs.length > 0 ? await ProgramModel.getDownloads(programs[0].id) : [];
     const pauseStatus = await ProgramModel.getDownloadPauseStatus();
+    const settings = await ContactModel.getSettings();
     res.render('admin/download', {
       layout: 'admin',
       title: 'Link tải xuống — Admin',
@@ -243,9 +244,28 @@ const AdminController = {
       downloads,
       downloadPaused: pauseStatus.paused,
       downloadPauseMessage: pauseStatus.message,
+      sysreq_os: settings.sysreq_os || 'Windows 10 / 11',
+      sysreq_cpu: settings.sysreq_cpu || 'Intel Core i3 trở lên',
+      sysreq_ram: settings.sysreq_ram || 'Tối thiểu 4 GB',
+      sysreq_disk: settings.sysreq_disk || '10 GB trống / lớp',
+      sysreq_screen: settings.sysreq_screen || '1280 × 720 trở lên',
       success: req.flash('success'),
       error: req.flash('error')
     });
+  },
+
+  async downloadUpdateSysreq(req, res) {
+    try {
+      const { sysreq_os, sysreq_cpu, sysreq_ram, sysreq_disk, sysreq_screen } = req.body;
+      await ContactModel.updateSetting('sysreq_os', sysreq_os || 'Windows 10 / 11');
+      await ContactModel.updateSetting('sysreq_cpu', sysreq_cpu || 'Intel Core i3 trở lên');
+      await ContactModel.updateSetting('sysreq_ram', sysreq_ram || 'Tối thiểu 4 GB');
+      await ContactModel.updateSetting('sysreq_disk', sysreq_disk || '10 GB trống / lớp');
+      await ContactModel.updateSetting('sysreq_screen', sysreq_screen || '1280 × 720 trở lên');
+      res.json({ ok: true, message: 'Đã cập nhật yêu cầu hệ thống!' });
+    } catch (err) {
+      res.json({ ok: false, message: err.message });
+    }
   },
 
   async downloadToggleGlobalPause(req, res) {

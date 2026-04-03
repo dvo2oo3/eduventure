@@ -46,6 +46,7 @@ router.post('/download/programs/:id/toggle', AdminController.downloadToggleProgr
 router.post('/download/programs/:id/grade/:grade/toggle', AdminController.downloadToggleGrade);
 router.post('/download/pause/toggle', AdminController.downloadToggleGlobalPause);
 router.post('/download/pause-message', AdminController.downloadUpdatePauseMessage);
+router.post('/download/sysreq', AdminController.downloadUpdateSysreq);
 
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });

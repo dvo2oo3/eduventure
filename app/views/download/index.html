@@ -70,22 +70,6 @@
         <p class="dl-card__note">Số điện thoại của bạn phải được đăng ký trước với EduVenture. Mỗi số điện thoại tương ứng với một khối lớp cụ thể.</p>
       </div>
 
-      <!-- 5 khối lớp hiển thị -->
-      <div class="dl-alt-title" style="margin-top:2rem;">Phần mềm theo khối lớp</div>
-      <div class="dl-alts" style="display:flex;flex-direction:column;gap:.75rem;">
-        {{#each grades}}
-        <div class="dl-alt-card" style="cursor:default;">
-          <div class="dl-alt-card__icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a7f5a" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          </div>
-          <div>
-            <div class="dl-alt-card__label">{{label}}</div>
-            <div class="dl-alt-card__url">{{version}} · {{file_size}}</div>
-          </div>
-          <span style="font-size:.8rem;color:var(--color-text-secondary);background:#f0f0f0;padding:.2rem .6rem;border-radius:999px;">Cần xác nhận</span>
-        </div>
-        {{/each}}
-      </div>
     </div>
 
     <!-- RIGHT: Sidebar -->
@@ -93,11 +77,11 @@
       <div class="aside-box">
         <div class="aside-box__title">Yêu cầu hệ thống</div>
         <table class="sysreq-table">
-          <tr><td>Hệ điều hành</td><td>Windows 10 / 11</td></tr>
-          <tr><td>Bộ xử lý</td><td>Intel Core i3 trở lên</td></tr>
-          <tr><td>RAM</td><td>Tối thiểu 4 GB</td></tr>
-          <tr><td>Dung lượng</td><td>10 GB trống / lớp</td></tr>
-          <tr><td>Màn hình</td><td>1280 × 720 trở lên</td></tr>
+          <tr><td>Hệ điều hành</td><td>{{sysreq_os}}</td></tr>
+          <tr><td>Bộ xử lý</td><td>{{sysreq_cpu}}</td></tr>
+          <tr><td>RAM</td><td>{{sysreq_ram}}</td></tr>
+          <tr><td>Dung lượng</td><td>{{sysreq_disk}}</td></tr>
+          <tr><td>Màn hình</td><td>{{sysreq_screen}}</td></tr>
         </table>
       </div>
       <div class="aside-box aside-box--help">

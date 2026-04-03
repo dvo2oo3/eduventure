@@ -1,18 +1,29 @@
 const ProgramModel = require('../models/ProgramModel');
+const ContactModel = require('../models/ContactModel');
 
 const DownloadController = {
   async index(req, res) {
     try {
       const programs = await ProgramModel.getAll();
       const pauseStatus = await ProgramModel.getDownloadPauseStatus();
+      const settings = await ContactModel.getSettings();
+
+      const grades = programs.length > 0 ? await ProgramModel.getDownloads(programs[0].id) : [];
+
       res.render('download/index', {
         title: 'Tải xuống — ' + (res.locals.siteName || 'EduVenture'),
         page: 'download',
         pageCSS: 'download',
         pageJS: 'download',
         programs,
+        grades,
         downloadPaused: pauseStatus.paused,
         downloadPauseMessage: pauseStatus.message,
+        sysreq_os: settings.sysreq_os || 'Windows 10 / 11',
+        sysreq_cpu: settings.sysreq_cpu || 'Intel Core i3 trở lên',
+        sysreq_ram: settings.sysreq_ram || 'Tối thiểu 4 GB',
+        sysreq_disk: settings.sysreq_disk || '10 GB trống / lớp',
+        sysreq_screen: settings.sysreq_screen || '1280 × 720 trở lên',
         error: req.flash('error')
       });
     } catch (err) {
@@ -37,11 +48,9 @@ const DownloadController = {
         return res.redirect('/tai-xuong');
       }
 
-      // Lọc chỉ lấy các khối hợp lệ (chương trình active + khối active)
       const validRows = rows.filter(r => r.is_active && r.grade_active !== 0 && r.grade_active !== false);
 
       if (validRows.length === 0) {
-        // Tất cả khối đều bị tạm dừng
         req.flash('error', 'Chương trình hiện đang tạm dừng tải xuống. Vui lòng liên hệ EduVenture.');
         return res.redirect('/tai-xuong');
       }
