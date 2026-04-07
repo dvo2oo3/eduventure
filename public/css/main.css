@@ -134,10 +134,10 @@ input, textarea, select { font-family: var(--font); }
 }
 .flash--success { background: var(--green-50); color: var(--green-600); border: 1px solid var(--green-100); }
 .flash--error { background: var(--red-50); color: var(--red-500); border: 1px solid #f09595; }
-.flash--admin { position: static; transform: none; min-width: unset; max-width: unset; margin: 1rem 1.5rem; animation: none; }
+.flash--admin { position: fixed; top: 1.25rem; left: 50%; transform: translateX(-50%); min-width: unset; max-width: unset; margin: 0; animation: flashIn .28s ease; border-radius: 999px; padding: .7rem 1.4rem; }
 .flash__close { background: none; border: none; cursor: pointer; font-size: 1rem; opacity: .6; }
 .flash__close:hover { opacity: 1; }
-@keyframes flashIn { from { opacity: 0; transform: translateX(-50%) translateY(-8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+@keyframes flashIn { from { opacity: 0; transform: translateX(-50%) translateY(-28px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
 /* ── Navbar ───────────────────────────────────────────────── */
 .navbar {
@@ -1094,4 +1094,94 @@ input, textarea, select { font-family: var(--font); }
   .pub-filter-bar__search { min-width: 100%; }
   .pub-filter-bar__select { flex: 1; min-width: 0; }
   .pub-filter-bar__btn { padding: .45rem .875rem; }
+}
+/* ── Download page — mobile ─────────────────────────────── */
+@media (max-width: 600px) {
+  /* Layout: stack thành 1 cột, sidebar lên trên */
+  .download-layout {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .download-layout > .download-aside {
+    order: -1;
+  }
+
+  /* dl-card: giảm padding, badge nhỏ hơn */
+  .dl-card {
+    padding: 1.25rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+  }
+  .dl-card__badge {
+    font-size: .7rem;
+    top: -10px;
+    left: 1rem;
+    padding: .18em .75em;
+  }
+  .dl-card__top {
+    gap: .75rem;
+    margin-bottom: 1rem;
+  }
+  .dl-card__icon {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+  }
+  .dl-card__name { font-size: .95rem; }
+  .dl-card__info { font-size: .78rem; }
+  .dl-card__note { font-size: .78rem; }
+
+  /* Form bên trong card */
+  .dl-card .btn--lg {
+    width: 100%;
+    justify-content: center;
+    padding: .75rem 1rem;
+    font-size: .95rem;
+  }
+  .dl-card .form-control {
+    font-size: 16px !important; /* chặn iOS zoom */
+  }
+
+  /* Alt download cards */
+  .dl-alt-card {
+    padding: .875rem 1rem;
+    gap: .75rem;
+    border-radius: 10px;
+  }
+  .dl-alt-card__icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+  .dl-alt-card__label { font-size: .875rem; }
+  .dl-alt-card__url   { font-size: .75rem; word-break: break-all; }
+
+  /* Aside boxes */
+  .aside-box {
+    padding: 1rem;
+    margin-bottom: .875rem;
+    border-radius: 10px;
+  }
+  .aside-box__title { font-size: .9rem; margin-bottom: .75rem; }
+  .aside-box p      { font-size: .825rem; margin-bottom: .75rem; }
+  .aside-box .btn--block {
+    font-size: .875rem;
+    padding: .6rem 1rem;
+  }
+
+  /* Sysreq table */
+  .sysreq-table { font-size: .78rem; }
+  .sysreq-table td { padding: .4rem 0; }
+  .sysreq-table td:first-child { width: 45%; }
+
+  /* Maintenance banner */
+  .download-layout [style*="background:#fff7ed"] {
+    padding: 1rem !important;
+    gap: .75rem !important;
+    border-radius: 10px !important;
+  }
+  .download-layout [style*="background:#fff7ed"] .btn {
+    font-size: .825rem;
+    padding: .45rem .9rem;
+  }
 }
