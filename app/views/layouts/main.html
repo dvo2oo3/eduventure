@@ -61,7 +61,15 @@
           </svg>
           {{/if}}
         </div>
-        {{#if siteLogoText}}<span class="navbar__name">{{siteLogoText}}</span>{{/if}}
+        {{#if (eq siteLogoBesideMode 'image')}}
+          {{#if siteLogoBesideUrl}}
+          <img src="{{siteLogoBesideUrl}}" alt="{{siteName}}" style="height:28px;width:auto;max-width:140px;object-fit:contain;display:block;" />
+          {{else if siteLogoText}}
+          <span class="navbar__name">{{siteLogoText}}</span>
+          {{/if}}
+        {{else}}
+          {{#if siteLogoText}}<span class="navbar__name">{{siteLogoText}}</span>{{/if}}
+        {{/if}}
       </a>
       <nav class="navbar__nav">
         <a href="/" class="navbar__link {{#if (eq page 'home')}}navbar__link--active{{/if}}">Trang chủ</a>
@@ -134,9 +142,10 @@
         </div>
         <div class="footer__col">
           <div class="footer__col-title">Liên hệ</div>
-          <span>📍 Hà Nội, Việt Nam</span>
-          <span>📧 info@eduventure.vn</span>
-          <span>📞 0243 xxx xxxx</span>
+          <span>📍 {{#if siteContactAddress}}{{siteContactAddress}}{{else}}Hà Nội, Việt Nam{{/if}}</span>
+          <span>📧 {{#if siteContactEmail}}{{siteContactEmail}}{{else}}info@eduventure.vn{{/if}}</span>
+          <span>📞 {{#if siteContactPhone}}{{siteContactPhone}}{{else}}0243 xxx xxxx{{/if}}</span>
+          {{#if siteContactHours}}<span>🕐 {{siteContactHours}}</span>{{/if}}
           {{#if siteFacebookUrl}}
           <a href="{{siteFacebookUrl}}" target="_blank" rel="noopener" class="footer__social-link">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>

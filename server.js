@@ -116,6 +116,16 @@ app.use(async (req, res, next) => {
     res.locals.siteFacebookUrl = about?.facebook_url?.content || '';
     res.locals.siteZaloUrl = about?.zalo_url?.content || '';
     res.locals.siteBannerOverlayOpacity = about?.banner_overlay_opacity?.content || '45';
+    res.locals.siteLogoBesideMode = about?.logo_beside_mode?.content || 'text';
+    res.locals.siteLogoBesideUrl = about?.logo_beside_url?.content || null;
+  } catch(e) {}
+  try {
+    const ContactModel = require('./app/models/ContactModel');
+    const contactSettings = await ContactModel.getSettings();
+    res.locals.siteContactAddress = contactSettings.address || '';
+    res.locals.siteContactEmail   = contactSettings.email   || '';
+    res.locals.siteContactPhone   = contactSettings.phone   || '';
+    res.locals.siteContactHours   = contactSettings.working_hours || '';
   } catch(e) {}
   next();
 });

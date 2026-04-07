@@ -1,8 +1,29 @@
+<!-- TAB NAVIGATION -->
 <div class="admin-page">
   <div class="admin-topbar">
-    <h1 class="admin-topbar__title">Quản lý Tin tức & Chương trình</h1>
+    <h1 class="admin-topbar__title">Tin tức & Chương trình</h1>
     <a href="/admin/news/create" class="btn btn--primary">+ Thêm tin mới</a>
   </div>
+  <!-- FAB mobile -->
+  <a href="/admin/news/create" class="admin-fab">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Thêm tin mới
+  </a>
+
+  <!-- TAB BAR -->
+  <div style="display:flex;gap:0;margin-bottom:1.25rem;border-bottom:2px solid #e5e7eb;">
+    <button id="tab-btn-list" onclick="switchAdminTab('list')"
+      style="padding:.6rem 1.25rem;font-size:.875rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid #1a7f5a;margin-bottom:-2px;color:#1a7f5a;">
+      📋 Danh sách bài viết
+    </button>
+    <button id="tab-btn-settings" onclick="switchAdminTab('settings')"
+      style="padding:.6rem 1.25rem;font-size:.875rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:#6b7280;">
+      ⚙️ Cài đặt hiển thị
+    </button>
+  </div>
+
+  <!-- TAB: DANH SÁCH -->
+  <div id="tab-panel-list">
 
   <!-- BỘ LỌC -->
   <div class="admin-card" style="margin-bottom:1rem;">
@@ -51,7 +72,7 @@
   </div>
 
   <div class="admin-card">
-    <table class="admin-table">
+    <div class="admin-table-wrap"><table class="admin-table">
       <thead>
         <tr>
           <th style="width:40%">Tiêu đề</th>
@@ -105,7 +126,7 @@
         </tr>
         {{/each}}
       </tbody>
-    </table>
+    </table></div>
 
     <!-- PAGINATION -->
     {{#if (gt totalPages 1)}}
@@ -116,5 +137,56 @@
       {{/each}}
     </div>
     {{/if}}
-  </div>
-</div>
+  </div><!-- /.admin-card -->
+
+  </div><!-- /#tab-panel-list -->
+
+  <!-- TAB: CÀI ĐẶT HIỂN THỊ -->
+  <div id="tab-panel-settings" style="display:none;">
+    <div class="admin-card" style="max-width:520px;">
+      <div class="admin-card__header">
+        <div class="admin-card__title">⚙️ Cài đặt số bài hiển thị mỗi trang</div>
+      </div>
+      <form method="POST" action="/admin/news/display-settings" style="padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem;">
+        <div style="display:flex;flex-direction:column;gap:.5rem;">
+          <label style="font-size:.875rem;font-weight:600;color:#374151;">📌 Tin nổi bật — số bài mỗi trang</label>
+          <div style="display:flex;align-items:center;gap:.75rem;">
+            <input type="number" name="news_per_page" value="{{news_per_page}}" min="1" max="50"
+              style="width:80px;padding:.45rem .65rem;border:1px solid #d1d5db;border-radius:8px;font-size:1rem;text-align:center;" />
+            <span style="font-size:.875rem;color:#6b7280;">bài / trang</span>
+          </div>
+          <p style="font-size:.78rem;color:#9ca3af;margin:0;">Áp dụng cho trang /tin-tuc công khai</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:.5rem;">
+          <label style="font-size:.875rem;font-weight:600;color:#374151;">📚 Chương trình — số bài mỗi trang</label>
+          <div style="display:flex;align-items:center;gap:.75rem;">
+            <input type="number" name="program_per_page" value="{{program_per_page}}" min="1" max="50"
+              style="width:80px;padding:.45rem .65rem;border:1px solid #d1d5db;border-radius:8px;font-size:1rem;text-align:center;" />
+            <span style="font-size:.875rem;color:#6b7280;">bài / trang</span>
+          </div>
+          <p style="font-size:.78rem;color:#9ca3af;margin:0;">Áp dụng cho trang /chuong-trinh công khai</p>
+        </div>
+
+        <div style="border-top:1px solid #e5e7eb;padding-top:1rem;">
+          <button type="submit" class="btn btn--primary">💾 Lưu cài đặt</button>
+        </div>
+      </form>
+    </div>
+  </div><!-- /#tab-panel-settings -->
+
+</div><!-- /.admin-page -->
+
+<script>
+function switchAdminTab(tab) {
+  const isSettings = tab === 'settings';
+  document.getElementById('tab-panel-list').style.display = isSettings ? 'none' : '';
+  document.getElementById('tab-panel-settings').style.display = isSettings ? '' : 'none';
+  const activeStyle = 'padding:.6rem 1.25rem;font-size:.875rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid #1a7f5a;margin-bottom:-2px;color:#1a7f5a;';
+  const inactiveStyle = 'padding:.6rem 1.25rem;font-size:.875rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:#6b7280;';
+  document.getElementById('tab-btn-list').style.cssText = isSettings ? inactiveStyle : activeStyle;
+  document.getElementById('tab-btn-settings').style.cssText = isSettings ? activeStyle : inactiveStyle;
+}
+</script>
+<!-- FAB mobile -->
+<a href="/admin/news/create" class="admin-fab">＋ Thêm tin mới</a>

@@ -77,3 +77,58 @@
   .hero { padding: 2.5rem 0 2rem; }
   .hero__title { font-size: 1.75rem; }
 }
+
+
+/* ── Responsive — tablet ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .hero { padding: 3rem 0 2.5rem; }
+  .hero__inner { grid-template-columns: 1fr; }
+  .hero__visual { display: none; }
+  .hero__title  { font-size: 2rem; }
+  .hero__desc   { font-size: .9875rem; }
+  .hero__actions { flex-direction: column; }
+  .hero__actions .btn { width: 100%; justify-content: center; }
+}
+
+/* ── Hero mobile (iPhone) ─────────────────────────────────── */
+@media (max-width: 600px) {
+  /* Hero với ảnh nền */
+  .hero[style*="background-image"] {
+    padding: 0 !important;
+    min-height: 72vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    background-size: cover !important;
+    background-position: center !important;
+  }
+  /* KHÔNG override overlay ở đây — để JS/inline style quyết định độ tối */
+  .hero__inner {
+    grid-template-columns: 1fr !important;
+    padding: 2.25rem 1rem 1.75rem;
+    gap: 0 !important;
+  }
+  .hero__badge  { font-size: .72rem; padding: .28em .8em; margin-bottom: .65rem; }
+  .hero__title  {
+    font-size: 1.45rem !important;
+    line-height: 1.2;
+    margin-bottom: .625rem;
+    text-shadow: 0 1px 8px rgba(0,0,0,.38);
+  }
+  .hero__desc   {
+    font-size: .875rem !important;
+    margin-bottom: 1.1rem;
+    line-height: 1.55;
+    text-shadow: 0 1px 5px rgba(0,0,0,.28);
+    opacity: 1 !important;
+  }
+  .hero__actions { flex-direction: column !important; gap: .6rem !important; }
+  .hero__actions .btn { width: 100% !important; padding: .75rem 1rem; font-size: .9375rem; }
+  .hero__visual { display: none !important; }
+
+  /* Hero không có ảnh nền */
+  .hero:not([style*="background-image"]) {
+    padding: 2rem 0 1.75rem !important;
+    min-height: unset;
+  }
+}

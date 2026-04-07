@@ -1,5 +1,7 @@
 const ContactModel = require('../models/ContactModel');
+// const transporter = require('../../config/mail');
 const transporter = require('../../config/mail');
+// const transporter = require('../config/mail');
 require('dotenv').config();
 
 const ContactController = {

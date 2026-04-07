@@ -9,38 +9,60 @@
 <section class="section">
   <div class="container">
 
-    <!-- FILTER BAR -->
-    <div class="filter-bar">
-      <div class="filter-bar__pills">
-        <a href="/chuong-trinh" class="pill {{#unless currentYear}}{{#unless currentLocation}}pill--active{{/unless}}{{/unless}}">Tất cả</a>
-        {{#each years}}
-        <a href="/chuong-trinh?year={{this}}" class="pill {{#if (eq ../currentYear (json this))}}pill--active{{/if}}">{{this}}</a>
-        {{/each}}
-        <a href="/chuong-trinh?location=Hà Nội" class="pill {{#if (eq currentLocation 'Hà Nội')}}pill--active{{/if}}">Hà Nội</a>
-        <a href="/chuong-trinh?location=Hải Dương" class="pill {{#if (eq currentLocation 'Hải Dương')}}pill--active{{/if}}">Hải Dương</a>
+    <!-- SEARCH & FILTER BAR -->
+    <form method="GET" action="/chuong-trinh" class="pub-filter-bar">
+      <div class="pub-filter-bar__search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" name="q" value="{{filter.q}}" placeholder="Tìm kiếm chương trình..." class="pub-filter-bar__input" />
       </div>
-    </div>
+      {{#if allLocations.length}}
+      <select name="location" class="pub-filter-bar__select" onchange="this.form.submit()">
+        <option value="">📍 Tất cả địa điểm</option>
+        {{#each allLocations}}
+        <option value="{{this}}" {{#if (eq this ../filter.location)}}selected{{/if}}>{{this}}</option>
+        {{/each}}
+      </select>
+      {{/if}}
+      {{#if allYears.length}}
+      <select name="year" class="pub-filter-bar__select" onchange="this.form.submit()">
+        <option value="">📅 Tất cả năm</option>
+        {{#each allYears}}
+        <option value="{{this}}" {{#if (eq (json this) ../filter.year)}}selected{{/if}}>{{this}}</option>
+        {{/each}}
+      </select>
+      {{/if}}
+      <button type="submit" class="pub-filter-bar__btn">Tìm</button>
+      {{#if hasFilter}}
+      <a href="/chuong-trinh" class="pub-filter-bar__clear">✕ Xóa lọc</a>
+      {{/if}}
+    </form>
+
+    {{#if hasFilter}}
+    <p class="pub-filter-bar__result">Tìm thấy <strong>{{total}}</strong> kết quả</p>
+    {{/if}}
 
     <!-- EVENT LIST -->
     {{#if rows.length}}
-    <div class="event-list">
+    <div class="article-list">
       {{#each rows}}
-      <article class="event-item">
-        <div class="event-item__date">
-          <div class="event-item__day">{{#if event_date}}{{formatDate event_date}}{{/if}}</div>
-        </div>
-        <div class="event-item__body">
-          <div class="event-item__meta">
-            {{#if location}}<span class="badge badge--green">📍 {{location}}</span>{{/if}}
-            {{#if grade_level}}<span class="badge badge--gray">{{grade_level}}</span>{{/if}}
+      <article class="article-row">
+        <a href="/chuong-trinh/{{slug}}" class="article-row__thumb-link">
+          <div class="article-row__thumb {{#unless image}}article-row__thumb--placeholder{{/unless}}"
+            style="{{#if image}}background-image:url('{{image}}');{{/if}}"></div>
+        </a>
+        <div class="article-row__body">
+          <div class="article-row__content">
+            <div class="article-row__top">
+              {{#if location}}<span class="article-row__cat">📍 {{location}}</span>{{/if}}
+              {{#if grade_level}}<span class="article-row__badge">{{grade_level}}</span>{{/if}}
+              {{#if event_date}}<span class="article-row__time">{{formatDate event_date}}</span>{{/if}}
+            </div>
+            <h3 class="article-row__title"><a href="/chuong-trinh/{{slug}}">{{title}}</a></h3>
+            <p class="article-row__summary">{{truncate summary 160}}</p>
           </div>
-          <h3 class="event-item__title">
-            <a href="/chuong-trinh/{{slug}}">{{title}}</a>
-          </h3>
-          <p class="event-item__summary">{{truncate summary 160}}</p>
-        </div>
-        <div class="event-item__action">
-          <a href="/chuong-trinh/{{slug}}" class="btn btn--sm btn--outline">Xem chi tiết →</a>
+          <div class="article-row__action">
+            <a href="/chuong-trinh/{{slug}}" class="article-row__link">Xem chi tiết →</a>
+          </div>
         </div>
       </article>
       {{/each}}
@@ -49,14 +71,14 @@
     <!-- PAGINATION -->
     {{#if (ne totalPages 1)}}
     <div class="pagination">
-      {{#if (ne page 1)}}
-      <a href="/chuong-trinh?page={{dec page}}{{#if currentYear}}&year={{currentYear}}{{/if}}" class="pagination__btn">&laquo; Trước</a>
+      {{#if (ne currentPage 1)}}
+      <a href="/chuong-trinh?page={{dec currentPage}}{{#if filter.q}}&q={{filter.q}}{{/if}}{{#if filter.year}}&year={{filter.year}}{{/if}}{{#if filter.location}}&location={{filter.location}}{{/if}}" class="pagination__btn">&laquo; Trước</a>
       {{/if}}
       {{#each (range 1 totalPages)}}
-      <a href="/chuong-trinh?page={{this}}{{#if ../currentYear}}&year={{../currentYear}}{{/if}}" class="pagination__btn {{#if (eq this ../page)}}pagination__btn--active{{/if}}">{{this}}</a>
+      <a href="/chuong-trinh?page={{this}}{{#if ../filter.q}}&q={{../filter.q}}{{/if}}{{#if ../filter.year}}&year={{../filter.year}}{{/if}}{{#if ../filter.location}}&location={{../filter.location}}{{/if}}" class="pagination__btn {{#if (eq this ../currentPage)}}pagination__btn--active{{/if}}">{{this}}</a>
       {{/each}}
-      {{#if (ne page totalPages)}}
-      <a href="/chuong-trinh?page={{inc page}}{{#if currentYear}}&year={{currentYear}}{{/if}}" class="pagination__btn">Tiếp &raquo;</a>
+      {{#if (ne currentPage totalPages)}}
+      <a href="/chuong-trinh?page={{inc currentPage}}{{#if filter.q}}&q={{filter.q}}{{/if}}{{#if filter.year}}&year={{filter.year}}{{/if}}{{#if filter.location}}&location={{filter.location}}{{/if}}" class="pagination__btn">Tiếp &raquo;</a>
       {{/if}}
     </div>
     {{/if}}
@@ -64,8 +86,8 @@
     {{else}}
     <div class="empty-state">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <p>Chưa có sự kiện nào trong mục này.</p>
-      <a href="/chuong-trinh" class="btn btn--outline">Xem tất cả</a>
+      <p>{{#if hasFilter}}Không tìm thấy chương trình nào khớp bộ lọc.{{else}}Chưa có sự kiện nào trong mục này.{{/if}}</p>
+      {{#if hasFilter}}<a href="/chuong-trinh" class="btn btn--outline">Xem tất cả</a>{{/if}}
     </div>
     {{/if}}
 

@@ -1,4 +1,4 @@
-const db = require('../../config/database');  
+const db = require('../../config/database');
 
 const NewsModel = {
   // Lấy tin nổi bật ghim cho trang chủ
@@ -10,42 +10,57 @@ const NewsModel = {
   },
 
   // Lấy tất cả chương trình (category = program)
-  async getPrograms({ page = 1, limit = 8, year = null, location = null } = {}) {
+  async getPrograms({ page = 1, limit = 8, year = null, location = null, q = '' } = {}) {
     const offset = (page - 1) * limit;
     let where = "WHERE category = 'program' AND is_visible = 1";
     const params = [];
 
-    if (year) {
-      where += ' AND YEAR(event_date) = ?';
-      params.push(year);
-    }
-    if (location) {
-      where += ' AND location LIKE ?';
-      params.push(`%${location}%`);
-    }
+    if (year) { where += ' AND YEAR(event_date) = ?'; params.push(year); }
+    if (location) { where += ' AND location LIKE ?'; params.push(`%${location}%`); }
+    if (q) { where += ' AND (title LIKE ? OR summary LIKE ?)'; params.push(`%${q}%`, `%${q}%`); }
 
     const [rows] = await db.query(
       `SELECT * FROM news ${where} ORDER BY event_date DESC LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );
-    const [[{ total }]] = await db.query(
-      `SELECT COUNT(*) as total FROM news ${where}`,
-      params
-    );
+    const [[{ total }]] = await db.query(`SELECT COUNT(*) as total FROM news ${where}`, params);
     return { rows, total, page, limit, totalPages: Math.ceil(total / limit) };
   },
 
   // Lấy tất cả tin nổi bật (category = highlight)
-  async getHighlights({ page = 1, limit = 6 } = {}) {
+  async getHighlights({ page = 1, limit = 6, q = '', location = '', year = '' } = {}) {
     const offset = (page - 1) * limit;
+    let where = "WHERE category = 'highlight' AND is_visible = 1";
+    const params = [];
+
+    if (q) { where += ' AND (title LIKE ? OR summary LIKE ?)'; params.push(`%${q}%`, `%${q}%`); }
+    if (location) { where += ' AND location LIKE ?'; params.push(`%${location}%`); }
+    if (year) { where += ' AND YEAR(event_date) = ?'; params.push(year); }
+
     const [rows] = await db.query(
-      "SELECT * FROM news WHERE category = 'highlight' AND is_visible = 1 ORDER BY created_at DESC LIMIT ? OFFSET ?",
-      [limit, offset]
+      `SELECT * FROM news ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
     );
-    const [[{ total }]] = await db.query(
-      "SELECT COUNT(*) as total FROM news WHERE category = 'highlight' AND is_visible = 1"
-    );
+    const [[{ total }]] = await db.query(`SELECT COUNT(*) as total FROM news ${where}`, params);
     return { rows, total, page, limit, totalPages: Math.ceil(total / limit) };
+  },
+
+  // Lấy danh sách location distinct theo category
+  async getDistinctLocations(category) {
+    const [rows] = await db.query(
+      "SELECT DISTINCT location FROM news WHERE category = ? AND is_visible = 1 AND location IS NOT NULL AND location != '' ORDER BY location",
+      [category]
+    );
+    return rows.map(r => r.location);
+  },
+
+  // Lấy danh sách năm distinct theo category
+  async getDistinctYears(category) {
+    const [rows] = await db.query(
+      "SELECT DISTINCT YEAR(event_date) as yr FROM news WHERE category = ? AND is_visible = 1 AND event_date IS NOT NULL ORDER BY yr DESC",
+      [category]
+    );
+    return rows.map(r => r.yr).filter(Boolean);
   },
 
   // Lấy chi tiết bài viết theo slug
@@ -97,17 +112,9 @@ const NewsModel = {
     );
   },
 
-  async delete(id) {
-    await db.query('DELETE FROM news WHERE id = ?', [id]);
-  },
-
-  async toggleVisible(id) {
-    await db.query('UPDATE news SET is_visible = NOT is_visible WHERE id = ?', [id]);
-  },
-
-  async togglePin(id) {
-    await db.query('UPDATE news SET is_pinned = NOT is_pinned WHERE id = ?', [id]);
-  }
+  async delete(id) { await db.query('DELETE FROM news WHERE id = ?', [id]); },
+  async toggleVisible(id) { await db.query('UPDATE news SET is_visible = NOT is_visible WHERE id = ?', [id]); },
+  async togglePin(id) { await db.query('UPDATE news SET is_pinned = NOT is_pinned WHERE id = ?', [id]); }
 };
 
 module.exports = NewsModel;

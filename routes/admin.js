@@ -24,6 +24,7 @@ router.post('/news/:id/edit', requirePermission('news'), AdminController.newsUpd
 router.post('/news/:id/delete', requirePermission('news'), AdminController.newsDelete);
 router.post('/news/:id/toggle-visible', requirePermission('news'), AdminController.newsToggleVisible);
 router.post('/news/:id/toggle-pin', requirePermission('news'), AdminController.newsTogglePin);
+router.post('/news/display-settings', requirePermission('news'), AdminController.newsDisplaySettingSave);
 
 // Về chúng tôi
 router.get('/about', requirePermission('about'), AdminController.aboutPage);

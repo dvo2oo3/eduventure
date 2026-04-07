@@ -1,29 +1,27 @@
 ﻿const NewsModel = require('../models/NewsModel');
+const ContactModel = require('../models/ContactModel');
 
 const ProgramController = {
-  
   async index(req, res) {
     try {
-      const { page = 1, year = null, location = null } = req.query;
-      const data = await NewsModel.getPrograms({ page: parseInt(page), year, location });
-      const years = [...new Set(
-        data.rows
-          .map(r => r.event_date ? new Date(r.event_date).getFullYear() : null)
-          .filter(Boolean)
-      )].sort((a, b) => b - a);
-
+      const { page = 1, q = '', location = '', year = '' } = req.query;
+      const settings = await ContactModel.getSettings();
+      const limit = parseInt(settings.news_per_page) || 6;
+      const data = await NewsModel.getPrograms({ page: parseInt(page), limit, q, location, year });
+      const allLocations = await NewsModel.getDistinctLocations('program');
+      const allYears = await NewsModel.getDistinctYears('program');
       res.render('programs/index', {
-        title: 'Chương trình & Sự kiện - EduVenture',
+        title: 'Chương trình & Sự kiện - ' + (res.locals.siteName || 'EduVenture'),
         page: 'programs',
         pageCSS: 'programs',
-        pageJS: 'programs',
         rows: data.rows,
         total: data.total,
         totalPages: data.totalPages,
         currentPage: data.page,
-        years,
-        currentYear: year,
-        currentLocation: location
+        filter: { q, location, year },
+        hasFilter: !!(q || location || year),
+        allLocations,
+        allYears
       });
     } catch (err) {
       console.error(err);

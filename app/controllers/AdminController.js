@@ -25,18 +25,19 @@ const uploadNews = multer({
 
 const uploadMedia = multer({
   storage: memStorage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB (cho video)
+  limits: { fileSize: 50 * 1024 * 1024, fieldSize: 20 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = ['.jpg','.jpeg','.png','.webp','.gif','.mp4','.webm','.mov','.ogg'];
     const ext = path.extname(file.originalname).toLowerCase();
     allowed.includes(ext) ? cb(null, true) : cb(new Error('Định dạng file không được hỗ trợ!'));
   }
 }).fields([
-  { name: 'banner_file', maxCount: 1 },
-  { name: 'logo_file', maxCount: 1 },
-  { name: 'event_banner_file', maxCount: 1 },
-  { name: 'favicon_file', maxCount: 1 },
-  { name: 'og_image_file', maxCount: 1 }
+  { name: 'banner_file',      maxCount: 1 },
+  { name: 'logo_file',        maxCount: 1 },
+  { name: 'logoBeside_file',  maxCount: 1 },
+  { name: 'event_file',       maxCount: 1 },
+  { name: 'favicon_file',     maxCount: 1 },
+  { name: 'og_image_file',    maxCount: 1 }
 ]);
 // Helper tạo slug từ tiêu đề
 function makeSlug(title) {
@@ -100,6 +101,7 @@ const AdminController = {
   async newsList(req, res) {
     const { page = 1, category = '', q = '', status = '', date_from = '', date_to = '' } = req.query;
     const data = await NewsModel.getAll({ page: parseInt(page), category, q, status, date_from, date_to });
+    const settings = await ContactModel.getSettings();
     res.render('admin/news', {
       layout: 'admin',
       title: 'Quản lý tin tức — Admin',
@@ -108,6 +110,8 @@ const AdminController = {
       ...data,
       filter: { category, q, status, date_from, date_to },
       hasFilter: !!(category || q || status || date_from || date_to),
+      news_per_page: settings.news_per_page || '6',
+      program_per_page: settings.program_per_page || '8',
       success: req.flash('success'),
       error: req.flash('error')
     });
@@ -765,6 +769,18 @@ const AdminController = {
     }
   },
 
+  async newsDisplaySettingSave(req, res) {
+    try {
+      const { news_per_page, program_per_page } = req.body;
+      if (news_per_page) await ContactModel.updateSetting('news_per_page', parseInt(news_per_page) || 6);
+      if (program_per_page) await ContactModel.updateSetting('program_per_page', parseInt(program_per_page) || 8);
+      req.flash('success', 'Cập nhật số bài hiển thị thành công!');
+      res.redirect('/admin/news');
+    } catch (err) {
+      req.flash('error', 'Lỗi: ' + err.message);
+      res.redirect('/admin/news');
+    }
+  }
 };
 
 module.exports = AdminController;
@@ -787,36 +803,107 @@ const AdminControllerExtension = {
   async mediaUpdate(req, res) {
     try {
       const AboutModel = require('../models/AboutModel');
-      for (const key of ['site_name', 'banner_title', 'banner_subtitle', 'logo_mode', 'logo_text', 'logo_size', 'banner_position', 'banner_zoom', 'logo_position', 'logo_zoom', 'event_position', 'event_zoom', 'event_banner_title', 'event_banner_link', 'banner_text_color', 'event_text_color', 'favicon_shape', 'favicon_position', 'og_title', 'og_description', 'facebook_url', 'zalo_url', 'banner_overlay_opacity']) {
-        if (req.body[key] !== undefined) await AboutModel.upsert(key, { title: null, content: req.body[key] });
+
+      // ── Helper: decode base64 data URL → Buffer ──────────────
+      function base64ToBuffer(dataUrl) {
+        // format: "data:image/jpeg;base64,<data>"
+        const matches = dataUrl.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+        if (!matches || matches.length !== 3) throw new Error('Invalid base64 image data');
+        return Buffer.from(matches[2], 'base64');
       }
-      await AboutModel.upsert('banner_active', { title: null, content: req.body.banner_active === '1' ? '1' : '0' });
+
+      // ── Lưu các field text thông thường ─────────────────────
+      for (const key of [
+        'site_name', 'banner_title', 'banner_subtitle',
+        'logo_mode', 'logo_text', 'logo_size',
+        'logo_beside_mode',
+        'banner_position', 'banner_zoom',
+        'logo_position', 'logo_zoom',
+        'event_position', 'event_zoom',
+        'event_banner_title', 'event_banner_link',
+        'banner_text_color', 'event_text_color',
+        'favicon_shape', 'favicon_position',
+        'og_title', 'og_description',
+        'facebook_url', 'zalo_url',
+        'banner_overlay_opacity'
+      ]) {
+        if (req.body[key] !== undefined) {
+          await AboutModel.upsert(key, { title: null, content: req.body[key] });
+        }
+      }
+      await AboutModel.upsert('banner_active',       { title: null, content: req.body.banner_active       === '1' ? '1' : '0' });
       await AboutModel.upsert('event_banner_active', { title: null, content: req.body.event_banner_active === '1' ? '1' : '0' });
-      if (req.files?.banner_file?.[0]) {
-        const f = req.files.banner_file[0];
-        await AboutModel.upsert('banner_url', { title: null, content: await uploadToR2(f.buffer, f.originalname, 'media') });
+
+      // ── Upload ảnh từ crop modal (base64) → R2 ────────────────
+      // Banner
+      const bannerData = req.body.banner_cropped_data;
+      if (bannerData && bannerData.startsWith('data:')) {
+        const buf = base64ToBuffer(bannerData);
+        const url = await uploadToR2(buf, 'banner_cropped.jpg', 'media');
+        await AboutModel.upsert('banner_url', { title: null, content: url });
       }
-      if (req.files?.logo_file?.[0]) {
-        const f = req.files.logo_file[0];
-        await AboutModel.upsert('logo_url', { title: null, content: await uploadToR2(f.buffer, f.originalname, 'media') });
+
+      // Logo chính
+      const logoData = req.body.logo_cropped_data;
+      if (logoData && logoData.startsWith('data:')) {
+        const buf = base64ToBuffer(logoData);
+        const url = await uploadToR2(buf, 'logo_cropped.jpg', 'media');
+        await AboutModel.upsert('logo_url', { title: null, content: url });
       }
-      if (req.files?.event_banner_file?.[0]) {
-        const f = req.files.event_banner_file[0];
-        await AboutModel.upsert('event_banner_url', { title: null, content: await uploadToR2(f.buffer, f.originalname, 'media') });
+
+      // Ảnh phụ cạnh logo
+      const logoBesideData = req.body.logo_beside_cropped_data;
+      if (logoBesideData && logoBesideData.startsWith('data:')) {
+        const buf = base64ToBuffer(logoBesideData);
+        const url = await uploadToR2(buf, 'logo_beside_cropped.jpg', 'media');
+        await AboutModel.upsert('logo_beside_url', { title: null, content: url });
       }
-      if (req.files?.favicon_file?.[0]) {
+
+      // Banner sự kiện
+      const eventData = req.body.event_cropped_data;
+      if (eventData && eventData.startsWith('data:')) {
+        const buf = base64ToBuffer(eventData);
+        const url = await uploadToR2(buf, 'event_banner_cropped.jpg', 'media');
+        await AboutModel.upsert('event_banner_url', { title: null, content: url });
+      }
+
+      // ── Upload favicon (cropped base64 ưu tiên, fallback file upload) ──
+      const faviconCropped = req.body.favicon_cropped_data;
+      if (faviconCropped && faviconCropped.startsWith('data:')) {
+        const buf = base64ToBuffer(faviconCropped);
+        const url = await uploadToR2(buf, 'favicon_cropped.png', 'media');
+        await AboutModel.upsert('favicon_url', { title: null, content: url });
+      } else if (req.files?.favicon_file?.[0]) {
         const f = req.files.favicon_file[0];
         await AboutModel.upsert('favicon_url', { title: null, content: await uploadToR2(f.buffer, f.originalname, 'media') });
       }
-      if (req.files?.og_image_file?.[0]) {
+
+      // ── Upload OG image (cropped base64 ưu tiên, fallback file upload) ──
+      const ogCropped = req.body.og_image_cropped_data;
+      if (ogCropped && ogCropped.startsWith('data:')) {
+        const buf = base64ToBuffer(ogCropped);
+        const url = await uploadToR2(buf, 'og_image_cropped.jpg', 'media');
+        await AboutModel.upsert('og_image_url', { title: null, content: url });
+      } else if (req.files?.og_image_file?.[0]) {
         const f = req.files.og_image_file[0];
         await AboutModel.upsert('og_image_url', { title: null, content: await uploadToR2(f.buffer, f.originalname, 'media') });
       }
-      req.flash('success', 'Cập nhật thành công!');
-      res.redirect('/admin/media');
+
+      const wantsJson = req.headers['x-requested-with'] === 'XMLHttpRequest' || req.headers['accept']?.includes('application/json');
+      if (wantsJson) {
+        res.json({ ok: true, message: 'Cập nhật thành công!' });
+      } else {
+        req.flash('success', 'Cập nhật thành công!');
+        res.redirect('/admin/media');
+      }
     } catch (e) {
-      req.flash('error', 'Lỗi: ' + e.message);
-      res.redirect('/admin/media');
+      const wantsJson = req.headers['x-requested-with'] === 'XMLHttpRequest' || req.headers['accept']?.includes('application/json');
+      if (wantsJson) {
+        res.json({ ok: false, message: e.message });
+      } else {
+        req.flash('error', 'Lỗi: ' + e.message);
+        res.redirect('/admin/media');
+      }
     }
   }
 ,
@@ -825,7 +912,7 @@ const AdminControllerExtension = {
     try {
       const AboutModel = require('../models/AboutModel');
       const { key } = req.body;
-      const allowed = ['favicon_url', 'og_image_url'];
+      const allowed = ['favicon_url', 'og_image_url', 'logo_beside_url'];
       if (!allowed.includes(key)) {
         req.flash('error', 'Key không hợp lệ.');
         return res.redirect('/admin/media');
