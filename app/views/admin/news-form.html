@@ -10,7 +10,7 @@
   {{#if error}}<div class="flash flash--error flash--admin"><span>{{error}}</span><button class="flash__close" onclick="this.parentElement.remove()">✕</button></div>{{/if}}
 
   <form action="/admin/news/{{#if item}}{{item.id}}/edit{{else}}create{{/if}}" method="POST" enctype="multipart/form-data">
-    <div class="news-form-grid" style="display:grid;grid-template-columns:1fr 320px;gap:1.5rem;align-items:start;">
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:1.5rem;align-items:start;">
 
       <!-- CỘT TRÁI: Nội dung chính -->
       <div style="display:flex;flex-direction:column;gap:1.25rem;">
@@ -62,33 +62,21 @@
             <!-- Preview panel -->
             <div id="preview-panel" style="display:none;">
               <div id="pv-outer" style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#f9fafb;box-shadow:0 2px 8px rgba(0,0,0,.06);">
-                <!-- Header -->
                 <div style="background:#f0fdf4;border-bottom:1px solid #d1fae5;padding:.5rem 1rem;display:flex;align-items:center;gap:.5rem;">
                   <span style="font-size:.72rem;color:#059669;font-weight:700;letter-spacing:.05em;">👁 PREVIEW</span>
                   <span style="font-size:.7rem;color:#9ca3af;margin-left:auto;" id="pv-size-label">Desktop</span>
                 </div>
                 <div style="overflow-x:auto;">
                   <div id="pv-page" style="max-width:780px;margin:0 auto;padding:2rem 1.5rem;background:#fff;min-height:300px;">
-
-                    <!-- Ảnh đại diện -->
                     <div id="pv-img-wrap" style="display:none;margin-bottom:1.5rem;border-radius:10px;overflow:hidden;">
                       <img id="pv-img" src="" alt="" style="width:100%;max-height:360px;object-fit:cover;object-position:center top;display:block;" />
                     </div>
-
-                    <!-- Meta badges -->
                     <div id="pv-meta" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem;"></div>
-
-                    <!-- Tiêu đề -->
                     <h1 id="pv-title" style="font-size:1.65rem;font-weight:800;line-height:1.3;color:#111827;margin:0 0 .75rem;">
                       <em style="color:#d1d5db;font-style:italic;font-weight:400;">Tiêu đề bài viết...</em>
                     </h1>
-
-                    <!-- Tóm tắt -->
                     <p id="pv-summary" style="display:none;font-size:1rem;color:#4b5563;line-height:1.65;border-left:3px solid #1a7f5a;padding-left:1rem;margin:0 0 1.25rem;"></p>
-
                     <div style="border-top:2px solid #f3f4f6;margin-bottom:1.5rem;"></div>
-
-                    <!-- Nội dung — CSS khớp với .prose trên web -->
                     <style>
                       #pv-content p { margin-bottom:1.2em; }
                       #pv-content h2,#pv-content h3 { font-weight:700;margin:1.5em 0 .5em;line-height:1.3; }
@@ -105,11 +93,9 @@
                       #pv-content blockquote { border-left:3px solid #1a7f5a;padding-left:1rem;color:#6b7280;margin:1.5em 0;font-style:italic; }
                     </style>
                     <div id="pv-content" style="font-family:'Be Vietnam Pro',sans-serif;font-size:.9375rem;line-height:1.8;color:#1c1c1a;"></div>
-
                   </div>
                 </div>
               </div>
-              <!-- Responsive toggle -->
               <div style="margin-top:.6rem;display:flex;gap:.4rem;justify-content:flex-end;align-items:center;">
                 <span style="font-size:.75rem;color:#9ca3af;">Xem trên:</span>
                 <button type="button" onclick="setPvWidth('100%','Desktop')"  style="font-size:.72rem;padding:.28rem .6rem;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;color:#374151;">🖥 Desktop</button>
@@ -186,16 +172,12 @@
             <div class="admin-card__title">Ảnh đại diện</div>
           </div>
           <div style="padding:1.25rem;display:flex;flex-direction:column;gap:.875rem;">
-
-            <!-- Preview -->
             <div id="img-preview-wrap" style="{{#if item.image}}{{else}}display:none;{{/if}}border-radius:8px;overflow:hidden;border:1px solid #e8e8e4;background:#f9fafb;">
               <img id="img-preview"
                 src="{{#if item}}{{item.image}}{{/if}}"
                 alt="Preview"
                 style="width:100%;max-height:180px;object-fit:cover;display:block;" />
             </div>
-
-            <!-- Tab chọn kiểu -->
             <div style="display:flex;background:#f3f4f6;border-radius:8px;padding:3px;gap:3px;">
               <button type="button" id="tab-upload" onclick="switchImgTab('upload')"
                 style="flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:#fff;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,.1);">
@@ -206,7 +188,6 @@
                 🔗 Nhập URL
               </button>
             </div>
-
             <div id="pane-upload">
               <label style="display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:1.25rem;border:2px dashed #d1d5db;border-radius:8px;cursor:pointer;transition:border-color .15s;" id="upload-label">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -215,7 +196,6 @@
                 <input type="file" name="image_file" accept="image/*" onchange="previewImg(this)" style="display:none;" />
               </label>
             </div>
-
             <div id="pane-url" style="display:none;">
               <input class="form-input" type="text" name="image" id="image-url-input"
                 value="{{#if item}}{{item.image}}{{/if}}"
@@ -223,7 +203,6 @@
                 oninput="previewUrl(this.value)" />
               <div style="font-size:.75rem;color:#9ca3af;margin-top:.35rem;">Dán link ảnh từ internet</div>
             </div>
-
           </div>
         </div>
 
@@ -254,7 +233,6 @@ function previewImg(input) {
       document.getElementById('img-preview-wrap').style.display = '';
     };
     reader.readAsDataURL(input.files[0]);
-    // Đổi label upload
     const label = document.getElementById('upload-label');
     label.style.borderColor = '#1a7f5a';
     label.querySelector('span').textContent = input.files[0].name;
@@ -269,12 +247,12 @@ function previewUrl(val) {
 }
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js" referrerpolicy="origin"></script>
+<!-- ✅ Dùng Cloudflare CDN thay vì jsdelivr để ổn định hơn ở VN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
 tinymce.init({
   selector: '#content',
-  language_url: 'https://cdn.jsdelivr.net/npm/tinymce-i18n@23.10.9/langs6/vi.js',
-  language: 'vi',
+  // ✅ Đã xóa language_url và language vì file vi.js từ jsdelivr gây lỗi init
   height: 520,
   menubar: false,
   plugins: ['advlist','autolink','lists','link','image','media','charmap','preview',
@@ -285,13 +263,11 @@ tinymce.init({
   ],
   toolbar_mode: 'wrap',
 
-  // ── Ảnh ─────────────────────────────────────────────────
   image_advtab: true,
   automatic_uploads: true,
   images_upload_url: '/admin/upload-image',
   images_upload_credentials: true,
 
-  // ── Video ────────────────────────────────────────────────
   media_live_embeds: true,
   media_alt_source: false,
   media_poster: false,
@@ -302,32 +278,25 @@ tinymce.init({
       + '</video>';
   },
 
-  // File picker: upload ảnh + video từ máy tính
   file_picker_types: 'image media',
   file_picker_callback: function(callback, value, meta) {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
-
     if (meta.filetype === 'image') {
       input.setAttribute('accept', 'image/*');
     } else {
       input.setAttribute('accept', 'video/mp4,video/webm,video/ogg,video/mov');
     }
-
     input.onchange = function() {
       const file = this.files[0];
       const formData = new FormData();
       formData.append('file', file);
-
       const isVideo = meta.filetype === 'media';
       const uploadUrl = isVideo ? '/admin/upload-video' : '/admin/upload-image';
-
-      // Hiện loading
       const toast = document.createElement('div');
       toast.textContent = isVideo ? '⏳ Đang upload video...' : '⏳ Đang upload ảnh...';
       toast.style.cssText = 'position:fixed;bottom:2rem;right:2rem;background:#1a7f5a;color:#fff;padding:.75rem 1.25rem;border-radius:10px;font-size:.875rem;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,.2);';
       document.body.appendChild(toast);
-
       fetch(uploadUrl, { method: 'POST', body: formData, credentials: 'same-origin' })
         .then(r => r.json())
         .then(data => {
@@ -343,7 +312,6 @@ tinymce.init({
           alert('Lỗi kết nối khi upload file');
         });
     };
-
     input.click();
   },
 
@@ -382,7 +350,6 @@ tinymce.init({
   }
 });
 
-/* ── PREVIEW LOGIC ──────────────────────────────────── */
 function switchEditorTab(tab) {
   const isPreview = tab === 'preview';
   document.getElementById('editor-panel').style.display = isPreview ? 'none' : '';
@@ -391,9 +358,7 @@ function switchEditorTab(tab) {
   const inactiveStyle = 'padding:.45rem 1rem;font-size:.82rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:#6b7280;';
   document.getElementById('editor-tab-btn').style.cssText = isPreview ? inactiveStyle : activeStyle;
   document.getElementById('preview-tab-btn').style.cssText = isPreview ? activeStyle : inactiveStyle;
-
   if (isPreview) {
-    // Đồng bộ nội dung từ TinyMCE khi mở preview
     if (window.tinymce && tinymce.get('content')) {
       updatePreviewContent(tinymce.get('content').getContent());
     }
@@ -407,17 +372,14 @@ function updatePreviewContent(html) {
 }
 
 function updatePreviewMeta() {
-  // Tiêu đề
   const title = document.querySelector('[name=title]')?.value || '';
   const pvTitle = document.getElementById('pv-title');
   if (pvTitle) pvTitle.innerHTML = title || '<em style="color:#d1d5db;font-style:italic;font-weight:400;">Tiêu đề bài viết sẽ hiển thị ở đây...</em>';
 
-  // Tóm tắt
   const summary = document.querySelector('[name=summary]')?.value || '';
   const pvSummary = document.getElementById('pv-summary');
   if (pvSummary) { pvSummary.textContent = summary; pvSummary.style.display = summary ? '' : 'none'; }
 
-  // Meta (địa điểm, ngày, khối lớp)
   const location = document.querySelector('[name=location]')?.value || '';
   const grade = document.querySelector('[name=grade_level]')?.value || '';
   const eventDate = document.querySelector('[name=event_date]')?.value || '';
@@ -430,7 +392,6 @@ function updatePreviewMeta() {
     ].join('');
   }
 
-  // Ảnh đại diện
   const imgSrc = document.getElementById('img-preview')?.src || '';
   const pvImg = document.getElementById('pv-img');
   const pvImgWrap = document.getElementById('pv-img-wrap');
@@ -451,7 +412,6 @@ function setPvWidth(w, label) {
   if (lbl) lbl.textContent = label || w;
 }
 
-// Cập nhật tiêu đề/meta khi gõ
 document.addEventListener('input', function(e) {
   const names = ['title','summary','location','grade_level','event_date'];
   if (e.target && names.includes(e.target.name)) updatePreviewMeta();

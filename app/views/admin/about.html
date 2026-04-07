@@ -74,11 +74,19 @@
               <div class="about-stat-icon" style="background:#e8f5f0;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a7f5a" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
               </div>
-              <div style="flex:1;">
-                <label class="form-label">Số trường đối tác</label>
-                <input class="form-input" type="text" name="stats_schools"
-                  value="{{#if about.stats_schools}}{{about.stats_schools.title}}{{/if}}"
-                  placeholder="120+" />
+              <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
+                <div>
+                  <label class="form-label" style="margin-bottom:.2rem;">Số trường đối tác (con số)</label>
+                  <input class="form-input" type="text" name="stats_schools_title"
+                    value="{{#if about.stats_schools}}{{about.stats_schools.title}}{{/if}}"
+                    placeholder="120+" />
+                </div>
+                <div>
+                  <label class="form-label" style="margin-bottom:.2rem;">Nhãn mô tả</label>
+                  <input class="form-input" type="text" name="stats_schools"
+                    value="{{#if about.stats_schools}}{{about.stats_schools.content}}{{/if}}"
+                    placeholder="Trường đối tác" />
+                </div>
               </div>
             </div>
 
@@ -86,11 +94,19 @@
               <div class="about-stat-icon" style="background:#fff3e0;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               </div>
-              <div style="flex:1;">
-                <label class="form-label">Số học sinh</label>
-                <input class="form-input" type="text" name="stats_students"
-                  value="{{#if about.stats_students}}{{about.stats_students.title}}{{/if}}"
-                  placeholder="50,000+" />
+              <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
+                <div>
+                  <label class="form-label" style="margin-bottom:.2rem;">Số học sinh (con số)</label>
+                  <input class="form-input" type="text" name="stats_students_title"
+                    value="{{#if about.stats_students}}{{about.stats_students.title}}{{/if}}"
+                    placeholder="50,000+" />
+                </div>
+                <div>
+                  <label class="form-label" style="margin-bottom:.2rem;">Nhãn mô tả</label>
+                  <input class="form-input" type="text" name="stats_students"
+                    value="{{#if about.stats_students}}{{about.stats_students.content}}{{/if}}"
+                    placeholder="Học sinh" />
+                </div>
               </div>
             </div>
 
@@ -98,11 +114,19 @@
               <div class="about-stat-icon" style="background:#e8f0fe;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               </div>
-              <div style="flex:1;">
-                <label class="form-label">Năm kinh nghiệm</label>
-                <input class="form-input" type="text" name="stats_years"
-                  value="{{#if about.stats_years}}{{about.stats_years.title}}{{/if}}"
-                  placeholder="10+" />
+              <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
+                <div>
+                  <label class="form-label" style="margin-bottom:.2rem;">Năm kinh nghiệm (con số)</label>
+                  <input class="form-input" type="text" name="stats_years_title"
+                    value="{{#if about.stats_years}}{{about.stats_years.title}}{{/if}}"
+                    placeholder="10+" />
+                </div>
+                <div>
+                  <label class="form-label" style="margin-bottom:.2rem;">Nhãn mô tả</label>
+                  <input class="form-input" type="text" name="stats_years"
+                    value="{{#if about.stats_years}}{{about.stats_years.content}}{{/if}}"
+                    placeholder="Năm kinh nghiệm" />
+                </div>
               </div>
             </div>
 
