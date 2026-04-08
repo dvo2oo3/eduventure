@@ -843,7 +843,15 @@ function switchTab(name) {
   });
   if (cropState[name]) delete cropState[name];
   requestAnimationFrame(function() {
-    if (['banner','logo','event'].indexOf(name) !== -1) initCrop(name);
+    if (['banner','logo','event'].indexOf(name) !== -1) {
+      var img = document.getElementById(name + 'Img');
+      if (img && !img.complete) {
+        img.addEventListener('load', function() { initCrop(name); }, { once: true });
+        setTimeout(function() { initCrop(name); }, 800);
+      } else {
+        initCrop(name);
+      }
+    }
   });
 }
 
@@ -1398,8 +1406,18 @@ function doDeleteImage(key, msg) {
 
 /* ─── Init ──────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
-  initCrop('banner');
   updateBadgePreview();
+  const bannerImg = document.getElementById('bannerImg');
+  if (bannerImg) {
+    if (bannerImg.complete && bannerImg.naturalWidth) {
+      initCrop('banner');
+    } else {
+      bannerImg.addEventListener('load', function() { initCrop('banner'); });
+      setTimeout(function() { initCrop('banner'); }, 800);
+    }
+  } else {
+    initCrop('banner');
+  }
 });
 
 /* ─── Click ngoài modal để đóng ─────────────────────── */
