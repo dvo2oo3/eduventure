@@ -1400,6 +1400,12 @@ function doDeleteImage(key, msg) {
 document.addEventListener('DOMContentLoaded', function() {
   initCrop('banner');
   updateBadgePreview();
+  // Fix overlay opacity: DB lưu 0-80 (int), CSS cần 0.0-0.8 (float)
+  var overlay = document.getElementById('heroOverlayPreview');
+  var slider = document.getElementById('bannerOverlaySlider');
+  if (overlay && slider) {
+    overlay.style.background = 'rgba(0,0,0,' + (parseInt(slider.value) / 100) + ')';
+  }
 });
 
 /* ─── Click ngoài modal để đóng ─────────────────────── */
