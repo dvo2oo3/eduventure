@@ -192,10 +192,6 @@
                 style="flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;">
                 🔗 Nhập URL
               </button>
-              <button type="button" id="tab-library" onclick="switchImgTab('library')"
-                style="flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;">
-                🖼 Thư viện
-              </button>
             </div>
             <div id="pane-upload">
               <label style="display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:1.25rem;border:2px dashed #d1d5db;border-radius:8px;cursor:pointer;transition:border-color .15s;" id="upload-label">
@@ -212,12 +208,6 @@
                 oninput="previewUrl(this.value)" />
               <div style="font-size:.75rem;color:#9ca3af;margin-top:.35rem;">Dán link ảnh từ internet</div>
             </div>
-            <div id="pane-library" style="display:none;">
-              <button type="button" onclick="openLibraryModal()"
-                style="width:100%;padding:.65rem;border:2px dashed #d1d5db;border-radius:8px;background:#fafafa;cursor:pointer;font-size:.82rem;color:#6b7280;display:flex;align-items:center;justify-content:center;gap:.4rem;">
-                🖼 Mở thư viện ảnh
-              </button>
-            </div>
           </div>
         </div>
 
@@ -227,118 +217,17 @@
 </div>
 
 <script>
-const TAB_ACTIVE = 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:#fff;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,.1);';
-const TAB_INACTIVE = 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;';
-
 function switchImgTab(tab) {
-  ['upload','url','library'].forEach(t => {
-    document.getElementById('pane-' + t).style.display = t === tab ? '' : 'none';
-    document.getElementById('tab-' + t).style.cssText  = t === tab ? TAB_ACTIVE : TAB_INACTIVE;
-  });
-  if (tab !== 'upload') document.querySelector('[name=image_file]').value = '';
-  if (tab === 'library') openLibraryModal();
-}
-
-// ── Library Modal ──────────────────────────────────────────────
-function openLibraryModal() {
-  let modal = document.getElementById('lib-modal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'lib-modal';
-    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:1rem;';
-    modal.innerHTML = `
-      <div style="background:#fff;border-radius:14px;width:100%;max-width:860px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);">
-        <div style="padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-          <div>
-            <div style="font-weight:700;font-size:1rem;color:#111827;">🖼 Chọn ảnh từ thư viện</div>
-            <div style="font-size:.75rem;color:#9ca3af;margin-top:.1rem;">Chỉ hiển thị ảnh trong thư mục <strong>news</strong></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:.5rem;">
-            <input id="lib-search" type="text" placeholder="Tìm tên file..." oninput="filterLibrary(this.value)"
-              style="padding:.4rem .75rem;border:1px solid #e5e7eb;border-radius:8px;font-size:.82rem;width:200px;outline:none;" />
-            <button onclick="closeLibraryModal()" style="border:none;background:none;font-size:1.4rem;cursor:pointer;color:#9ca3af;line-height:1;padding:.2rem;">✕</button>
-          </div>
-        </div>
-        <div id="lib-grid" style="flex:1;overflow-y:auto;padding:1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem;">
-          <div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af;font-size:.9rem;">⏳ Đang tải...</div>
-        </div>
-        <div style="padding:.75rem 1.25rem;border-top:1px solid #e5e7eb;font-size:.75rem;color:#9ca3af;text-align:center;flex-shrink:0;">
-          Nhấn vào ảnh để chọn làm ảnh đại diện
-        </div>
-      </div>`;
-    modal.addEventListener('click', e => { if (e.target === modal) closeLibraryModal(); });
-    document.body.appendChild(modal);
-    loadLibraryImages();
-  } else {
-    modal.style.display = 'flex';
-  }
-}
-
-function closeLibraryModal() {
-  const modal = document.getElementById('lib-modal');
-  if (modal) modal.style.display = 'none';
-}
-
-let _libAllFiles = [];
-
-async function loadLibraryImages() {
-  try {
-    const res = await fetch('/admin/uploads/list');
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.message);
-    // Chỉ lấy ảnh trong folder news
-    _libAllFiles = data.files.filter(f =>
-      f.key && f.key.startsWith('news/') &&
-      /\.(jpe?g|png|webp|gif)$/i.test(f.key)
-    );
-    renderLibraryGrid(_libAllFiles);
-  } catch(e) {
-    document.getElementById('lib-grid').innerHTML =
-      `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#ef4444;">Lỗi tải ảnh: ${e.message}</div>`;
-  }
-}
-
-function renderLibraryGrid(files) {
-  const grid = document.getElementById('lib-grid');
-  if (!files.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af;">Chưa có ảnh nào trong thư mục news</div>';
-    return;
-  }
-  grid.innerHTML = files.map(f => {
-    const name = f.key.split('/').pop();
-    const kb = f.size ? (f.size / 1024).toFixed(0) + ' KB' : '';
-    return `<div onclick="selectLibraryImage('${f.url}')"
-      title="${name}"
-      style="cursor:pointer;border:2px solid #e5e7eb;border-radius:10px;overflow:hidden;transition:border-color .15s;background:#f9fafb;"
-      onmouseover="this.style.borderColor='#1a7f5a'" onmouseout="this.style.borderColor='#e5e7eb'">
-      <div style="aspect-ratio:4/3;overflow:hidden;background:#f3f4f6;">
-        <img src="${f.url}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" />
-      </div>
-      <div style="padding:.35rem .5rem;">
-        <div style="font-size:.7rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
-        ${kb ? `<div style="font-size:.65rem;color:#9ca3af;">${kb}</div>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function filterLibrary(q) {
-  const filtered = q.trim()
-    ? _libAllFiles.filter(f => f.key.toLowerCase().includes(q.toLowerCase()))
-    : _libAllFiles;
-  renderLibraryGrid(filtered);
-}
-
-function selectLibraryImage(url) {
-  // Cập nhật hidden input image URL
-  document.getElementById('image-url-input').value = url;
-  // Cập nhật preview
-  document.getElementById('img-preview').src = url;
-  document.getElementById('img-preview-wrap').style.display = '';
-  // Đóng modal
-  closeLibraryModal();
-  // Cập nhật preview bài viết
-  updatePreviewMeta();
+  const isUpload = tab === 'upload';
+  document.getElementById('pane-upload').style.display = isUpload ? '' : 'none';
+  document.getElementById('pane-url').style.display   = isUpload ? 'none' : '';
+  document.getElementById('tab-upload').style.cssText = isUpload
+    ? 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:#fff;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,.1);'
+    : 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;';
+  document.getElementById('tab-url').style.cssText = isUpload
+    ? 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;'
+    : 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:#fff;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,.1);';
+  if (!isUpload) document.querySelector('[name=image_file]').value = '';
 }
 
 function previewImg(input) {
