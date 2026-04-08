@@ -49,7 +49,7 @@
                 <span>Chưa có ảnh — upload bên dưới</span>
               </div>
               {{/if}}
-              <div id="heroOverlayPreview" style="position:absolute;inset:0;background:rgba(0,0,0,{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}0.45{{/if}});pointer-events:none;border-radius:inherit;"></div>
+              <div id="heroOverlayPreview" style="position:absolute;inset:0;background:rgba(0,0,0,{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}0{{/if}});pointer-events:none;border-radius:inherit;"></div>
               <div class="crop-hint"></div>
             </div>
             <div class="zoom-row">
@@ -185,10 +185,10 @@
                 <div style="display:flex;align-items:center;gap:.75rem;">
                   <input type="range" name="banner_overlay_opacity" id="bannerOverlaySlider"
                     min="0" max="80" step="5"
-                    value="{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}45{{/if}}"
+                    value="{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}0{{/if}}"
                     style="flex:1;accent-color:#1a7f5a;"
                     oninput="document.getElementById('bannerOverlayLabel').textContent=this.value+'%';var o=document.getElementById('heroOverlayPreview');if(o)o.style.background='rgba(0,0,0,'+(parseInt(this.value)/100)+')';" />
-                  <span id="bannerOverlayLabel" style="font-size:.85rem;color:#888;min-width:38px;text-align:right;">{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}45{{/if}}%</span>
+                  <span id="bannerOverlayLabel" style="font-size:.85rem;color:#888;min-width:38px;text-align:right;">{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}0{{/if}}%</span>
                 </div>
                 <div class="form-hint">0% = không tối, 80% = rất tối.</div>
               </div>
@@ -843,15 +843,7 @@ function switchTab(name) {
   });
   if (cropState[name]) delete cropState[name];
   requestAnimationFrame(function() {
-    if (['banner','logo','event'].indexOf(name) !== -1) {
-      var img = document.getElementById(name + 'Img');
-      if (img && !img.complete) {
-        img.addEventListener('load', function() { initCrop(name); }, { once: true });
-        setTimeout(function() { initCrop(name); }, 800);
-      } else {
-        initCrop(name);
-      }
-    }
+    if (['banner','logo','event'].indexOf(name) !== -1) initCrop(name);
   });
 }
 
@@ -1406,18 +1398,8 @@ function doDeleteImage(key, msg) {
 
 /* ─── Init ──────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
+  initCrop('banner');
   updateBadgePreview();
-  const bannerImg = document.getElementById('bannerImg');
-  if (bannerImg) {
-    if (bannerImg.complete && bannerImg.naturalWidth) {
-      initCrop('banner');
-    } else {
-      bannerImg.addEventListener('load', function() { initCrop('banner'); });
-      setTimeout(function() { initCrop('banner'); }, 800);
-    }
-  } else {
-    initCrop('banner');
-  }
 });
 
 /* ─── Click ngoài modal để đóng ─────────────────────── */
