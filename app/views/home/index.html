@@ -122,20 +122,20 @@
 <section class="stats-section">
   <div class="container stats-grid">
     <div class="stat-item">
-      <div class="stat-item__num">120+</div>
-      <div class="stat-item__label">Trường đối tác</div>
+      <div class="stat-item__num">{{#if about.stats_schools}}{{about.stats_schools.title}}{{else}}120+{{/if}}</div>
+      <div class="stat-item__label">{{#if about.stats_schools}}{{about.stats_schools.content}}{{else}}Trường đối tác{{/if}}</div>
     </div>
     <div class="stat-item">
-      <div class="stat-item__num">50.000+</div>
-      <div class="stat-item__label">Học sinh</div>
+      <div class="stat-item__num">{{#if about.stats_students}}{{about.stats_students.title}}{{else}}50.000+{{/if}}</div>
+      <div class="stat-item__label">{{#if about.stats_students}}{{about.stats_students.content}}{{else}}Học sinh{{/if}}</div>
     </div>
     <div class="stat-item">
-      <div class="stat-item__num">5</div>
-      <div class="stat-item__label">Khối lớp</div>
+      <div class="stat-item__num">{{#if about.stats_grades}}{{about.stats_grades.title}}{{else}}5{{/if}}</div>
+      <div class="stat-item__label">{{#if about.stats_grades}}{{about.stats_grades.content}}{{else}}Khối lớp{{/if}}</div>
     </div>
     <div class="stat-item">
-      <div class="stat-item__num">10+</div>
-      <div class="stat-item__label">Năm kinh nghiệm</div>
+      <div class="stat-item__num">{{#if about.stats_years}}{{about.stats_years.title}}{{else}}10+{{/if}}</div>
+      <div class="stat-item__label">{{#if about.stats_years}}{{about.stats_years.content}}{{else}}Năm kinh nghiệm{{/if}}</div>
     </div>
   </div>
 </section>

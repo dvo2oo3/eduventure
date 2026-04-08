@@ -90,6 +90,7 @@ INSERT INTO about (section_key, title, content) VALUES
 ('about_text', 'Giới thiệu công ty', 'Thành lập năm 2015, EduVenture đã triển khai chương trình kỹ năng sống tại hơn 120 trường tiểu học, đồng hành cùng hơn 50.000 học sinh. Chúng tôi tin rằng giáo dục kỹ năng sống là nền tảng không thể thiếu bên cạnh kiến thức học thuật.'),
 ('stats_schools', '120+', NULL),
 ('stats_students', '50,000+', NULL),
+('stats_grades', '5', 'Khối lớp'),
 ('stats_years', '10+', NULL)
 ON DUPLICATE KEY UPDATE updated_at=NOW();
 

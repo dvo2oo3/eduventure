@@ -220,12 +220,27 @@ const AdminController = {
 
   async aboutUpdate(req, res) {
     try {
-      const fields = ['mission', 'vision', 'about_text', 'stats_schools', 'stats_students', 'stats_years'];
-      for (const key of fields) {
+      const textFields = ['mission', 'vision', 'about_text'];
+      const statsFields = ['stats_schools', 'stats_students', 'stats_grades', 'stats_years'];
+
+      // Text fields: chỉ lưu khi có trong request
+      for (const key of textFields) {
         if (req.body[key] !== undefined) {
           await AboutModel.upsert(key, { title: req.body[`${key}_title`] || null, content: req.body[key] });
         }
       }
+
+      // Stats fields: luôn upsert khi _title hoặc content có trong request (kể cả rỗng)
+      for (const key of statsFields) {
+        const titleKey = `${key}_title`;
+        if (req.body[titleKey] !== undefined || req.body[key] !== undefined) {
+          await AboutModel.upsert(key, {
+            title: req.body[titleKey] !== undefined ? req.body[titleKey] : null,
+            content: req.body[key] !== undefined ? req.body[key] : null
+          });
+        }
+      }
+
       res.json({ ok: true, message: 'Cập nhật giới thiệu thành công!' });
     } catch (err) {
       console.error(err);
