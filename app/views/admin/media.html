@@ -105,8 +105,23 @@
                 <label class="form-label">Nhãn badge (góc trên tiêu đề)</label>
                 <input class="form-input" type="text" name="banner_badge_text"
                   value="{{data.banner_badge_text}}"
-                  placeholder="Kỹ năng sống · Lớp 1 → Lớp 5" />
+                  placeholder="Kỹ năng sống · Lớp 1 → Lớp 5"
+                  oninput="updateBadgePreview()" />
                 <div class="form-hint">Dòng chữ nhỏ hiển thị phía trên tiêu đề chính của banner.</div>
+                <!-- Badge preview -->
+                <div style="margin-top:.75rem;">
+                  <div style="font-size:.78rem;color:#888;margin-bottom:.4rem;font-weight:500;">Xem trước badge</div>
+                  <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+                    <div id="badgeLivePreview" style="
+                      display:inline-flex;align-items:center;
+                      padding:.3rem .85rem;
+                      border-radius:999px;
+                      font-size:.78rem;font-weight:600;letter-spacing:.03em;
+                      transition:background .2s,color .2s;
+                    ">{{#if data.banner_badge_text}}{{data.banner_badge_text}}{{else}}Kỹ năng sống · Lớp 1 → Lớp 5{{/if}}</div>
+                    <span style="font-size:.75rem;color:#aaa;">&#x2190; cập nhật theo thửi gian thực</span>
+                  </div>
+                </div>
               </div>
               <div class="form-group" style="margin:0;">
                 <label class="form-label">Màu nền badge</label>
@@ -114,15 +129,24 @@
                   <input type="color" name="banner_badge_color" id="pickerBadgeBg"
                     value="{{#if data.banner_badge_color}}{{data.banner_badge_color}}{{else}}#1a7f5a{{/if}}"
                     style="width:38px;height:36px;padding:2px;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:none;"
-                    oninput="document.getElementById('hexBadgeBg').value=this.value" />
+                    oninput="document.getElementById('hexBadgeBg').value=this.value;updateBadgePreview()" />
                   <input class="form-input" type="text" id="hexBadgeBg"
                     value="{{#if data.banner_badge_color}}{{data.banner_badge_color}}{{else}}#1a7f5a{{/if}}"
                     style="font-family:monospace;max-width:110px;"
-                    oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('pickerBadgeBg').value=this.value" />
+                    oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value)){document.getElementById('pickerBadgeBg').value=this.value;updateBadgePreview();}" />
                   <button type="button" onclick="setBadgeBg('#1a7f5a')" class="media-color-btn" style="background:#1a7f5a;color:#fff;border-color:#1a7f5a;">Xanh lá</button>
                   <button type="button" onclick="setBadgeBg('#1d4ed8')" class="media-color-btn" style="background:#1d4ed8;color:#fff;border-color:#1d4ed8;">Xanh dương</button>
                   <button type="button" onclick="setBadgeBg('#7c3aed')" class="media-color-btn" style="background:#7c3aed;color:#fff;border-color:#7c3aed;">Tím</button>
                   <button type="button" onclick="setBadgeBg('#dc2626')" class="media-color-btn" style="background:#dc2626;color:#fff;border-color:#dc2626;">Đỏ</button>
+                </div>
+                <div style="margin-top:.85rem;">
+                  <label class="form-label" style="margin-bottom:.4rem;">Độ trong suốt nền badge <span id="badgeBgOpacityLabel" style="font-weight:600;color:#1a7f5a;">{{#if data.banner_badge_bg_opacity}}{{data.banner_badge_bg_opacity}}{{else}}100{{/if}}%</span></label>
+                  <input type="range" id="badgeBgOpacitySlider" name="banner_badge_bg_opacity"
+                    min="0" max="100" step="1"
+                    value="{{#if data.banner_badge_bg_opacity}}{{data.banner_badge_bg_opacity}}{{else}}100{{/if}}"
+                    style="width:100%;accent-color:#1a7f5a;"
+                    oninput="document.getElementById('badgeBgOpacityLabel').textContent=this.value+'%';updateBadgePreview();" />
+                  <div class="form-hint" style="margin-top:.3rem;">0% = trong suốt hoàn toàn · 100% = đặc</div>
                 </div>
               </div>
               <div class="form-group" style="margin:0;">
@@ -131,11 +155,11 @@
                   <input type="color" name="banner_badge_text_color" id="pickerBadgeText"
                     value="{{#if data.banner_badge_text_color}}{{data.banner_badge_text_color}}{{else}}#0f4f38{{/if}}"
                     style="width:38px;height:36px;padding:2px;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:none;"
-                    oninput="document.getElementById('hexBadgeText').value=this.value" />
+                    oninput="document.getElementById('hexBadgeText').value=this.value;updateBadgePreview()" />
                   <input class="form-input" type="text" id="hexBadgeText"
                     value="{{#if data.banner_badge_text_color}}{{data.banner_badge_text_color}}{{else}}#0f4f38{{/if}}"
                     style="font-family:monospace;max-width:110px;"
-                    oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('pickerBadgeText').value=this.value" />
+                    oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value)){document.getElementById('pickerBadgeText').value=this.value;updateBadgePreview();}" />
                   <button type="button" onclick="setBadgeText('#ffffff')" class="media-color-btn" style="background:#fff;border-color:#ddd;">Trắng</button>
                   <button type="button" onclick="setBadgeText('#0f4f38')" class="media-color-btn" style="background:#0f4f38;color:#fff;border-color:#0f4f38;">Xanh tối</button>
                   <button type="button" onclick="setBadgeText('#1a1a1a')" class="media-color-btn" style="background:#1a1a1a;color:#fff;border-color:#1a1a1a;">Đen</button>
@@ -187,6 +211,8 @@
           <div style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem;">
             <input type="hidden" name="logo_position" id="logoPositionInput" value="{{#if data.logo_position}}{{data.logo_position}}{{else}}50% 50%{{/if}}" />
             <input type="hidden" name="logo_zoom" id="logoZoomInput" value="{{#if data.logo_zoom}}{{data.logo_zoom}}{{else}}100{{/if}}" />
+            <input type="hidden" name="logo_nav_bg_hex" id="logoNavBgHexInput" value="{{#if data.logo_nav_bg_hex}}{{data.logo_nav_bg_hex}}{{else}}#ffffff{{/if}}" />
+            <input type="hidden" name="logo_nav_bg_opacity" id="logoNavBgOpacityInput" value="{{#if data.logo_nav_bg_opacity}}{{data.logo_nav_bg_opacity}}{{else}}15{{/if}}" />
 
             <!-- Preview thực tế navbar -->
             <div style="background:#1a7f5a;border-radius:8px;padding:.6rem 1rem;display:flex;align-items:center;gap:.6rem;margin-bottom:.25rem;">
@@ -378,6 +404,38 @@
                   <button type="button" onclick="setLogoSize(64)" class="btn btn--outline btn--sm">64</button>
                 </div>
               </div>
+
+              <!-- Màu nền banner logo -->
+              <div class="form-group" style="margin:0;">
+                <label class="form-label">Màu nền banner logo</label>
+                <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+                  <input type="color" id="pickerLogoNavBg"
+                    value="{{#if data.logo_nav_bg_hex}}{{data.logo_nav_bg_hex}}{{else}}#ffffff{{/if}}"
+                    style="width:38px;height:36px;padding:2px;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:none;"
+                    oninput="updateLogoNavBg()" />
+                  <input class="form-input" type="text" id="hexLogoNavBg"
+                    value="{{#if data.logo_nav_bg_hex}}{{data.logo_nav_bg_hex}}{{else}}#ffffff{{/if}}"
+                    style="font-family:monospace;max-width:100px;"
+                    oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value)){document.getElementById('pickerLogoNavBg').value=this.value;updateLogoNavBg();}" />
+                  <button type="button" onclick="setLogoNavBgHex('#ffffff')" class="media-color-btn" style="background:#fff;border-color:#ddd;">Trắng</button>
+                  <button type="button" onclick="setLogoNavBgHex('#1a7f5a')" class="media-color-btn" style="background:#1a7f5a;color:#fff;border-color:#1a7f5a;">Xanh lá</button>
+                  <button type="button" onclick="setLogoNavBgHex('#1d4ed8')" class="media-color-btn" style="background:#1d4ed8;color:#fff;border-color:#1d4ed8;">Xanh dương</button>
+                  <button type="button" onclick="setLogoNavBgHex('#000000')" class="media-color-btn" style="background:#000;color:#fff;border-color:#000;">Đen</button>
+                </div>
+                <div style="margin-top:.85rem;">
+                  <label class="form-label" style="margin-bottom:.4rem;">Độ trong suốt nền logo <span id="logoNavBgOpacityLabel" style="font-weight:600;color:#1a7f5a;">{{#if data.logo_nav_bg_opacity}}{{data.logo_nav_bg_opacity}}{{else}}15{{/if}}%</span></label>
+                  <div style="display:flex;align-items:center;gap:.75rem;">
+                    <input type="range" id="logoNavBgOpacitySlider"
+                      min="0" max="100" step="1"
+                      value="{{#if data.logo_nav_bg_opacity}}{{data.logo_nav_bg_opacity}}{{else}}15{{/if}}"
+                      style="flex:1;accent-color:#1a7f5a;"
+                      oninput="document.getElementById('logoNavBgOpacityLabel').textContent=this.value+'%';document.getElementById('logoNavBgOpacityInput').value=this.value;updateLogoNavBg();" />
+                    <span style="font-size:.8rem;color:#888;min-width:32px;text-align:right;">0% = trong suốt</span>
+                  </div>
+                </div>
+                <div class="form-hint">Màu nền của ô chứa logo trên thanh điều hướng.</div>
+              </div>
+
             </div>
           </div>
 
@@ -899,6 +957,37 @@ function updateLogoNavPreview() {
   }
 }
 
+/* Logo nav background color + opacity */
+function updateLogoNavBg() {
+  const hex = document.getElementById('pickerLogoNavBg').value;
+  const opacity = parseInt(document.getElementById('logoNavBgOpacitySlider').value || 15) / 100;
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  const rgba = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity.toFixed(2) + ')';
+  const navSlot = document.getElementById('logoNavPreview');
+  if (navSlot) navSlot.style.background = rgba;
+  document.getElementById('logoNavBgHexInput').value = hex;
+  document.getElementById('hexLogoNavBg').value = hex;
+}
+
+function setLogoNavBgHex(hex) {
+  document.getElementById('pickerLogoNavBg').value = hex;
+  document.getElementById('hexLogoNavBg').value = hex;
+  updateLogoNavBg();
+}
+
+/* Init logo nav bg on page load */
+(function() {
+  const hexInput = document.getElementById('logoNavBgHexInput');
+  const opacityInput = document.getElementById('logoNavBgOpacityInput');
+  if (!hexInput || !opacityInput) return;
+  const hex = hexInput.value || '#ffffff';
+  const opacity = parseInt(opacityInput.value || 15) / 100;
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  const rgba = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity.toFixed(2) + ')';
+  const navSlot = document.getElementById('logoNavPreview');
+  if (navSlot) navSlot.style.background = rgba;
+})();
+
 /* ─── Phần bên cạnh logo ─── */
 function switchBesideMode(mode) {
   document.getElementById('beside-text-panel').style.display = mode === 'text' ? '' : 'none';
@@ -1259,13 +1348,30 @@ function setLogoSize(val) {
   document.getElementById('logoSizeVal').value    = val;
   document.getElementById('logoSizeInput').value  = val;
 }
+function hexToRgba(hex, opacity) {
+  var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return 'rgba(' + r + ',' + g + ',' + b + ',' + (opacity/100).toFixed(2) + ')';
+}
+function updateBadgePreview() {
+  var el = document.getElementById('badgeLivePreview');
+  if (!el) return;
+  var hex = document.getElementById('pickerBadgeBg').value || '#1a7f5a';
+  var opacity = parseInt(document.getElementById('badgeBgOpacitySlider').value || 100);
+  var textColor = document.getElementById('pickerBadgeText').value || '#0f4f38';
+  var text = document.querySelector('input[name="banner_badge_text"]').value || 'Kỹ năng sống · Lớp 1 → Lớp 5';
+  el.style.background = /^#[0-9a-fA-F]{6}$/.test(hex) ? hexToRgba(hex, opacity) : hex;
+  el.style.color = textColor;
+  el.textContent = text;
+}
 function setBadgeBg(c) {
   document.getElementById('pickerBadgeBg').value = c;
   document.getElementById('hexBadgeBg').value    = c;
+  updateBadgePreview();
 }
 function setBadgeText(c) {
   document.getElementById('pickerBadgeText').value = c;
   document.getElementById('hexBadgeText').value    = c;
+  updateBadgePreview();
 }
 function setBannerColor(c) {
   document.getElementById('pickerBannerText').value = c;
@@ -1293,6 +1399,7 @@ function doDeleteImage(key, msg) {
 /* ─── Init ──────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
   initCrop('banner');
+  updateBadgePreview();
 });
 
 /* ─── Click ngoài modal để đóng ─────────────────────── */

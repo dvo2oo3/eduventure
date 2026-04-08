@@ -113,7 +113,16 @@ app.use(async (req, res, next) => {
     res.locals.siteEventZoom = about?.event_zoom?.content || '100';
     res.locals.siteBannerTextColor = about?.banner_text_color?.content || '#ffffff';
     res.locals.siteBannerBadgeText = about?.banner_badge_text?.content || 'Kỹ năng sống · Lớp 1 → Lớp 5';
-    res.locals.siteBannerBadgeColor = about?.banner_badge_color?.content || '';
+    (function() {
+      const hex = about?.banner_badge_color?.content || '';
+      const opacityPct = parseInt(about?.banner_badge_bg_opacity?.content ?? '100', 10);
+      if (hex && /^#[0-9a-fA-F]{6}$/.test(hex)) {
+        const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+        res.locals.siteBannerBadgeColor = 'rgba(' + r + ',' + g + ',' + b + ',' + (opacityPct/100).toFixed(2) + ')';
+      } else {
+        res.locals.siteBannerBadgeColor = hex;
+      }
+    })();
     res.locals.siteBannerBadgeTextColor = about?.banner_badge_text_color?.content || '';
     res.locals.siteEventTextColor = about?.event_text_color?.content || '#ffffff';
     res.locals.siteFacebookUrl = about?.facebook_url?.content || '';
