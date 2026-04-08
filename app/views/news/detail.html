@@ -31,10 +31,12 @@
         {{/if}}
       </header>
 
+      {{#if news.image_in_article}}
       {{#if news.image}}
       <div class="article__cover">
         <img src="{{news.image}}" alt="{{news.title}}" />
       </div>
+      {{/if}}
       {{/if}}
 
       <div class="article__content prose">

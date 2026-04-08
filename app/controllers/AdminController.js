@@ -132,12 +132,12 @@ const AdminController = {
     uploadNews(req, res, async (err) => {
       if (err) { req.flash('error', err.message); return res.redirect('/admin/news/create'); }
       try {
-        const { title, summary, content, category, location, grade_level, event_date, is_visible, is_pinned } = req.body;
+        const { title, summary, content, category, location, grade_level, event_date, is_visible, is_pinned, image_in_article } = req.body;
         const slug = makeSlug(title);
         // Ưu tiên file upload, nếu không có thì dùng URL nhập tay
         let image = req.body.image || null;
         if (req.file) image = await uploadToR2(req.file.buffer, req.file.originalname, 'news');
-        await NewsModel.create({ title, slug, summary, content, image, category, location, grade_level, event_date, is_visible: !!is_visible, is_pinned: !!is_pinned });
+        await NewsModel.create({ title, slug, summary, content, image, image_in_article: !!image_in_article, category, location, grade_level, event_date, is_visible: !!is_visible, is_pinned: !!is_pinned });
         req.flash('success', 'Thêm tin thành công!');
         res.redirect('/admin/news');
       } catch (err) {
@@ -165,7 +165,7 @@ const AdminController = {
     uploadNews(req, res, async (err) => {
       if (err) { req.flash('error', err.message); return res.redirect(`/admin/news/${req.params.id}/edit`); }
       try {
-        const { title, summary, content, category, location, grade_level, event_date, is_visible, is_pinned } = req.body;
+        const { title, summary, content, category, location, grade_level, event_date, is_visible, is_pinned, image_in_article } = req.body;
         const item = await NewsModel.getById(req.params.id);
         const slug = title !== item.title ? makeSlug(title) : item.slug;
         // Nếu upload file mới thì dùng file, không thì dùng URL nhập tay, không thì giữ ảnh cũ
@@ -177,7 +177,7 @@ const AdminController = {
         } else {
           image = item.image;
         }
-        await NewsModel.update(req.params.id, { title, slug, summary, content, image, category, location, grade_level, event_date, is_visible: !!is_visible, is_pinned: !!is_pinned });
+        await NewsModel.update(req.params.id, { title, slug, summary, content, image, image_in_article: !!image_in_article, category, location, grade_level, event_date, is_visible: !!is_visible, is_pinned: !!is_pinned });
         req.flash('success', 'Cập nhật thành công!');
         res.redirect('/admin/news');
       } catch (err) {
@@ -957,6 +957,34 @@ const AdminControllerExtension = {
       const files = await listFilesFromR2();
       const totalSize = files.reduce((s, f) => s + f.size, 0);
       res.json({ ok: true, files, stats: { totalFiles: files.length, totalSize } });
+    } catch (e) {
+      res.json({ ok: false, message: e.message });
+    }
+  },
+
+  async uploadsUsedUrlsApi(req, res) {
+    try {
+      const db = require('../../config/database');
+      const usedUrls = new Set();
+
+      // 1. Lấy tất cả URL từ bảng about (banner, logo, favicon, og_image, ...)
+      const [aboutRows] = await db.query("SELECT content FROM about WHERE content LIKE 'http%'");
+      aboutRows.forEach(r => { if (r.content) usedUrls.add(r.content.trim()); });
+
+      // 2. Lấy tất cả URL ảnh từ bảng news
+      const [newsRows] = await db.query("SELECT image FROM news WHERE image IS NOT NULL AND image LIKE 'http%'");
+      newsRows.forEach(r => { if (r.image) usedUrls.add(r.image.trim()); });
+
+      // 3. Tìm thêm URL trong nội dung HTML của news (content field)
+      const [newsContent] = await db.query("SELECT content FROM news WHERE content IS NOT NULL");
+      const urlRegex = /https?:\/\/[^\s"'<>]+/g;
+      newsContent.forEach(r => {
+        if (!r.content) return;
+        const matches = r.content.match(urlRegex);
+        if (matches) matches.forEach(u => usedUrls.add(u.trim()));
+      });
+
+      res.json({ ok: true, usedUrls: Array.from(usedUrls) });
     } catch (e) {
       res.json({ ok: false, message: e.message });
     }

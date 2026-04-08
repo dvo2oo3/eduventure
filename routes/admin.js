@@ -125,6 +125,7 @@ router.post('/upload-video', (req, res) => {
 // Quản lý Uploads
 router.get('/uploads', requirePermission('uploads'), AdminController.uploadsPage);
 router.get('/uploads/list', AdminController.uploadsListApi);
+router.get('/uploads/used-urls', AdminController.uploadsUsedUrlsApi);
 router.post('/uploads/delete', express.json(), AdminController.uploadsDeleteApi);
 
 // Quản lý tài khoản (chỉ superadmin)

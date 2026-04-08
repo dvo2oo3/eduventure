@@ -34,6 +34,24 @@
       <div class="ustat-label">Đã chọn</div>
     </div>
   </div>
+  <div class="ustat-card">
+    <div class="ustat-icon ustat-icon--teal">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+    </div>
+    <div>
+      <div class="ustat-num" id="usedCount">—</div>
+      <div class="ustat-label">Đang được dùng</div>
+    </div>
+  </div>
+  <div class="ustat-card">
+    <div class="ustat-icon ustat-icon--red">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <div>
+      <div class="ustat-num" id="unusedCount">—</div>
+      <div class="ustat-label">Không dùng</div>
+    </div>
+  </div>
 </div>
 
 <!-- TOOLBAR -->
@@ -45,6 +63,8 @@
     <button class="uf-tab" data-folder="content">Nội dung</button>
     <button class="uf-tab" data-type="video">🎬 Video</button>
     <button class="uf-tab" data-type="image">🖼 Ảnh</button>
+    <button class="uf-tab" data-usage="used">✅ Đang dùng</button>
+    <button class="uf-tab" data-usage="unused">🗑 Không dùng</button>
   </div>
   <div class="uploads-actions">
     <button class="btn-uaction btn-uaction--danger" id="btnBulkDelete" disabled onclick="bulkDelete()">
@@ -90,6 +110,19 @@
 .ustat-icon--blue{background:#eff6ff;color:#3b82f6;}
 .ustat-icon--green{background:#f0fdf4;color:#22c55e;}
 .ustat-icon--orange{background:#fff7ed;color:#f97316;}
+.ustat-icon--teal{background:#f0fdfa;color:#0d9488;}
+.ustat-icon--red{background:#fef2f2;color:#dc2626;}
+
+/* ── Usage badge trên card ── */
+.ucard__usage-badge{position:absolute;bottom:38px;right:6px;font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:4px;display:flex;align-items:center;gap:3px;pointer-events:none;letter-spacing:.02em;}
+.ucard__usage-badge--used{background:rgba(220,252,231,.92);color:#15803d;border:1px solid rgba(21,128,61,.2);}
+.ucard__usage-badge--unused{background:rgba(254,226,226,.92);color:#dc2626;border:1px solid rgba(220,38,38,.2);}
+
+/* ── Card viền màu theo trạng thái ── */
+.ucard--unused{border-color:#fca5a5;}
+.ucard--unused:hover{border-color:#dc2626;box-shadow:0 2px 8px rgba(220,38,38,.15);}
+.ucard--used{border-color:#e5e7eb;}
+.ucard--used:hover{border-color:#3b82f6;box-shadow:0 2px 8px rgba(59,130,246,.15);}
 .ustat-num{font-size:1.35rem;font-weight:700;color:#111827;line-height:1.2;}
 .ustat-label{font-size:.78rem;color:#6b7280;margin-top:1px;}
 
@@ -148,18 +181,38 @@ let allFiles = [];
 let currentFolder = 'all';
 let selectedFiles = new Set();
 let modalCurrentFile = null;
+let usedUrls = new Set(); // Set các URL đang được sử dụng trong hệ thống
 
+// ── Helper: lấy filtered list theo currentFolder ──────────────────────────────
+function getFiltered() {
+  if (currentFolder === 'all')      return allFiles;
+  if (currentFolder === '__video')  return allFiles.filter(f => f.isVideo);
+  if (currentFolder === '__image')  return allFiles.filter(f => !f.isVideo);
+  if (currentFolder === '__used')   return allFiles.filter(f => usedUrls.has(f.url));
+  if (currentFolder === '__unused') return allFiles.filter(f => !usedUrls.has(f.url));
+  return allFiles.filter(f => f.folder === currentFolder);
+}
+
+// ── Load dữ liệu song song: danh sách file + URL đang dùng ───────────────────
 async function loadFiles() {
   try {
-    const res = await fetch('/admin/uploads/list');
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.message);
+    const [filesRes, usedRes] = await Promise.all([
+      fetch('/admin/uploads/list'),
+      fetch('/admin/uploads/used-urls')
+    ]);
+    const [filesData, usedData] = await Promise.all([filesRes.json(), usedRes.json()]);
+    if (!filesData.ok) throw new Error(filesData.message);
+
+    // Xây dựng set URL đang dùng
+    if (usedData.ok) usedUrls = new Set(usedData.usedUrls);
+
     const VIDEO_EXT = ['.mp4', '.webm', '.ogg', '.mov'];
-    allFiles = data.files.map(f => ({
+    allFiles = filesData.files.map(f => ({
       ...f,
       isVideo: VIDEO_EXT.includes(f.name.slice(f.name.lastIndexOf('.')).toLowerCase())
     }));
-    renderStats(data.stats);
+
+    renderStats(filesData.stats);
     renderGrid();
   } catch (e) {
     document.getElementById('uploadsGrid').innerHTML =
@@ -167,26 +220,34 @@ async function loadFiles() {
   }
 }
 
+// ── Stats ─────────────────────────────────────────────────────────────────────
 function renderStats(stats) {
   document.getElementById('totalFiles').textContent = stats.totalFiles.toLocaleString();
   document.getElementById('totalSize').textContent = formatSize(stats.totalSize);
+  renderUsageStats();
 }
 
+function renderUsageStats() {
+  const usedCount   = allFiles.filter(f => usedUrls.has(f.url)).length;
+  const unusedCount = allFiles.filter(f => !usedUrls.has(f.url)).length;
+  document.getElementById('usedCount').textContent   = usedCount.toLocaleString();
+  document.getElementById('unusedCount').textContent = unusedCount.toLocaleString();
+}
+
+// ── Grid ──────────────────────────────────────────────────────────────────────
 function renderGrid() {
   selectedFiles.clear();
   updateSelection();
-  let filtered;
-  if (currentFolder === 'all') filtered = allFiles;
-  else if (currentFolder === '__video') filtered = allFiles.filter(f => f.isVideo);
-  else if (currentFolder === '__image') filtered = allFiles.filter(f => !f.isVideo);
-  else filtered = allFiles.filter(f => f.folder === currentFolder);
+  const filtered = getFiltered();
   const grid = document.getElementById('uploadsGrid');
   if (!filtered.length) {
     grid.innerHTML = '<div class="uploads-empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg><p>Không có file nào</p></div>';
     return;
   }
-  grid.innerHTML = filtered.map(f => `
-    <div class="ucard" id="card-${f.id}" onclick="selectCard(event, '${f.id}')">
+  grid.innerHTML = filtered.map(f => {
+    const isUsed = usedUrls.has(f.url);
+    return `
+    <div class="ucard ${isUsed ? 'ucard--used' : 'ucard--unused'}" id="card-${f.id}" onclick="selectCard(event, '${f.id}')">
       ${f.isVideo
         ? `<video class="ucard__thumb" src="${f.url}" preload="metadata" muted style="object-fit:cover;background:#111;"></video>
            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.55);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;pointer-events:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg></div>`
@@ -194,6 +255,12 @@ function renderGrid() {
       }
       <div class="ucard__check"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg></div>
       <div class="ucard__folder">${f.folder}</div>
+      <div class="ucard__usage-badge ${isUsed ? 'ucard__usage-badge--used' : 'ucard__usage-badge--unused'}">
+        ${isUsed
+          ? `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg> Đang dùng`
+          : `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Không dùng`
+        }
+      </div>
       <div class="ucard__info">
         <div class="ucard__name" title="${f.name}">${f.name}</div>
         <div class="ucard__size">${formatSize(f.size)}</div>
@@ -201,19 +268,16 @@ function renderGrid() {
       <button class="ucard__del" onclick="deleteSingle(event, '${f.id}', '${f.folder}', '${f.name}')" title="Xóa">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
       </button>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
+// ── Select ────────────────────────────────────────────────────────────────────
 function selectCard(e, id) {
-  // Nếu click vào nút xóa thì bỏ qua
   if (e.target.closest('.ucard__del')) return;
-  // Nếu click vào checkbox area thì toggle select
   if (e.target.closest('.ucard__check') || e.shiftKey || e.ctrlKey || e.metaKey) {
-    toggleSelect(id);
-    return;
+    toggleSelect(id); return;
   }
-  // Click thường → mở modal
   const f = allFiles.find(x => x.id === id);
   if (f) openModal(f);
 }
@@ -226,11 +290,7 @@ function toggleSelect(id) {
 }
 
 function toggleSelectAll() {
-  let filtered;
-  if (currentFolder === 'all') filtered = allFiles;
-  else if (currentFolder === '__video') filtered = allFiles.filter(f => f.isVideo);
-  else if (currentFolder === '__image') filtered = allFiles.filter(f => !f.isVideo);
-  else filtered = allFiles.filter(f => f.folder === currentFolder);
+  const filtered = getFiltered();
   if (selectedFiles.size === filtered.length) {
     selectedFiles.clear();
     filtered.forEach(f => document.getElementById('card-' + f.id)?.classList.remove('selected'));
@@ -245,18 +305,21 @@ function updateSelection() {
   document.getElementById('selectedCount').textContent = n;
   document.getElementById('bulkCount').textContent = n;
   document.getElementById('btnBulkDelete').disabled = n === 0;
-  let filtered;
-  if (currentFolder === 'all') filtered = allFiles;
-  else if (currentFolder === '__video') filtered = allFiles.filter(f => f.isVideo);
-  else if (currentFolder === '__image') filtered = allFiles.filter(f => !f.isVideo);
-  else filtered = allFiles.filter(f => f.folder === currentFolder);
-  document.getElementById('btnSelectAll').textContent = selectedFiles.size === filtered.length && filtered.length > 0 ? 'Bỏ chọn tất cả' : 'Chọn tất cả';
+  const filtered = getFiltered();
+  document.getElementById('btnSelectAll').textContent =
+    selectedFiles.size === filtered.length && filtered.length > 0 ? 'Bỏ chọn tất cả' : 'Chọn tất cả';
 }
 
+// ── Delete ────────────────────────────────────────────────────────────────────
 async function deleteSingle(e, id, folder, name) {
   e.stopPropagation();
-  if (!confirm(`Xóa file "${name}"?`)) return;
+  // Cảnh báo thêm nếu file đang được dùng
   const file = allFiles.find(f => f.id === id);
+  const isUsed = file && usedUrls.has(file.url);
+  const msg = isUsed
+    ? `⚠️ File "${name}" đang được sử dụng trên website!\nXóa có thể gây lỗi hiển thị. Vẫn xóa?`
+    : `Xóa file "${name}"?`;
+  if (!confirm(msg)) return;
   const res = await fetch('/admin/uploads/delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -267,36 +330,39 @@ async function deleteSingle(e, id, folder, name) {
     allFiles = allFiles.filter(f => f.id !== id);
     document.getElementById('card-' + id)?.remove();
     selectedFiles.delete(id);
-    updateStats();
-    updateSelection();
+    updateStats(); updateSelection();
   } else alert('Lỗi: ' + data.message);
 }
 
 async function bulkDelete() {
   if (!selectedFiles.size) return;
-  if (!confirm(`Xóa ${selectedFiles.size} file đã chọn?`)) return;
-  const toDelete = allFiles.filter(f => selectedFiles.has(f.id)).map(f => ({ id: f.id, folder: f.folder, url: f.url }));
+  const toDelete = allFiles.filter(f => selectedFiles.has(f.id));
+  const usedInSelection = toDelete.filter(f => usedUrls.has(f.url));
+  let msg = `Xóa ${selectedFiles.size} file đã chọn?`;
+  if (usedInSelection.length > 0)
+    msg = `⚠️ ${usedInSelection.length} trong số ${selectedFiles.size} file đang được dùng trên website!\nXóa có thể gây lỗi hiển thị. Vẫn xóa tất cả?`;
+  if (!confirm(msg)) return;
   const res = await fetch('/admin/uploads/delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ files: toDelete })
+    body: JSON.stringify({ files: toDelete.map(f => ({ id: f.id, folder: f.folder, url: f.url })) })
   });
   const data = await res.json();
   if (data.ok) {
     allFiles = allFiles.filter(f => !selectedFiles.has(f.id));
     selectedFiles.forEach(id => document.getElementById('card-' + id)?.remove());
     selectedFiles.clear();
-    updateStats();
-    updateSelection();
+    updateStats(); updateSelection();
   } else alert('Lỗi: ' + data.message);
 }
 
 function updateStats() {
-  const shown = currentFolder === 'all' ? allFiles : allFiles.filter(f => f.folder === currentFolder);
   document.getElementById('totalFiles').textContent = allFiles.length.toLocaleString();
   document.getElementById('totalSize').textContent = formatSize(allFiles.reduce((s, f) => s + f.size, 0));
+  renderUsageStats();
 }
 
+// ── Modal ─────────────────────────────────────────────────────────────────────
 function openModal(f) {
   modalCurrentFile = f;
   const img = document.getElementById('modalImg');
@@ -308,8 +374,29 @@ function openModal(f) {
     vid.style.display = 'none'; vid.src = '';
     img.style.display = ''; img.src = f.url;
   }
+  const isUsed = usedUrls.has(f.url);
   document.getElementById('modalName').textContent = f.name;
   document.getElementById('modalMeta').textContent = `${f.folder} • ${formatSize(f.size)}`;
+  // Hiện badge trạng thái trong modal
+  let badge = document.getElementById('modalUsageBadge');
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.id = 'modalUsageBadge';
+    badge.style.cssText = 'font-size:.75rem;font-weight:600;padding:2px 8px;border-radius:999px;margin-left:.5rem;vertical-align:middle;';
+    document.getElementById('modalName').appendChild(badge);
+  }
+  badge.textContent   = isUsed ? '✓ Đang dùng' : 'Không dùng';
+  badge.style.background = isUsed ? '#dcfce7' : '#fee2e2';
+  badge.style.color      = isUsed ? '#15803d' : '#dc2626';
+
+  const delBtn = document.getElementById('modalDeleteBtn');
+  if (isUsed) {
+    delBtn.title = 'File này đang được dùng trên website';
+    delBtn.style.opacity = '0.7';
+  } else {
+    delBtn.title = '';
+    delBtn.style.opacity = '1';
+  }
   document.getElementById('imgModal').classList.add('open');
 }
 
@@ -323,12 +410,16 @@ function closeModal(e) {
 
 async function deleteFromModal() {
   if (!modalCurrentFile) return;
-  if (!confirm(`Xóa file "${modalCurrentFile.name}"?`)) return;
   const f = modalCurrentFile;
+  const isUsed = usedUrls.has(f.url);
+  const msg = isUsed
+    ? `⚠️ File "${f.name}" đang được sử dụng trên website!\nXóa có thể gây lỗi hiển thị. Vẫn xóa?`
+    : `Xóa file "${f.name}"?`;
+  if (!confirm(msg)) return;
   const res = await fetch('/admin/uploads/delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ files: [{ id: f.id, folder: f.folder }] })
+    body: JSON.stringify({ files: [{ id: f.id, folder: f.folder, url: f.url }] })
   });
   const data = await res.json();
   if (data.ok) {
@@ -339,19 +430,22 @@ async function deleteFromModal() {
   } else alert('Lỗi: ' + data.message);
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function formatSize(bytes) {
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / 1024 / 1024).toFixed(2) + ' MB';
 }
 
-// Tab filter
+// ── Tab filter ────────────────────────────────────────────────────────────────
 document.querySelectorAll('.uf-tab').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.uf-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    if (btn.dataset.type === 'video') currentFolder = '__video';
-    else if (btn.dataset.type === 'image') currentFolder = '__image';
+    if      (btn.dataset.type  === 'video')  currentFolder = '__video';
+    else if (btn.dataset.type  === 'image')  currentFolder = '__image';
+    else if (btn.dataset.usage === 'used')   currentFolder = '__used';
+    else if (btn.dataset.usage === 'unused') currentFolder = '__unused';
     else currentFolder = btn.dataset.folder;
     renderGrid();
   });
