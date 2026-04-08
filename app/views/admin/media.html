@@ -49,6 +49,7 @@
                 <span>Chưa có ảnh — upload bên dưới</span>
               </div>
               {{/if}}
+              <div id="heroOverlayPreview" style="position:absolute;inset:0;background:rgba(0,0,0,{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}0.45{{/if}});pointer-events:none;border-radius:inherit;"></div>
               <div class="crop-hint"></div>
             </div>
             <div class="zoom-row">
@@ -101,6 +102,46 @@
                 <textarea class="form-input" name="banner_subtitle" rows="3" placeholder="Đồng hành cùng hơn 50.000 học sinh">{{data.banner_subtitle}}</textarea>
               </div>
               <div class="form-group" style="margin:0;">
+                <label class="form-label">Nhãn badge (góc trên tiêu đề)</label>
+                <input class="form-input" type="text" name="banner_badge_text"
+                  value="{{data.banner_badge_text}}"
+                  placeholder="Kỹ năng sống · Lớp 1 → Lớp 5" />
+                <div class="form-hint">Dòng chữ nhỏ hiển thị phía trên tiêu đề chính của banner.</div>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label class="form-label">Màu nền badge</label>
+                <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+                  <input type="color" name="banner_badge_color" id="pickerBadgeBg"
+                    value="{{#if data.banner_badge_color}}{{data.banner_badge_color}}{{else}}#1a7f5a{{/if}}"
+                    style="width:38px;height:36px;padding:2px;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:none;"
+                    oninput="document.getElementById('hexBadgeBg').value=this.value" />
+                  <input class="form-input" type="text" id="hexBadgeBg"
+                    value="{{#if data.banner_badge_color}}{{data.banner_badge_color}}{{else}}#1a7f5a{{/if}}"
+                    style="font-family:monospace;max-width:110px;"
+                    oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('pickerBadgeBg').value=this.value" />
+                  <button type="button" onclick="setBadgeBg('#1a7f5a')" class="media-color-btn" style="background:#1a7f5a;color:#fff;border-color:#1a7f5a;">Xanh lá</button>
+                  <button type="button" onclick="setBadgeBg('#1d4ed8')" class="media-color-btn" style="background:#1d4ed8;color:#fff;border-color:#1d4ed8;">Xanh dương</button>
+                  <button type="button" onclick="setBadgeBg('#7c3aed')" class="media-color-btn" style="background:#7c3aed;color:#fff;border-color:#7c3aed;">Tím</button>
+                  <button type="button" onclick="setBadgeBg('#dc2626')" class="media-color-btn" style="background:#dc2626;color:#fff;border-color:#dc2626;">Đỏ</button>
+                </div>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label class="form-label">Màu chữ badge</label>
+                <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+                  <input type="color" name="banner_badge_text_color" id="pickerBadgeText"
+                    value="{{#if data.banner_badge_text_color}}{{data.banner_badge_text_color}}{{else}}#0f4f38{{/if}}"
+                    style="width:38px;height:36px;padding:2px;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:none;"
+                    oninput="document.getElementById('hexBadgeText').value=this.value" />
+                  <input class="form-input" type="text" id="hexBadgeText"
+                    value="{{#if data.banner_badge_text_color}}{{data.banner_badge_text_color}}{{else}}#0f4f38{{/if}}"
+                    style="font-family:monospace;max-width:110px;"
+                    oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('pickerBadgeText').value=this.value" />
+                  <button type="button" onclick="setBadgeText('#ffffff')" class="media-color-btn" style="background:#fff;border-color:#ddd;">Trắng</button>
+                  <button type="button" onclick="setBadgeText('#0f4f38')" class="media-color-btn" style="background:#0f4f38;color:#fff;border-color:#0f4f38;">Xanh tối</button>
+                  <button type="button" onclick="setBadgeText('#1a1a1a')" class="media-color-btn" style="background:#1a1a1a;color:#fff;border-color:#1a1a1a;">Đen</button>
+                </div>
+              </div>
+              <div class="form-group" style="margin:0;">
                 <label class="form-label">Màu chữ trên banner</label>
                 <div style="display:flex;align-items:center;gap:.6rem;">
                   <input type="color" name="banner_text_color" id="pickerBannerText"
@@ -122,7 +163,7 @@
                     min="0" max="80" step="5"
                     value="{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}45{{/if}}"
                     style="flex:1;accent-color:#1a7f5a;"
-                    oninput="document.getElementById('bannerOverlayLabel').textContent=this.value+'%'" />
+                    oninput="document.getElementById('bannerOverlayLabel').textContent=this.value+'%';var o=document.getElementById('heroOverlayPreview');if(o)o.style.background='rgba(0,0,0,'+(parseInt(this.value)/100)+')';" />
                   <span id="bannerOverlayLabel" style="font-size:.85rem;color:#888;min-width:38px;text-align:right;">{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}45{{/if}}%</span>
                 </div>
                 <div class="form-hint">0% = không tối, 80% = rất tối.</div>
@@ -1217,6 +1258,14 @@ function setLogoSize(val) {
   document.getElementById('logoSizeSlider').value = val;
   document.getElementById('logoSizeVal').value    = val;
   document.getElementById('logoSizeInput').value  = val;
+}
+function setBadgeBg(c) {
+  document.getElementById('pickerBadgeBg').value = c;
+  document.getElementById('hexBadgeBg').value    = c;
+}
+function setBadgeText(c) {
+  document.getElementById('pickerBadgeText').value = c;
+  document.getElementById('hexBadgeText').value    = c;
 }
 function setBannerColor(c) {
   document.getElementById('pickerBannerText').value = c;

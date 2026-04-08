@@ -837,6 +837,7 @@ const AdminControllerExtension = {
         'event_position', 'event_zoom',
         'event_banner_title', 'event_banner_link',
         'banner_text_color', 'event_text_color',
+        'banner_badge_text', 'banner_badge_color', 'banner_badge_text_color',
         'favicon_shape', 'favicon_position',
         'og_title', 'og_description',
         'facebook_url', 'zalo_url',
