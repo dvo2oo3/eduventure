@@ -222,3 +222,82 @@ function bulkDelete() {
   });
 }
 </script>
+<script>
+// ── Auto-poll tin nhắn mới mỗi 30 giây ──────────────────────
+(function() {
+  // Lấy ID lớn nhất hiện tại trên trang
+  var maxId = 0;
+  document.querySelectorAll('.msg-item[id^="msg-"]').forEach(function(el) {
+    var id = parseInt(el.id.replace('msg-', ''));
+    if (id > maxId) maxId = id;
+  });
+
+  function formatDate(str) {
+    var d = new Date(str);
+    return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear();
+  }
+
+  function pollMessages() {
+    fetch('/admin/contact/messages/poll?after=' + maxId)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.ok || !data.messages.length) return;
+
+        var list = document.getElementById('msgList');
+        var emptyState = list.querySelector('.empty-state');
+        if (emptyState) emptyState.remove();
+
+        data.messages.forEach(function(msg) {
+          if (document.getElementById('msg-' + msg.id)) return; // đã có rồi
+          if (msg.id > maxId) maxId = msg.id;
+
+          // Thêm vào _messages map để modal dùng được
+          _messages[msg.id] = msg;
+
+          var div = document.createElement('div');
+          div.className = 'msg-item msg-item--unread';
+          div.id = 'msg-' + msg.id;
+          div.style.cssText = 'display:flex;align-items:flex-start;gap:.6rem;padding:.85rem 1.25rem;border-bottom:1px solid #f5f5f3;cursor:pointer;animation:fadeIn .4s ease;';
+          div.setAttribute('onclick', 'openMsg(' + msg.id + ', event)');
+          div.innerHTML =
+            '<input type="checkbox" class="msg-chk" data-id="' + msg.id + '" onclick="event.stopPropagation();updateBulkBar()" style="margin-top:3px;width:15px;height:15px;accent-color:#1a7f5a;flex-shrink:0;cursor:pointer;" />' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div class="msg-item__header">' +
+                '<div class="msg-item__name"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1a7f5a;margin-right:6px;vertical-align:middle;"></span>' + msg.full_name + '</div>' +
+                '<div class="msg-item__date">' + formatDate(new Date().toISOString()) + '</div>' +
+              '</div>' +
+              '<div class="msg-item__email">' + msg.email + (msg.phone ? ' · ' + msg.phone : '') + '</div>' +
+              '<p class="msg-item__text">' + msg.message.substring(0, 120) + (msg.message.length > 120 ? '...' : '') + '</p>' +
+            '</div>';
+
+          // Chèn lên đầu danh sách
+          list.insertBefore(div, list.firstChild);
+        });
+
+        // Cập nhật badge unread
+        var badge = document.querySelector('.badge--amber');
+        if (data.unread > 0) {
+          if (badge) {
+            badge.textContent = data.unread + ' chưa đọc';
+          } else {
+            var title = document.querySelector('.admin-card__title');
+            if (title) {
+              var nb = document.createElement('span');
+              nb.className = 'badge badge--amber';
+              nb.style.marginLeft = '8px';
+              nb.textContent = data.unread + ' chưa đọc';
+              title.appendChild(nb);
+            }
+          }
+        }
+
+        // Toast thông báo
+        showAdminMsg(true, '🔔 ' + data.messages.length + ' tin nhắn mới!');
+      })
+      .catch(function() {}); // silent fail
+  }
+
+  // Poll mỗi 30 giây
+  setInterval(pollMessages, 30000);
+})();
+</script>

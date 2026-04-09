@@ -62,6 +62,30 @@ router.post('/contact/settings', AdminController.contactSettingUpdate);
 router.post('/contact/messages/:id/read', AdminController.contactMessageRead);
 router.post('/contact/messages/:id/delete', AdminController.contactMessageDelete)
 router.post('/contact/messages/bulk-delete', express.json(), AdminController.contactMessageBulkDelete);
+
+// 25002500 Polling APIs 25002500
+router.get('/contact/messages/poll', requireAuth, async (req, res) => {
+  try {
+    const afterId = parseInt(req.query.after) || 0;
+    const ContactModel = require('../app/models/ContactModel');
+    const { rows } = await ContactModel.getMessages({ page: 1, limit: 50 });
+    const newMsgs = rows.filter(m => m.id > afterId).map(m => ({
+      id: m.id, full_name: m.full_name, email: m.email, phone: m.phone || '',
+      message: m.message, is_read: m.is_read ? true : false,
+      created_at_fmt: new Date(m.created_at).toLocaleString('vi-VN')
+    }));
+    const unread = rows.filter(m => !m.is_read).length;
+    res.json({ ok: true, messages: newMsgs, unread });
+  } catch (e) { res.json({ ok: false }); }
+});
+
+router.get('/download-status', async (req, res) => {
+  try {
+    const ProgramModel = require('../app/models/ProgramModel');
+    const status = await ProgramModel.getDownloadPauseStatus();
+    res.json({ ok: true, paused: !!status.paused, message: status.message || '' });
+  } catch (e) { res.json({ ok: false, paused: false }); }
+});
 router.get('/settings/profile', AdminController.profilePage);
 router.post('/settings/profile', AdminController.profileUpdate);
 router.get('/settings/password', AdminController.changePasswordPage);

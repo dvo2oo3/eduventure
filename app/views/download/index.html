@@ -93,3 +93,54 @@
 
   </div>
 </section>
+<script>
+// ── Poll trạng thái tạm dừng tải xuống mỗi 15 giây ──────────
+(function() {
+  var isPaused = {{#if downloadPaused}}true{{else}}false{{/if}};
+
+  function showPauseBanner(message) {
+    if (document.getElementById('_pause_banner')) return;
+    var banner = document.createElement('div');
+    banner.id = '_pause_banner';
+    banner.style.cssText = 'background:#fff7ed;border:1.5px solid #f97316;border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.75rem;display:flex;gap:1rem;align-items:flex-start;';
+    banner.innerHTML =
+      '<div style="font-size:1.75rem;line-height:1;flex-shrink:0;">🔧</div>' +
+      '<div>' +
+        '<div style="font-weight:700;color:#c2410c;font-size:1rem;margin-bottom:.4rem;">Chức năng tải xuống đang tạm dừng</div>' +
+        '<p style="margin:0;color:#7c2d12;font-size:.9rem;line-height:1.6;">' + message + '</p>' +
+        '<a href="/lien-he" class="btn btn--outline btn--sm" style="margin-top:.85rem;border-color:#f97316;color:#c2410c;">Liên hệ EduVenture</a>' +
+      '</div>';
+    var main = document.querySelector('.download-main');
+    if (main) main.insertBefore(banner, main.firstChild);
+
+    // Mờ form đi
+    var card = document.querySelector('.dl-card--primary');
+    if (card) { card.style.opacity = '.55'; card.style.pointerEvents = 'none'; }
+  }
+
+  function hidePauseBanner() {
+    var banner = document.getElementById('_pause_banner');
+    if (banner) banner.remove();
+    var card = document.querySelector('.dl-card--primary');
+    if (card) { card.style.opacity = ''; card.style.pointerEvents = ''; }
+  }
+
+  function pollStatus() {
+    fetch('/admin/download-status')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.ok) return;
+        if (data.paused && !isPaused) {
+          isPaused = true;
+          showPauseBanner(data.message || 'Vui lòng thử lại sau.');
+        } else if (!data.paused && isPaused) {
+          isPaused = false;
+          hidePauseBanner();
+        }
+      })
+      .catch(function() {});
+  }
+
+  setInterval(pollStatus, 15000);
+})();
+</script>

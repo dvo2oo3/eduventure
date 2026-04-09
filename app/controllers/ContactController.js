@@ -1,7 +1,5 @@
 const ContactModel = require('../models/ContactModel');
-// const transporter = require('../../config/mail');
 const transporter = require('../../config/mail');
-// const transporter = require('../config/mail');
 require('dotenv').config();
 
 const ContactController = {
@@ -24,9 +22,11 @@ const ContactController = {
   },
 
   async send(req, res) {
+    const isAjax = req.headers['x-requested-with'] === 'XMLHttpRequest';
     try {
       const { full_name, email, phone, message } = req.body;
       if (!full_name || !email || !message) {
+        if (isAjax) return res.json({ ok: false, message: 'Vui lòng điền đầy đủ thông tin bắt buộc.' });
         req.flash('error', 'Vui lòng điền đầy đủ thông tin bắt buộc.');
         return res.redirect('/lien-he');
       }
@@ -50,10 +50,13 @@ const ContactController = {
         console.error('Lỗi gửi mail (không ảnh hưởng):', mailErr.message);
       });
 
-      req.flash('success', 'Yêu cầu của bạn đã được gửi thành công! Chúng tôi sẽ phản hồi trong vòng 24h.');
+      const successMsg = 'Yêu cầu của bạn đã được gửi thành công! Chúng tôi sẽ phản hồi trong vòng 24h.';
+      if (isAjax) return res.json({ ok: true, message: successMsg });
+      req.flash('success', successMsg);
       res.redirect('/lien-he');
     } catch (err) {
       console.error(err);
+      if (isAjax) return res.json({ ok: false, message: 'Có lỗi xảy ra, vui lòng thử lại.' });
       req.flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
       res.redirect('/lien-he');
     }
