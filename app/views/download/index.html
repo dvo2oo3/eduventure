@@ -239,3 +239,84 @@
   setInterval(pollStatus, 60000);
 })();
 </script>
+<style>
+@keyframes fadeInUp { from { opacity:0;transform:translateY(30px) scale(.96); } to { opacity:1;transform:translateY(0) scale(1); } }
+@keyframes fadeOutDown { from { opacity:1;transform:translateY(0) scale(1); } to { opacity:0;transform:translateY(30px) scale(.96); } }
+.pause-overlay { position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem; }
+.pause-modal { background:#fff;border-radius:20px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:fadeInUp .4s cubic-bezier(.34,1.56,.64,1);overflow:hidden; }
+.pause-modal__top { background:linear-gradient(135deg,#fff7ed,#ffedd5);padding:2rem 2rem 1.5rem;text-align:center;border-bottom:1px solid #fed7aa; }
+.pause-modal__icon { font-size:3rem;line-height:1;margin-bottom:.75rem; }
+.pause-modal__title { font-weight:700;font-size:1.1rem;color:#c2410c;margin-bottom:.5rem; }
+.pause-modal__msg { font-size:.9rem;color:#7c2d12;line-height:1.6;margin:0; }
+.pause-modal__foot { padding:1.25rem 2rem;display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap; }
+</style>
+
+<script>
+(function() {
+  var isPaused = {{#if downloadPaused}}true{{else}}false{{/if}};
+
+  function showPausePopup(message) {
+    if (document.getElementById('_pause_overlay')) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'pause-overlay';
+    overlay.id = '_pause_overlay';
+    overlay.innerHTML =
+      '<div class="pause-modal">' +
+        '<div class="pause-modal__top">' +
+          '<div class="pause-modal__icon">🔧</div>' +
+          '<div class="pause-modal__title">Chức năng tải xuống đang tạm dừng</div>' +
+          '<p class="pause-modal__msg">' + (message || 'Vui lòng thử lại sau.') + '</p>' +
+        '</div>' +
+        '<div class="pause-modal__foot">' +
+          '<a href="/lien-he" class="btn btn--outline" style="border-color:#f97316;color:#c2410c;">Liên hệ EduVenture</a>' +
+          '<button class="btn btn--primary" onclick="closePausePopup()" style="background:#c2410c;border-color:#c2410c;">Đã hiểu</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    var card = document.querySelector('.dl-card--primary');
+    if (card) { card.style.opacity='.45'; card.style.pointerEvents='none'; }
+  }
+
+  window.closePausePopup = function() {
+    var o = document.getElementById('_pause_overlay');
+    if (o) { o.querySelector('.pause-modal').style.animation='fadeOutDown .3s ease forwards'; setTimeout(function(){ o.remove(); },300); }
+  };
+
+  function resumeState() {
+    closePausePopup();
+    var card = document.querySelector('.dl-card--primary');
+    if (card) { card.style.opacity=''; card.style.pointerEvents=''; }
+    var toast = document.createElement('div');
+    toast.style.cssText='position:fixed;bottom:24px;right:24px;z-index:9999;background:#e8f5ee;color:#1a7f5a;border:1px solid #c1e3d0;border-radius:10px;padding:.875rem 1.25rem;font-weight:600;font-size:.9rem;box-shadow:0 4px 16px rgba(0,0,0,.1);';
+    toast.textContent='✅ Chức năng tải xuống đã hoạt động trở lại!';
+    document.body.appendChild(toast);
+    setTimeout(function(){ toast.remove(); }, 5000);
+  }
+
+  // SSE — nhận tức thì khi admin thay đổi
+  var es = new EventSource('/admin/download-stream');
+  es.addEventListener('status-change', function(e) {
+    var data = JSON.parse(e.data);
+    if (data.paused && !isPaused) {
+      isPaused = true;
+      showPausePopup(data.message);
+    } else if (!data.paused && isPaused) {
+      isPaused = false;
+      resumeState();
+    }
+  });
+  es.onerror = function() {
+    // fallback poll 15s nếu SSE lỗi
+    es.close();
+    setInterval(function() {
+      fetch('/admin/download-status')
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+          if (!data.ok) return;
+          if (data.paused && !isPaused) { isPaused=true; showPausePopup(data.message); }
+          else if (!data.paused && isPaused) { isPaused=false; resumeState(); }
+        }).catch(function(){});
+    }, 15000);
+  };
+})();
+</script>

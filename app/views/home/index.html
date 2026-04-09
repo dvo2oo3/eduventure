@@ -6,7 +6,7 @@
   <script>!function(){var o=document.getElementById('heroOverlay');if(o){var v=parseInt(o.dataset.opacity||'45');o.style.background='rgba(0,0,0,'+(v/100)+')'}}()</script>
   <div class="container hero__inner" style="position:relative;z-index:1;">
     <div class="hero__content">
-      <div class="hero__badge">Kỹ năng sống · Lớp 1 → Lớp 5</div>
+      <div class="hero__badge" {{#if siteBannerBadgeColor}}style="background:{{siteBannerBadgeColor}};{{#if siteBannerBadgeTextColor}}color:{{siteBannerBadgeTextColor}};{{/if}}"{{/if}}>{{#if siteBannerBadgeText}}{{siteBannerBadgeText}}{{else}}Kỹ năng sống · Lớp 1 → Lớp 5{{/if}}</div>
       <h1 class="hero__title" style="color:{{#if siteBannerTextColor}}{{siteBannerTextColor}}{{else}}#ffffff{{/if}};">{{#if siteBannerTitle}}{{siteBannerTitle}}{{else}}Trang bị kỹ năng
         sống cho học sinh tiểu học{{/if}}</h1>
       <p class="hero__desc" style="color:{{#if siteBannerTextColor}}{{siteBannerTextColor}}{{else}}rgba(255,255,255,.85){{/if}};opacity:.9;">{{#if
@@ -24,7 +24,7 @@
 <section class="hero">
   <div class="container hero__inner">
     <div class="hero__content">
-      <div class="hero__badge">Kỹ năng sống · Lớp 1 → Lớp 5</div>
+      <div class="hero__badge" {{#if siteBannerBadgeColor}}style="background:{{siteBannerBadgeColor}};{{#if siteBannerBadgeTextColor}}color:{{siteBannerBadgeTextColor}};{{/if}}"{{/if}}>{{#if siteBannerBadgeText}}{{siteBannerBadgeText}}{{else}}Kỹ năng sống · Lớp 1 → Lớp 5{{/if}}</div>
       <h1 class="hero__title">{{#if siteBannerTitle}}{{siteBannerTitle}}{{else}}Trang bị kỹ năng sống<br>cho học sinh tiểu học{{/if}}</h1>
       <p class="hero__desc">{{#if siteBannerSubtitle}}{{siteBannerSubtitle}}{{else}}Chương trình giáo dục thực tiễn, được triển khai tại các trường tiểu học trên toàn quốc —
         giúp học sinh phát triển toàn diện từ sớm.{{/if}}</p>

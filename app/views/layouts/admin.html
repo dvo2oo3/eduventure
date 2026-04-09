@@ -98,6 +98,7 @@
         <a href="/admin/contact" title="Liên hệ" class="sidebar__link {{#if (eq activeMenu 'contact')}}active{{/if}}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           Map & Liên hệ
+          <span id="sidebarUnreadBadge" style="display:none;background:#e67e22;color:#fff;border-radius:999px;font-size:.65rem;font-weight:700;padding:1px 7px;margin-left:auto;min-width:18px;text-align:center;"></span>
         </a>
         {{/if}}
       </nav>
@@ -131,6 +132,11 @@
 
     <!-- MAIN -->
     <div class="admin-main">
+      <div style="display:flex;justify-content:flex-end;padding:.5rem 1.5rem 0;margin-bottom:-.5rem;">
+        <button id="_notifyToggleBtn" onclick="toggleAdminNotify()"
+          style="display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .85rem;border-radius:999px;border:1px solid;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;background:rgba(26,127,90,.12);color:#1a7f5a;border-color:rgba(26,127,90,.25);">
+        </button>
+      </div>
       {{#if flashSuccess}}
       <div class="flash flash--success flash--admin">
         <span>{{flashSuccess}}</span>
@@ -288,7 +294,7 @@
     </a>
     <a href="/admin/contact" class="bottom-nav__item {{#if (eq activeMenu 'contact')}}active{{/if}}">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      <span>Liên hệ</span>
+      <span style="position:relative;">Liên hệ <span id="mobileUnreadBadge" style="display:none;position:absolute;top:-6px;right:-10px;background:#e67e22;color:#fff;border-radius:999px;font-size:.55rem;font-weight:700;padding:1px 5px;min-width:14px;text-align:center;"></span></span>
     </a>
     <a href="#" class="bottom-nav__item {{#if (eq activeMenu 'more')}}active{{/if}}" onclick="openSidebar();return false;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -297,5 +303,122 @@
   </nav>
 
   <script src="/js/admin.js"></script>
+<script>
+// ── SSE: cập nhật real-time tin nhắn mới ─────────────────────
+(function() {
+  var es = new EventSource('/admin/contact/messages/stream');
+
+  es.addEventListener('new-message', function(e) {
+    var msg = JSON.parse(e.data);
+
+    // 1. Cập nhật sidebar badge + mobile badge
+    var badge = document.getElementById('sidebarUnreadBadge');
+    var mobileBadge = document.getElementById('mobileUnreadBadge');
+    var current = badge ? (parseInt(badge.textContent) || 0) : 0;
+    var newCount = current + 1;
+    if (badge) { badge.textContent = newCount; badge.style.display = ''; }
+    if (mobileBadge) { mobileBadge.textContent = newCount; mobileBadge.style.display = ''; }
+
+    // 2. Cập nhật số dashboard
+    var dashNum = document.getElementById('dashUnreadNum');
+    if (dashNum) dashNum.textContent = parseInt(dashNum.textContent || 0) + 1;
+
+    // 3. Popup thông báo góc phải
+    showMsgPopup(msg);
+  });
+
+  es.onerror = function() {
+    // SSE lỗi → fallback poll 30s
+    es.close();
+    setInterval(function() {
+      fetch('/admin/contact/messages/poll?after=0')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.ok) return;
+          var badge = document.getElementById('sidebarUnreadBadge');
+          if (badge) {
+            if (data.unread > 0) { badge.textContent = data.unread; badge.style.display = ''; }
+            else badge.style.display = 'none';
+          }
+          var mb = document.getElementById('mobileUnreadBadge');
+          if (mb) {
+            if (data.unread > 0) { mb.textContent = data.unread; mb.style.display = ''; }
+            else mb.style.display = 'none';
+          }
+          var dashNum = document.getElementById('dashUnreadNum');
+          if (dashNum) dashNum.textContent = data.unread;
+        }).catch(function(){});
+    }, 30000);
+  };
+
+  function showMsgPopup(msg) {
+    // Kiểm tra người dùng có bật thông báo không
+    if (localStorage.getItem('adminNotify') === 'off') return;
+    var old = document.getElementById('_msg_notify');
+    if (old) old.remove();
+    var initials = (msg.full_name || '?').trim().split(' ').slice(-1)[0].charAt(0).toUpperCase();
+    var el = document.createElement('div');
+    el.id = '_msg_notify';
+    el.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;width:320px;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.15);overflow:hidden;border:1px solid #e8e8e4;animation:slideInRight .35s cubic-bezier(.34,1.56,.64,1);';
+    el.innerHTML =
+      '<div style="height:4px;background:linear-gradient(90deg,#1a7f5a,#34d399);"></div>' +
+      '<button onclick="document.getElementById(\'_msg_notify\').remove()" style="position:absolute;top:.5rem;right:.625rem;background:none;border:none;cursor:pointer;color:#aaa;font-size:1rem;line-height:1;padding:2px 4px;">✕</button>' +
+      '<div style="padding:1rem 1.125rem .875rem;display:flex;gap:.75rem;align-items:flex-start;">' +
+        '<div style="width:40px;height:40px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#1a7f5a,#34d399);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1rem;">' + initials + '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:.7rem;font-weight:600;color:#1a7f5a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.2rem;">🔔 Tin nhắn mới</div>' +
+          '<div style="font-weight:700;font-size:.9rem;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (msg.full_name || '') + '</div>' +
+          '<div style="font-size:.8rem;color:#666;margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (msg.message || '').substring(0, 60) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="padding:.5rem 1.125rem .75rem;display:flex;gap:.5rem;justify-content:flex-end;">' +
+        '<button onclick="document.getElementById(\'_msg_notify\').remove()" class="btn btn--sm btn--outline">Bỏ qua</button>' +
+        '<a href="/admin/contact" class="btn btn--sm btn--primary">Xem ngay</a>' +
+      '</div>';
+    document.body.appendChild(el);
+    setTimeout(function() {
+      var n = document.getElementById('_msg_notify');
+      if (n) { n.style.animation = 'slideOutRight .3s ease forwards'; setTimeout(function(){ if(n) n.remove(); }, 300); }
+    }, 8000);
+  }
+})();
+
+// ── Toggle thông báo ─────────────────────────────────────────
+(function() {
+  var KEY = 'adminNotify';
+
+  function getState() {
+    return localStorage.getItem(KEY) !== 'off';
+  }
+
+  function renderBtn() {
+    var btn = document.getElementById('_notifyToggleBtn');
+    if (!btn) return;
+    var on = getState();
+    btn.innerHTML = on
+      ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Thông báo'
+      : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Tắt thông báo';
+    btn.style.background = on ? 'rgba(26,127,90,.12)' : 'rgba(200,50,50,.1)';
+    btn.style.color = on ? '#1a7f5a' : '#dc2626';
+    btn.style.borderColor = on ? 'rgba(26,127,90,.25)' : 'rgba(220,38,38,.25)';
+    btn.title = on ? 'Đang bật — nhấn để tắt thông báo' : 'Đang tắt — nhấn để bật thông báo';
+  }
+
+  window.toggleAdminNotify = function() {
+    var on = getState();
+    localStorage.setItem(KEY, on ? 'off' : 'on');
+    renderBtn();
+    // Toast xác nhận
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;background:#1c1c1a;color:#fff;border-radius:8px;padding:.6rem 1.2rem;font-size:.85rem;font-weight:500;';
+    t.textContent = on ? '🔕 Đã tắt thông báo tin nhắn' : '🔔 Đã bật thông báo tin nhắn';
+    document.body.appendChild(t);
+    setTimeout(function() { t.remove(); }, 2500);
+  };
+
+  document.addEventListener('DOMContentLoaded', renderBtn);
+})();
+</script>
+
 </body>
 </html>
