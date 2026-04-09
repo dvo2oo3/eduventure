@@ -6,7 +6,7 @@
   <script>!function(){var o=document.getElementById('heroOverlay');if(o){var v=parseInt(o.dataset.opacity||'45');o.style.background='rgba(0,0,0,'+(v/100)+')'}}()</script>
   <div class="container hero__inner" style="position:relative;z-index:1;">
     <div class="hero__content">
-      <div class="hero__badge" style="{{#if siteBannerBadgeColor}}background:{{siteBannerBadgeColor}};{{/if}}{{#if siteBannerBadgeTextColor}}color:{{siteBannerBadgeTextColor}};{{/if}}">{{#if siteBannerBadgeText}}{{siteBannerBadgeText}}{{else}}Kỹ năng sống · Lớp 1 → Lớp 5{{/if}}</div>
+      <div class="hero__badge">Kỹ năng sống · Lớp 1 → Lớp 5</div>
       <h1 class="hero__title" style="color:{{#if siteBannerTextColor}}{{siteBannerTextColor}}{{else}}#ffffff{{/if}};">{{#if siteBannerTitle}}{{siteBannerTitle}}{{else}}Trang bị kỹ năng
         sống cho học sinh tiểu học{{/if}}</h1>
       <p class="hero__desc" style="color:{{#if siteBannerTextColor}}{{siteBannerTextColor}}{{else}}rgba(255,255,255,.85){{/if}};opacity:.9;">{{#if
@@ -24,7 +24,7 @@
 <section class="hero">
   <div class="container hero__inner">
     <div class="hero__content">
-      <div class="hero__badge" style="{{#if siteBannerBadgeColor}}background:{{siteBannerBadgeColor}};{{/if}}{{#if siteBannerBadgeTextColor}}color:{{siteBannerBadgeTextColor}};{{/if}}">{{#if siteBannerBadgeText}}{{siteBannerBadgeText}}{{else}}Kỹ năng sống · Lớp 1 → Lớp 5{{/if}}</div>
+      <div class="hero__badge">Kỹ năng sống · Lớp 1 → Lớp 5</div>
       <h1 class="hero__title">{{#if siteBannerTitle}}{{siteBannerTitle}}{{else}}Trang bị kỹ năng sống<br>cho học sinh tiểu học{{/if}}</h1>
       <p class="hero__desc">{{#if siteBannerSubtitle}}{{siteBannerSubtitle}}{{else}}Chương trình giáo dục thực tiễn, được triển khai tại các trường tiểu học trên toàn quốc —
         giúp học sinh phát triển toàn diện từ sớm.{{/if}}</p>
@@ -122,20 +122,20 @@
 <section class="stats-section">
   <div class="container stats-grid">
     <div class="stat-item">
-      <div class="stat-item__num">{{#if about.stats_schools}}{{about.stats_schools.title}}{{else}}120+{{/if}}</div>
-      <div class="stat-item__label">{{#if about.stats_schools}}{{about.stats_schools.content}}{{else}}Trường đối tác{{/if}}</div>
+      <div class="stat-item__num">{{#if about.stats_schools.title}}{{about.stats_schools.title}}{{else}}120+{{/if}}</div>
+      <div class="stat-item__label">{{#if about.stats_schools.content}}{{about.stats_schools.content}}{{else}}Trường đối tác{{/if}}</div>
     </div>
     <div class="stat-item">
-      <div class="stat-item__num">{{#if about.stats_students}}{{about.stats_students.title}}{{else}}50.000+{{/if}}</div>
-      <div class="stat-item__label">{{#if about.stats_students}}{{about.stats_students.content}}{{else}}Học sinh{{/if}}</div>
+      <div class="stat-item__num">{{#if about.stats_students.title}}{{about.stats_students.title}}{{else}}50.000+{{/if}}</div>
+      <div class="stat-item__label">{{#if about.stats_students.content}}{{about.stats_students.content}}{{else}}Học sinh{{/if}}</div>
     </div>
     <div class="stat-item">
-      <div class="stat-item__num">{{#if about.stats_grades}}{{about.stats_grades.title}}{{else}}5{{/if}}</div>
-      <div class="stat-item__label">{{#if about.stats_grades}}{{about.stats_grades.content}}{{else}}Khối lớp{{/if}}</div>
+      <div class="stat-item__num">{{#if about.stats_grades.title}}{{about.stats_grades.title}}{{else}}5{{/if}}</div>
+      <div class="stat-item__label">{{#if about.stats_grades.content}}{{about.stats_grades.content}}{{else}}Khối lớp{{/if}}</div>
     </div>
     <div class="stat-item">
-      <div class="stat-item__num">{{#if about.stats_years}}{{about.stats_years.title}}{{else}}10+{{/if}}</div>
-      <div class="stat-item__label">{{#if about.stats_years}}{{about.stats_years.content}}{{else}}Năm kinh nghiệm{{/if}}</div>
+      <div class="stat-item__num">{{#if about.stats_years.title}}{{about.stats_years.title}}{{else}}10+{{/if}}</div>
+      <div class="stat-item__label">{{#if about.stats_years.content}}{{about.stats_years.content}}{{else}}Năm kinh nghiệm{{/if}}</div>
     </div>
   </div>
 </section>

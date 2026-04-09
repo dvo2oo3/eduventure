@@ -168,5 +168,34 @@
 
   <script src="/js/main.js"></script>
   {{#if pageJS}}<script src="/js/{{pageJS}}.js"></script>{{/if}}
+
+<!-- Lightbox cho ảnh trong bài viết -->
+<div id="lightbox" onclick="this.style.display='none'" style="
+  display:none;position:fixed;inset:0;z-index:99999;
+  background:rgba(0,0,0,.88);cursor:zoom-out;
+  align-items:center;justify-content:center;
+">
+  <img id="lightbox-img" src="" style="max-width:92vw;max-height:92vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.5);object-fit:contain;" />
+  <button onclick="document.getElementById('lightbox').style.display='none'" style="
+    position:fixed;top:1rem;right:1.25rem;background:rgba(255,255,255,.15);
+    border:none;color:#fff;font-size:1.5rem;cursor:pointer;
+    width:40px;height:40px;border-radius:50%;line-height:1;
+  ">✕</button>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.article__content img, .prose img').forEach(function(img) {
+    img.style.cursor = 'zoom-in';
+    img.addEventListener('click', function() {
+      var lb = document.getElementById('lightbox');
+      document.getElementById('lightbox-img').src = this.src;
+      lb.style.display = 'flex';
+    });
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') document.getElementById('lightbox').style.display = 'none';
+  });
+});
+</script>
 </body>
 </html>

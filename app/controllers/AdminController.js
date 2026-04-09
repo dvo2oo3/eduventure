@@ -112,6 +112,8 @@ const AdminController = {
       hasFilter: !!(category || q || status || date_from || date_to),
       news_per_page: settings.news_per_page || '6',
       program_per_page: settings.program_per_page || '8',
+      news_related_count: settings.news_related_count || settings.related_count || '4',
+      program_related_count: settings.program_related_count || settings.related_count || '4',
       success: req.flash('success'),
       error: req.flash('error')
     });
@@ -238,6 +240,31 @@ const AdminController = {
             title: req.body[titleKey] !== undefined ? req.body[titleKey] : null,
             content: req.body[key] !== undefined ? req.body[key] : null
           });
+        }
+      }
+
+      // Upload ảnh logo about → R2 + lưu display mode
+      const aboutLogoData = req.body.about_logo_data;
+      const aboutDisplayMode = req.body.about_display_mode || 'icon';
+      if (aboutLogoData && aboutLogoData.startsWith('data:')) {
+        // Upload base64 từ máy tính → R2
+        function base64ToBuffer(dataUrl) {
+          const matches = dataUrl.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+          if (!matches) throw new Error('Invalid base64');
+          return Buffer.from(matches[2], 'base64');
+        }
+        const buf = base64ToBuffer(aboutLogoData);
+        const url = await uploadToR2(buf, 'about_logo.jpg', 'media');
+        await AboutModel.upsert('about_logo', { title: aboutDisplayMode, content: url });
+      } else if (aboutLogoData && aboutLogoData.startsWith('r2:')) {
+        // Chọn từ thư viện R2 — dùng URL trực tiếp
+        const url = aboutLogoData.replace('r2:', '');
+        await AboutModel.upsert('about_logo', { title: aboutDisplayMode, content: url });
+      } else if (req.body.about_display_mode) {
+        // Chỉ cập nhật mode, giữ ảnh cũ
+        const existing = await AboutModel.getByKey('about_logo');
+        if (existing) {
+          await AboutModel.upsert('about_logo', { title: aboutDisplayMode, content: existing.content });
         }
       }
 
@@ -786,10 +813,12 @@ const AdminController = {
 
   async newsDisplaySettingSave(req, res) {
     try {
-      const { news_per_page, program_per_page } = req.body;
-      if (news_per_page) await ContactModel.updateSetting('news_per_page', parseInt(news_per_page) || 6);
-      if (program_per_page) await ContactModel.updateSetting('program_per_page', parseInt(program_per_page) || 8);
-      req.flash('success', 'Cập nhật số bài hiển thị thành công!');
+      const { news_per_page, program_per_page, news_related_count, program_related_count } = req.body;
+      if (news_per_page !== undefined) await ContactModel.updateSetting('news_per_page', parseInt(news_per_page) || 6);
+      if (program_per_page !== undefined) await ContactModel.updateSetting('program_per_page', parseInt(program_per_page) || 8);
+      if (news_related_count !== undefined) await ContactModel.updateSetting('news_related_count', parseInt(news_related_count) || 4);
+      if (program_related_count !== undefined) await ContactModel.updateSetting('program_related_count', parseInt(program_related_count) || 4);
+      req.flash('success', 'Cập nhật cài đặt hiển thị thành công!');
       res.redirect('/admin/news');
     } catch (err) {
       req.flash('error', 'Lỗi: ' + err.message);

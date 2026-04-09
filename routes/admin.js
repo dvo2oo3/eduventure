@@ -28,7 +28,6 @@ router.post('/news/display-settings', requirePermission('news'), AdminController
 
 // Về chúng tôi
 router.get('/about', requirePermission('about'), AdminController.aboutPage);
-router.post('/about', requirePermission('about'), AdminController.aboutUpdate);
 
 // Link tải xuống
 router.get('/download', requirePermission('download'), AdminController.downloadPage);
@@ -51,6 +50,8 @@ router.post('/download/sysreq', AdminController.downloadUpdateSysreq);
 
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
+const uploadAbout = multer({ storage: multer.memoryStorage(), limits: { fieldSize: 20 * 1024 * 1024 } }).none();
+router.post('/about', requirePermission('about'), uploadAbout, AdminController.aboutUpdate);
 
 router.get('/download/import', AdminController.downloadImportPage);
 router.post('/download/import', upload.single('file'), AdminController.downloadImport);
@@ -134,5 +135,27 @@ router.post('/accounts/create', requireSuperAdmin, AdminController.accountCreate
 router.post('/accounts/:id/update', requireSuperAdmin, AdminController.accountUpdate);
 router.post('/accounts/:id/reset-password', requireSuperAdmin, AdminController.accountResetPassword);
 router.post('/accounts/:id/delete', requireSuperAdmin, AdminController.accountDelete);
+
+// Proxy ảnh từ R2 để tránh lỗi CORS khi dùng r2.dev
+router.get('/proxy-image', async (req, res) => {
+  const { url } = req.query;
+  const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || '';
+  if (!url || !url.startsWith(R2_PUBLIC_URL)) {
+    return res.status(400).send('Invalid URL');
+  }
+  try {
+    const https = require('https');
+    const http = require('http');
+    const client = url.startsWith('https') ? https : http;
+    client.get(url, (r2res) => {
+      res.set('Content-Type', r2res.headers['content-type'] || 'image/jpeg');
+      res.set('Access-Control-Allow-Origin', '*');
+      res.set('Cache-Control', 'public, max-age=86400');
+      r2res.pipe(res);
+    }).on('error', () => res.status(500).send('Proxy error'));
+  } catch(e) {
+    res.status(500).send(e.message);
+  }
+});
 
 module.exports = router;

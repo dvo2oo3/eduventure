@@ -3,7 +3,7 @@
   <div class="container breadcrumb__inner">
     <a href="/">Trang chủ</a>
     <span>›</span>
-    <a href="/tin-tuc">Tin tức</a>
+    <a href="/tin-tuc">Chương trình</a>
     <span>›</span>
     <span>{{truncate news.title 60}}</span>
   </div>
@@ -31,12 +31,10 @@
         {{/if}}
       </header>
 
-      {{#if news.image_in_article}}
       {{#if news.image}}
       <div class="article__cover">
         <img src="{{news.image}}" alt="{{news.title}}" />
       </div>
-      {{/if}}
       {{/if}}
 
       <div class="article__content prose">
@@ -50,17 +48,41 @@
     </article>
 
     <!-- SIDEBAR -->
-    <aside class="article-sidebar">
+    <aside class="article-sidebar article-sidebar--sticky">
+
+      {{#if relatedNews.length}}
+      <div class="sidebar-widget">
+        <div class="sidebar-widget__title">Bài viết liên quan</div>
+        <ul class="related-list">
+          {{#each relatedNews}}
+          <li class="related-item">
+            {{#if this.image}}
+            <a href="/tin-tuc/{{this.slug}}" class="related-item__thumb-link">
+              <img src="{{this.image}}" alt="{{this.title}}" class="related-item__thumb" />
+            </a>
+            {{/if}}
+            <div class="related-item__body">
+              {{#if this.category}}<span class="badge {{#if (eq this.category 'program')}}badge--green{{else}}badge--blue{{/if}}" style="font-size:.65rem;padding:.15rem .5rem;">{{#if (eq this.category 'program')}}Chương trình{{else}}Tin tức{{/if}}</span>{{/if}}
+              <a href="/tin-tuc/{{this.slug}}" class="related-item__title">{{this.title}}</a>
+            </div>
+          </li>
+          {{/each}}
+        </ul>
+      </div>
+      {{/if}}
+
       <div class="sidebar-widget">
         <div class="sidebar-widget__title">Tải phần mềm</div>
         <p class="sidebar-widget__desc">Phần mềm giảng dạy kỹ năng sống dành cho giáo viên tiểu học</p>
         <a href="/tai-xuong" class="btn btn--primary btn--block">Xem trang tải xuống</a>
       </div>
+
       <div class="sidebar-widget">
         <div class="sidebar-widget__title">Liên hệ hợp tác</div>
         <p class="sidebar-widget__desc">Muốn triển khai chương trình tại trường bạn? Liên hệ ngay.</p>
         <a href="/lien-he" class="btn btn--outline btn--block">Liên hệ ngay</a>
       </div>
+
     </aside>
   </div>
 </section>

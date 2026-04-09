@@ -132,7 +132,7 @@
               <label class="checkbox-label">
                 <input type="checkbox" name="image_in_article" value="1"
                   {{#if item}}{{#if item.image_in_article}}checked{{/if}}{{else}}checked{{/if}} />
-                <span>Hiển thị ảnh đại diện trong bài viết</span>
+                <span>Hiển thị ảnh trong bài viết</span>
               </label>
             </div>
           </div>
@@ -192,6 +192,10 @@
                 style="flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;">
                 🔗 Nhập URL
               </button>
+              <button type="button" id="tab-library" onclick="switchImgTab('library')"
+                style="flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;">
+                🖼 Thư viện
+              </button>
             </div>
             <div id="pane-upload">
               <label style="display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:1.25rem;border:2px dashed #d1d5db;border-radius:8px;cursor:pointer;transition:border-color .15s;" id="upload-label">
@@ -208,6 +212,12 @@
                 oninput="previewUrl(this.value)" />
               <div style="font-size:.75rem;color:#9ca3af;margin-top:.35rem;">Dán link ảnh từ internet</div>
             </div>
+            <div id="pane-library" style="display:none;">
+              <button type="button" onclick="openLibraryModal()"
+                style="width:100%;padding:.65rem;border:2px dashed #d1d5db;border-radius:8px;background:#fafafa;cursor:pointer;font-size:.82rem;color:#6b7280;display:flex;align-items:center;justify-content:center;gap:.4rem;">
+                🖼 Mở thư viện ảnh
+              </button>
+            </div>
           </div>
         </div>
 
@@ -217,17 +227,118 @@
 </div>
 
 <script>
+const TAB_ACTIVE = 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:#fff;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,.1);';
+const TAB_INACTIVE = 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;';
+
 function switchImgTab(tab) {
-  const isUpload = tab === 'upload';
-  document.getElementById('pane-upload').style.display = isUpload ? '' : 'none';
-  document.getElementById('pane-url').style.display   = isUpload ? 'none' : '';
-  document.getElementById('tab-upload').style.cssText = isUpload
-    ? 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:#fff;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,.1);'
-    : 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;';
-  document.getElementById('tab-url').style.cssText = isUpload
-    ? 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;'
-    : 'flex:1;padding:.4rem;border:none;border-radius:6px;font-size:.8rem;font-weight:500;cursor:pointer;background:#fff;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,.1);';
-  if (!isUpload) document.querySelector('[name=image_file]').value = '';
+  ['upload','url','library'].forEach(t => {
+    document.getElementById('pane-' + t).style.display = t === tab ? '' : 'none';
+    document.getElementById('tab-' + t).style.cssText  = t === tab ? TAB_ACTIVE : TAB_INACTIVE;
+  });
+  if (tab !== 'upload') document.querySelector('[name=image_file]').value = '';
+  if (tab === 'library') openLibraryModal();
+}
+
+// ── Library Modal ──────────────────────────────────────────────
+function openLibraryModal() {
+  let modal = document.getElementById('lib-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'lib-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:1rem;';
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:860px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+        <div style="padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+          <div>
+            <div style="font-weight:700;font-size:1rem;color:#111827;">🖼 Chọn ảnh từ thư viện</div>
+            <div style="font-size:.75rem;color:#9ca3af;margin-top:.1rem;">Tất cả ảnh đã tải lên (news · media · content)</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <input id="lib-search" type="text" placeholder="Tìm tên file..." oninput="filterLibrary(this.value)"
+              style="padding:.4rem .75rem;border:1px solid #e5e7eb;border-radius:8px;font-size:.82rem;width:200px;outline:none;" />
+            <button onclick="closeLibraryModal()" style="border:none;background:none;font-size:1.4rem;cursor:pointer;color:#9ca3af;line-height:1;padding:.2rem;">✕</button>
+          </div>
+        </div>
+        <div id="lib-grid" style="flex:1;overflow-y:auto;padding:1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem;">
+          <div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af;font-size:.9rem;">⏳ Đang tải...</div>
+        </div>
+        <div style="padding:.75rem 1.25rem;border-top:1px solid #e5e7eb;font-size:.75rem;color:#9ca3af;text-align:center;flex-shrink:0;">
+          Nhấn vào ảnh để chọn làm ảnh đại diện
+        </div>
+      </div>`;
+    modal.addEventListener('click', e => { if (e.target === modal) closeLibraryModal(); });
+    document.body.appendChild(modal);
+    loadLibraryImages();
+  } else {
+    modal.style.display = 'flex';
+  }
+}
+
+function closeLibraryModal() {
+  const modal = document.getElementById('lib-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+let _libAllFiles = [];
+
+async function loadLibraryImages() {
+  try {
+    const res = await fetch('/admin/uploads/list');
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.message);
+    // Lấy tất cả ảnh (news, media, content)
+    _libAllFiles = data.files.filter(f =>
+      f.name && /\.(jpe?g|png|webp|gif)$/i.test(f.name)
+    );
+    renderLibraryGrid(_libAllFiles);
+  } catch(e) {
+    document.getElementById('lib-grid').innerHTML =
+      `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#ef4444;">Lỗi tải ảnh: ${e.message}</div>`;
+  }
+}
+
+function renderLibraryGrid(files) {
+  const grid = document.getElementById('lib-grid');
+  if (!files.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af;">Chưa có ảnh nào trong thư mục news</div>';
+    return;
+  }
+  grid.innerHTML = files.map(f => {
+    const name = f.name;
+    const kb = f.size ? (f.size / 1024).toFixed(0) + ' KB' : '';
+    return `<div onclick="selectLibraryImage('${f.url}')"
+      title="${name}"
+      style="cursor:pointer;border:2px solid #e5e7eb;border-radius:10px;overflow:hidden;transition:border-color .15s;background:#f9fafb;position:relative;"
+      onmouseover="this.style.borderColor='#1a7f5a'" onmouseout="this.style.borderColor='#e5e7eb'">
+      <div style="aspect-ratio:4/3;overflow:hidden;background:#f3f4f6;">
+        <img src="${f.url}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" />
+      </div>
+      <div style="position:absolute;top:5px;right:5px;font-size:.6rem;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(0,0,0,.5);color:#fff;">${f.folder}</div>
+      <div style="padding:.35rem .5rem;">
+        <div style="font-size:.7rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
+        ${kb ? `<div style="font-size:.65rem;color:#9ca3af;">${kb}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterLibrary(q) {
+  const filtered = q.trim()
+    ? _libAllFiles.filter(f => f.name.toLowerCase().includes(q.toLowerCase()) || f.folder.toLowerCase().includes(q.toLowerCase()))
+    : _libAllFiles;
+  renderLibraryGrid(filtered);
+}
+
+function selectLibraryImage(url) {
+  // Cập nhật hidden input image URL
+  document.getElementById('image-url-input').value = url;
+  // Cập nhật preview
+  document.getElementById('img-preview').src = url;
+  document.getElementById('img-preview-wrap').style.display = '';
+  // Đóng modal
+  closeLibraryModal();
+  // Cập nhật preview bài viết
+  updatePreviewMeta();
 }
 
 function previewImg(input) {
@@ -264,7 +375,7 @@ tinymce.init({
             'searchreplace','visualblocks','fullscreen','table','code','wordcount'],
   toolbar: [
     'undo redo | blocks | bold italic underline | forecolor backcolor | alignleft aligncenter alignright alignjustify',
-    'bullist numlist | link image | media | table | code fullscreen'
+    'bullist numlist | link image uploadvideo | table | code fullscreen'
   ],
   toolbar_mode: 'wrap',
 
@@ -285,37 +396,32 @@ tinymce.init({
 
   file_picker_types: 'image media',
   file_picker_callback: function(callback, value, meta) {
+    const isVideo = meta.filetype === 'media';
+    // Ảnh: hiện dialog chọn nguồn (thư viện hoặc tải lên)
+    if (!isVideo) {
+      openTinyLibrary(callback);
+      return;
+    }
+    // Video: vẫn upload từ máy như cũ
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
-    if (meta.filetype === 'image') {
-      input.setAttribute('accept', 'image/*');
-    } else {
-      input.setAttribute('accept', 'video/mp4,video/webm,video/ogg,video/mov');
-    }
+    input.setAttribute('accept', 'video/mp4,video/webm,video/ogg,video/mov');
     input.onchange = function() {
       const file = this.files[0];
       const formData = new FormData();
       formData.append('file', file);
-      const isVideo = meta.filetype === 'media';
-      const uploadUrl = isVideo ? '/admin/upload-video' : '/admin/upload-image';
       const toast = document.createElement('div');
-      toast.textContent = isVideo ? '⏳ Đang upload video...' : '⏳ Đang upload ảnh...';
+      toast.textContent = '⏳ Đang upload video...';
       toast.style.cssText = 'position:fixed;bottom:2rem;right:2rem;background:#1a7f5a;color:#fff;padding:.75rem 1.25rem;border-radius:10px;font-size:.875rem;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,.2);';
       document.body.appendChild(toast);
-      fetch(uploadUrl, { method: 'POST', body: formData, credentials: 'same-origin' })
+      fetch('/admin/upload-video', { method: 'POST', body: formData, credentials: 'same-origin' })
         .then(r => r.json())
         .then(data => {
           document.body.removeChild(toast);
-          if (data.location) {
-            callback(data.location, { title: file.name });
-          } else {
-            alert('Upload thất bại: ' + (data.error || 'Lỗi không xác định'));
-          }
+          if (data.location) callback(data.location, { title: file.name });
+          else alert('Upload thất bại: ' + (data.error || 'Lỗi không xác định'));
         })
-        .catch(() => {
-          document.body.removeChild(toast);
-          alert('Lỗi kết nối khi upload file');
-        });
+        .catch(() => { document.body.removeChild(toast); alert('Lỗi kết nối khi upload file'); });
     };
     input.click();
   },
@@ -345,6 +451,24 @@ tinymce.init({
   `,
 
   setup: function(editor) {
+    // Override nút image trên toolbar → mở thư viện R2
+    editor.ui.registry.addButton('image', {
+      icon: 'image',
+      tooltip: 'Chèn ảnh từ thư viện',
+      onAction: function() {
+        openTinyLibrary(function(url, meta) {
+          editor.insertContent('<img src="' + url + '" alt="' + (meta.alt || meta.title || '') + '" style="max-width:100%;" />');
+        });
+      }
+    });
+    // Thêm nút upload video từ máy
+    editor.ui.registry.addButton('uploadvideo', {
+      icon: 'embed',
+      tooltip: 'Chèn video từ thư viện',
+      onAction: function() {
+        openTinyLibrary(null, 'video');
+      }
+    });
     editor.on('change input keyup', function() {
       editor.save();
       updatePreviewContent(editor.getContent());
@@ -425,4 +549,216 @@ document.addEventListener('input', function(e) {
 document.addEventListener('change', function(e) {
   if (e.target && e.target.name === 'image_in_article') updatePreviewMeta();
 });
+// ══════════════════════════════════════════════════════
+// THƯ VIỆN ẢNH cho TinyMCE (chèn ảnh vào nội dung bài)
+// ══════════════════════════════════════════════════════
+let _tinyCallback = null;
+let _tinyLibAllFiles = []; // toàn bộ, không lọc
+let _tinyLibFolder = 'all';
+let _tinyLibMode = 'image';
+const TINY_VID = /\.(mp4|webm|ogg|mov)$/i;
+const TINY_IMG = /\.(jpe?g|png|webp|gif)$/i;
+
+function openTinyLibrary(callback, mode) {
+  _tinyCallback = callback;
+  _tinyLibMode = mode || 'image';
+
+  let modal = document.getElementById('tiny-lib-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'tiny-lib-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:1rem;';
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:920px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+        <div style="padding:.85rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:.75rem;flex-wrap:wrap;">
+          <div id="tiny-lib-title" style="font-weight:700;font-size:1rem;color:#111827;white-space:nowrap;">🖼 Chèn ảnh vào bài viết</div>
+          <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
+            <div id="tiny-lib-tabs" style="display:flex;background:#f3f4f6;border-radius:7px;padding:2px;gap:2px;">
+              <button data-f="all"      onclick="tinyLibFilter('all')"      style="padding:.28rem .65rem;border:none;border-radius:5px;font-size:.77rem;font-weight:500;cursor:pointer;background:#fff;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,.1);">Tất cả</button>
+              <button data-f="news"     onclick="tinyLibFilter('news')"     style="padding:.28rem .65rem;border:none;border-radius:5px;font-size:.77rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;">News</button>
+              <button data-f="media"    onclick="tinyLibFilter('media')"    style="padding:.28rem .65rem;border:none;border-radius:5px;font-size:.77rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;">Media</button>
+              <button data-f="content"  onclick="tinyLibFilter('content')"  style="padding:.28rem .65rem;border:none;border-radius:5px;font-size:.77rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;">Content</button>
+              <button data-f="__video"  onclick="tinyLibFilter('__video')"  style="padding:.28rem .65rem;border:none;border-radius:5px;font-size:.77rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;">🎬 Video</button>
+            </div>
+            <input id="tiny-lib-search" type="text" placeholder="Tìm tên file..."
+              oninput="tinyLibApply()"
+              style="padding:.3rem .7rem;border:1px solid #e5e7eb;border-radius:7px;font-size:.8rem;width:150px;outline:none;" />
+            <label id="tiny-lib-upload-btn" style="display:flex;align-items:center;gap:.35rem;padding:.3rem .85rem;background:#1a7f5a;color:#fff;border-radius:7px;cursor:pointer;font-size:.8rem;font-weight:500;white-space:nowrap;">
+              ⬆ Tải lên
+              <input type="file" id="tiny-lib-file-input" accept="image/*,video/mp4,video/webm,video/ogg,video/mov" style="display:none;" onchange="tinyLibUploadFile(this)" />
+            </label>
+            <button onclick="closeTinyLib()" style="border:none;background:none;font-size:1.3rem;cursor:pointer;color:#9ca3af;line-height:1;padding:.1rem .4rem;">✕</button>
+          </div>
+        </div>
+        <div id="tiny-lib-grid" style="flex:1;overflow-y:auto;padding:1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem;">
+          <div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af;">⏳ Đang tải...</div>
+        </div>
+        <div style="padding:.5rem 1.25rem;border-top:1px solid #e5e7eb;font-size:.74rem;color:#9ca3af;text-align:center;flex-shrink:0;">
+          Nhấn vào ảnh/video để chèn vào bài viết
+        </div>
+      </div>`;
+    modal.addEventListener('click', e => { if (e.target === modal) closeTinyLib(); });
+    document.body.appendChild(modal);
+    loadTinyLibImages();
+    return;
+  }
+
+  // Modal đã tồn tại — chỉ show lại và cập nhật mode
+  modal.style.display = 'flex';
+  _applyModeToModal();
+  if (_tinyLibAllFiles.length === 0) {
+    loadTinyLibImages();
+  } else {
+    tinyLibApply();
+  }
+}
+
+function _applyModeToModal() {
+  const titleEl = document.getElementById('tiny-lib-title');
+  if (titleEl) titleEl.textContent = _tinyLibMode === 'video' ? '🎬 Chèn video vào bài viết' : '🖼 Chèn ảnh vào bài viết';
+  // Tự động chọn tab phù hợp
+  const defaultTab = _tinyLibMode === 'video' ? '__video' : 'all';
+  _setActiveTab(defaultTab);
+  _tinyLibFolder = defaultTab;
+  // Xóa search
+  const s = document.getElementById('tiny-lib-search');
+  if (s) s.value = '';
+}
+
+function _setActiveTab(folder) {
+  document.querySelectorAll('#tiny-lib-tabs button').forEach(btn => {
+    const active = btn.dataset.f === folder;
+    btn.style.background = active ? '#fff' : 'transparent';
+    btn.style.color = active ? '#111827' : '#6b7280';
+    btn.style.boxShadow = active ? '0 1px 3px rgba(0,0,0,.1)' : 'none';
+  });
+}
+
+function closeTinyLib() {
+  const modal = document.getElementById('tiny-lib-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function loadTinyLibImages() {
+  const grid = document.getElementById('tiny-lib-grid');
+  if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af;">⏳ Đang tải...</div>';
+  try {
+    const res = await fetch('/admin/uploads/list');
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.message);
+    // Lấy tất cả ảnh và video, sắp xếp mới nhất trước
+    _tinyLibAllFiles = data.files
+      .filter(f => f.name && (TINY_IMG.test(f.name) || TINY_VID.test(f.name)))
+      .sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
+    _applyModeToModal();
+    tinyLibApply();
+  } catch(e) {
+    if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#ef4444;">Lỗi tải: ${e.message}</div>`;
+  }
+}
+
+function tinyLibFilter(folder) {
+  _tinyLibFolder = folder;
+  _setActiveTab(folder);
+  // Xóa search khi đổi tab
+  const s = document.getElementById('tiny-lib-search');
+  if (s) s.value = '';
+  tinyLibApply();
+}
+
+function tinyLibApply() {
+  const q = (document.getElementById('tiny-lib-search')?.value || '').trim().toLowerCase();
+  let files = _tinyLibAllFiles;
+  // Lọc theo tab
+  if (_tinyLibFolder === '__video') files = files.filter(f => TINY_VID.test(f.name));
+  else if (_tinyLibFolder !== 'all') files = files.filter(f => f.folder === _tinyLibFolder);
+  // Lọc theo search
+  if (q) files = files.filter(f => f.name.toLowerCase().includes(q));
+  renderTinyLibGrid(files);
+}
+
+function renderTinyLibGrid(files) {
+  const grid = document.getElementById('tiny-lib-grid');
+  if (!grid) return;
+  if (!files.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af;">Không tìm thấy file nào</div>';
+    return;
+  }
+  grid.innerHTML = files.map(f => {
+    const kb = f.size ? (f.size >= 1024*1024 ? (f.size/1024/1024).toFixed(1)+' MB' : Math.round(f.size/1024)+' KB') : '';
+    const isVid = TINY_VID.test(f.name);
+    const thumb = isVid
+      ? `<video src="${f.url}" style="width:100%;height:100%;object-fit:cover;display:block;" preload="metadata" muted></video>
+         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+           <div style="background:rgba(0,0,0,.55);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;">
+             <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
+           </div>
+         </div>`
+      : `<img src="${f.url}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.background='#e5e7eb'" />`;
+    return `
+    <div onclick="pickTinyFile('${f.url}','${f.name.replace(/'/g,"\\'")}',${isVid})"
+      title="${f.name}"
+      style="cursor:pointer;border:2px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#f9fafb;transition:border-color .15s,box-shadow .15s;position:relative;"
+      onmouseover="this.style.borderColor='#1a7f5a';this.style.boxShadow='0 2px 8px rgba(26,127,90,.2)'"
+      onmouseout="this.style.borderColor='#e5e7eb';this.style.boxShadow='none'">
+      <div style="aspect-ratio:4/3;overflow:hidden;background:#111;position:relative;">${thumb}</div>
+      <div style="position:absolute;top:5px;right:5px;font-size:.6rem;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(0,0,0,.55);color:#fff;">${f.folder}</div>
+      <div style="padding:.35rem .5rem;">
+        <div style="font-size:.7rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.name}</div>
+        ${kb ? `<div style="font-size:.65rem;color:#9ca3af;">${kb}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function pickTinyFile(url, name, isVid) {
+  closeTinyLib();
+  if (isVid) {
+    const ed = tinymce.activeEditor;
+    if (ed) ed.insertContent(`<video controls style="max-width:100%;border-radius:6px;margin:1em 0;"><source src="${url}"></video>`);
+    return;
+  }
+  if (_tinyCallback) _tinyCallback(url, { title: name, alt: name });
+}
+
+async function tinyLibUploadFile(input) {
+  if (!input.files[0]) return;
+  const file = input.files[0];
+  const isVid = TINY_VID.test(file.name);
+  const isImg = TINY_IMG.test(file.name);
+  if (!isVid && !isImg) { alert('Định dạng không được hỗ trợ'); input.value=''; return; }
+
+  const btn = document.getElementById('tiny-lib-upload-btn');
+  if (btn) { btn.style.opacity = '.6'; btn.style.pointerEvents = 'none'; }
+
+  const formData = new FormData();
+  formData.append('file', file);
+  const endpoint = isVid ? '/admin/upload-video' : '/admin/upload-image';
+
+  const toast = document.createElement('div');
+  toast.textContent = isVid ? '⏳ Đang upload video...' : '⏳ Đang upload ảnh...';
+  toast.style.cssText = 'position:fixed;bottom:2rem;right:2rem;background:#1a7f5a;color:#fff;padding:.75rem 1.25rem;border-radius:10px;font-size:.875rem;z-index:100000;box-shadow:0 4px 12px rgba(0,0,0,.2);';
+  document.body.appendChild(toast);
+
+  try {
+    const res = await fetch(endpoint, { method:'POST', body:formData, credentials:'same-origin' });
+    const data = await res.json();
+    document.body.removeChild(toast);
+    if (data.location) {
+      // Thêm vào đầu danh sách
+      _tinyLibAllFiles.unshift({ url:data.location, name:file.name, folder:'content', size:file.size, mtime:Date.now() });
+      tinyLibApply();
+      // Chọn luôn file vừa upload
+      pickTinyFile(data.location, file.name, isVid);
+    } else {
+      alert('Upload thất bại: ' + (data.error || 'Lỗi không xác định'));
+    }
+  } catch(e) {
+    document.body.removeChild(toast);
+    alert('Lỗi kết nối: ' + e.message);
+  }
+  if (btn) { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }
+  input.value = '';
+}
+
 </script>

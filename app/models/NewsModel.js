@@ -96,25 +96,34 @@ const NewsModel = {
   },
 
   async create(data) {
-    const { title, slug, summary, content, image, image_in_article, category, location, grade_level, event_date, is_visible, is_pinned } = data;
+    const { title, slug, summary, content, image, category, location, grade_level, event_date, is_visible, is_pinned } = data;
     const [result] = await db.query(
-      'INSERT INTO news (title, slug, summary, content, image, image_in_article, category, location, grade_level, event_date, is_visible, is_pinned) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [title, slug, summary, content, image || null, image_in_article ? 1 : 0, category, location || null, grade_level || null, event_date || null, is_visible ? 1 : 0, is_pinned ? 1 : 0]
+      'INSERT INTO news (title, slug, summary, content, image, category, location, grade_level, event_date, is_visible, is_pinned) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [title, slug, summary, content, image || null, category, location || null, grade_level || null, event_date || null, is_visible ? 1 : 0, is_pinned ? 1 : 0]
     );
     return result.insertId;
   },
 
   async update(id, data) {
-    const { title, slug, summary, content, image, image_in_article, category, location, grade_level, event_date, is_visible, is_pinned } = data;
+    const { title, slug, summary, content, image, category, location, grade_level, event_date, is_visible, is_pinned } = data;
     await db.query(
-      'UPDATE news SET title=?, slug=?, summary=?, content=?, image=?, image_in_article=?, category=?, location=?, grade_level=?, event_date=?, is_visible=?, is_pinned=? WHERE id=?',
-      [title, slug, summary, content, image || null, image_in_article ? 1 : 0, category, location || null, grade_level || null, event_date || null, is_visible ? 1 : 0, is_pinned ? 1 : 0, id]
+      'UPDATE news SET title=?, slug=?, summary=?, content=?, image=?, category=?, location=?, grade_level=?, event_date=?, is_visible=?, is_pinned=? WHERE id=?',
+      [title, slug, summary, content, image || null, category, location || null, grade_level || null, event_date || null, is_visible ? 1 : 0, is_pinned ? 1 : 0, id]
     );
   },
 
   async delete(id) { await db.query('DELETE FROM news WHERE id = ?', [id]); },
   async toggleVisible(id) { await db.query('UPDATE news SET is_visible = NOT is_visible WHERE id = ?', [id]); },
-  async togglePin(id) { await db.query('UPDATE news SET is_pinned = NOT is_pinned WHERE id = ?', [id]); }
+  async togglePin(id) { await db.query('UPDATE news SET is_pinned = NOT is_pinned WHERE id = ?', [id]); },
+
+  // Lấy tin đề xuất cùng category, loại trừ bài hiện tại
+  async getRelated({ id, category, limit = 4 }) {
+    const [rows] = await db.query(
+      'SELECT id, title, slug, image, summary, event_date, category, location FROM news WHERE is_visible = 1 AND category = ? AND id != ? ORDER BY created_at DESC LIMIT ?',
+      [category, id, limit]
+    );
+    return rows;
+  },
 };
 
 module.exports = NewsModel;

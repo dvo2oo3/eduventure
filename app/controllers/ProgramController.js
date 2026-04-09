@@ -6,7 +6,7 @@ const ProgramController = {
     try {
       const { page = 1, q = '', location = '', year = '' } = req.query;
       const settings = await ContactModel.getSettings();
-      const limit = parseInt(settings.news_per_page) || 6;
+      const limit = parseInt(settings.program_per_page) || 8;
       const data = await NewsModel.getPrograms({ page: parseInt(page), limit, q, location, year });
       const allLocations = await NewsModel.getDistinctLocations('program');
       const allYears = await NewsModel.getDistinctYears('program');
@@ -33,10 +33,15 @@ const ProgramController = {
     try {
       const news = await NewsModel.getBySlug(req.params.slug);
       if (!news) return res.status(404).render('error', { message: 'Bài viết không tồn tại' });
+      const settings = await ContactModel.getSettings();
+      const relatedLimit = parseInt(settings.program_related_count) || parseInt(settings.related_count) || 4;
+      const relatedNews = await NewsModel.getRelated({ id: news.id, category: news.category, limit: relatedLimit });
       res.render('programs/detail', {
         title: news.title + ' - ' + (res.locals.siteName || 'EduVenture'),
         page: 'programs',
-        news
+        pageCSS: 'programs',
+        news,
+        relatedNews
       });
     } catch (err) {
       console.error(err);

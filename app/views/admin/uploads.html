@@ -1,8 +1,26 @@
 <div class="page-header">
   <div>
     <h1 class="page-title">Quản lý Uploads</h1>
-    <p class="page-desc">Xem và xóa các file ảnh đã tải lên server</p>
+    <p class="page-desc">Tải lên, xem và xóa ảnh & video trên Cloudflare R2</p>
   </div>
+</div>
+
+<!-- UPLOAD ZONE -->
+<div class="upload-zone-wrap" id="uploadZoneWrap">
+  <div class="upload-zone" id="uploadZone">
+    <div class="upload-zone__icon">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <div class="upload-zone__text">Kéo thả ảnh & video vào đây</div>
+    <div class="upload-zone__sub">JPG, PNG, WEBP, GIF, MP4, WEBM, MOV — tối đa 200MB mỗi file</div>
+    <label class="upload-zone__btn">
+      Chọn file từ máy
+      <input type="file" id="uploadFileInput" multiple accept="image/*,video/mp4,video/webm,video/ogg,video/mov" style="display:none;" onchange="handleFileSelect(this.files)" />
+    </label>
+  </div>
+
+  <!-- QUEUE -->
+  <div id="uploadQueue" style="display:none;margin-top:1rem;display:flex;flex-direction:column;gap:.6rem;"></div>
 </div>
 
 <!-- STATS -->
@@ -103,6 +121,33 @@
 </div>
 
 <style>
+/* ── Upload Zone ── */
+.upload-zone-wrap{margin-bottom:1.5rem;}
+.upload-zone{border:2px dashed #d1d5db;border-radius:12px;padding:2rem 1.5rem;display:flex;flex-direction:column;align-items:center;gap:.75rem;background:#fafafa;transition:border-color .2s,background .2s;cursor:pointer;}
+.upload-zone.dragover{border-color:#1a7f5a;background:#f0fdf4;}
+.upload-zone__icon{color:#9ca3af;transition:color .2s;}
+.upload-zone.dragover .upload-zone__icon{color:#1a7f5a;}
+.upload-zone__text{font-weight:600;font-size:1rem;color:#374151;}
+.upload-zone__sub{font-size:.8rem;color:#9ca3af;}
+.upload-zone__btn{padding:.5rem 1.25rem;background:#1a7f5a;color:#fff;border-radius:8px;font-size:.85rem;font-weight:500;cursor:pointer;transition:background .15s;}
+.upload-zone__btn:hover{background:#15694a;}
+
+/* ── Upload Queue ── */
+.uq-item{display:flex;align-items:center;gap:.85rem;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:.75rem 1rem;transition:border-color .2s;}
+.uq-item.done{border-color:#bbf7d0;}
+.uq-item.error{border-color:#fca5a5;background:#fff5f5;}
+.uq-thumb{width:44px;height:44px;border-radius:7px;object-fit:cover;background:#f3f4f6;flex-shrink:0;}
+.uq-thumb-video{width:44px;height:44px;border-radius:7px;background:#111;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.uq-info{flex:1;min-width:0;}
+.uq-name{font-size:.83rem;font-weight:500;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.uq-status{font-size:.75rem;color:#6b7280;margin-top:2px;display:flex;align-items:center;gap:.4rem;}
+.uq-bar-wrap{height:5px;background:#e5e7eb;border-radius:99px;margin-top:.4rem;overflow:hidden;}
+.uq-bar{height:100%;background:#1a7f5a;border-radius:99px;transition:width .3s ease;width:0%;}
+.uq-bar.error{background:#dc2626;}
+.uq-timer{font-size:.72rem;font-weight:600;color:#1a7f5a;min-width:40px;text-align:right;}
+.uq-done-icon{color:#16a34a;flex-shrink:0;}
+.uq-err-icon{color:#dc2626;flex-shrink:0;}
+
 /* ── Stats ── */
 .uploads-stats{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
 .ustat-card{display:flex;align-items:center;gap:.85rem;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:.9rem 1.25rem;min-width:160px;flex:1;}
@@ -450,6 +495,159 @@ document.querySelectorAll('.uf-tab').forEach(btn => {
     renderGrid();
   });
 });
+
+// ══════════════════════════════════
+// UPLOAD ZONE
+// ══════════════════════════════════
+const zone = document.getElementById('uploadZone');
+
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+  handleFileSelect(e.dataTransfer.files);
+});
+zone.addEventListener('click', e => {
+  if (!e.target.closest('label')) document.getElementById('uploadFileInput').click();
+});
+
+function handleFileSelect(files) {
+  const queue = document.getElementById('uploadQueue');
+  queue.style.display = 'flex';
+  Array.from(files).forEach(file => uploadFile(file));
+}
+
+async function uploadFile(file) {
+  const queue = document.getElementById('uploadQueue');
+  const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(file.name);
+  const isImage = /\.(jpe?g|png|webp|gif)$/i.test(file.name);
+  if (!isVideo && !isImage) {
+    showQueueError(file.name, 'Định dạng không được hỗ trợ');
+    return;
+  }
+
+  // Tạo item trong queue
+  const id = 'uq-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  const item = document.createElement('div');
+  item.className = 'uq-item';
+  item.id = id;
+
+  // Thumbnail preview
+  let thumbHTML = '';
+  if (isImage) {
+    const previewUrl = URL.createObjectURL(file);
+    thumbHTML = `<img class="uq-thumb" src="${previewUrl}" alt="" />`;
+  } else {
+    thumbHTML = `<div class="uq-thumb-video"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg></div>`;
+  }
+
+  item.innerHTML = `
+    ${thumbHTML}
+    <div class="uq-info">
+      <div class="uq-name">${file.name}</div>
+      <div class="uq-status">
+        <span class="uq-status-text">⏳ Đang chuẩn bị...</span>
+      </div>
+      <div class="uq-bar-wrap"><div class="uq-bar" id="bar-${id}"></div></div>
+    </div>
+    <div class="uq-timer" id="timer-${id}">—</div>
+  `;
+  queue.prepend(item);
+
+  // Upload với XMLHttpRequest để theo dõi tiến trình
+  const formData = new FormData();
+  formData.append('file', file);
+  const url = isVideo ? '/admin/upload-video' : '/admin/upload-image';
+
+  const startTime = Date.now();
+  let timerInterval = null;
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', url);
+  xhr.withCredentials = true;
+
+  xhr.upload.addEventListener('progress', e => {
+    if (!e.lengthComputable) return;
+    const pct = Math.round((e.loaded / e.total) * 100);
+    const bar = document.getElementById('bar-' + id);
+    const timerEl = document.getElementById('timer-' + id);
+    const statusEl = item.querySelector('.uq-status-text');
+
+    if (bar) bar.style.width = pct + '%';
+
+    // Ước tính thời gian còn lại
+    const elapsed = (Date.now() - startTime) / 1000;
+    const speed = e.loaded / elapsed; // bytes/s
+    const remaining = speed > 0 ? Math.ceil((e.total - e.loaded) / speed) : null;
+
+    if (statusEl) statusEl.textContent = `⬆ Đang tải lên... ${pct}%`;
+    if (timerEl) timerEl.textContent = remaining !== null && remaining > 0 ? remaining + 's' : '';
+  });
+
+  xhr.addEventListener('load', () => {
+    clearInterval(timerInterval);
+    const timerEl = document.getElementById('timer-' + id);
+    const bar = document.getElementById('bar-' + id);
+    const statusEl = item.querySelector('.uq-status-text');
+    try {
+      const data = JSON.parse(xhr.responseText);
+      if (data.location) {
+        if (bar) bar.style.width = '100%';
+        if (timerEl) timerEl.innerHTML = '<svg class="uq-done-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>';
+        if (statusEl) statusEl.textContent = '✓ Tải lên thành công';
+        item.classList.add('done');
+        // Thêm vào đầu danh sách file
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        const sizeKb = (file.size / 1024).toFixed(0);
+        const folder = 'content';
+        allFiles.unshift({
+          id: data.location.split('/').slice(-2).join('/'),
+          folder,
+          name: file.name,
+          url: data.location,
+          size: file.size,
+          mtime: Date.now(),
+          isVideo
+        });
+        renderGrid();
+        renderStats({ totalFiles: allFiles.length, totalSize: allFiles.reduce((s,f) => s + f.size, 0) });
+      } else {
+        throw new Error(data.error || 'Lỗi không xác định');
+      }
+    } catch(e) {
+      if (bar) { bar.style.width = '100%'; bar.classList.add('error'); }
+      if (timerEl) timerEl.innerHTML = '<svg class="uq-err-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      if (statusEl) statusEl.textContent = '✗ Lỗi: ' + e.message;
+      item.classList.add('error');
+    }
+  });
+
+  xhr.addEventListener('error', () => {
+    clearInterval(timerInterval);
+    const bar = document.getElementById('bar-' + id);
+    const statusEl = item.querySelector('.uq-status-text');
+    if (bar) { bar.style.width = '100%'; bar.classList.add('error'); }
+    if (statusEl) statusEl.textContent = '✗ Lỗi kết nối mạng';
+    item.classList.add('error');
+  });
+
+  xhr.send(formData);
+}
+
+function showQueueError(name, msg) {
+  const queue = document.getElementById('uploadQueue');
+  queue.style.display = 'flex';
+  const item = document.createElement('div');
+  item.className = 'uq-item error';
+  item.innerHTML = `
+    <div class="uq-thumb-video" style="background:#fee2e2;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+    <div class="uq-info">
+      <div class="uq-name">${name}</div>
+      <div class="uq-status"><span class="uq-status-text">✗ ${msg}</span></div>
+    </div>`;
+  queue.prepend(item);
+}
 
 loadFiles();
 </script>

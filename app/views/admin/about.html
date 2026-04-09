@@ -3,204 +3,531 @@
     <h1 class="admin-topbar__title">Quản lý Về chúng tôi</h1>
   </div>
 
-  <form action="/admin/about" method="POST" onsubmit="ajaxForm(this,{btn:this.querySelector('[type=submit]')});return false;">
+  <!-- TABS -->
+  <div style="display:flex;border-bottom:2px solid #e8e8e4;margin-bottom:1.5rem;gap:0;">
+    <button type="button" onclick="switchAboutTab('content')" id="abtab-content"
+      style="padding:.65rem 1.25rem;font-size:.875rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid #1a7f5a;margin-bottom:-2px;color:#1a7f5a;">
+      📝 Nội dung
+    </button>
+    <button type="button" onclick="switchAboutTab('logo')" id="abtab-logo"
+      style="padding:.65rem 1.25rem;font-size:.875rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:#6b7280;">
+      🖼 Ảnh giới thiệu
+    </button>
+  </div>
 
-    <div class="about-grid">
-
-      <!-- CỘT TRÁI -->
-      <div style="display:flex;flex-direction:column;gap:1.25rem;">
-
-        <!-- Giới thiệu chính -->
-        <div class="admin-card">
-          <div class="admin-card__header">
-            <div class="admin-card__title">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:.4rem;color:#1a7f5a;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              Đoạn giới thiệu chính
+  <!-- TAB: NỘI DUNG -->
+  <div id="abpanel-content">
+    <form action="/admin/about" method="POST" onsubmit="ajaxForm(this,{btn:this.querySelector('[type=submit]')});return false;">
+      <div class="about-grid">
+        <!-- CỘT TRÁI -->
+        <div style="display:flex;flex-direction:column;gap:1.25rem;">
+          <div class="admin-card">
+            <div class="admin-card__header">
+              <div class="admin-card__title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:.4rem;color:#1a7f5a;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Đoạn giới thiệu chính
+              </div>
+            </div>
+            <div style="padding:1.25rem;">
+              <textarea class="form-input form-textarea" name="about_text" rows="7" placeholder="Mô tả về công ty...">{{#if about.about_text}}{{about.about_text.content}}{{/if}}</textarea>
             </div>
           </div>
-          <div style="padding:1.25rem;">
-            <textarea class="form-input form-textarea" name="about_text" rows="7" placeholder="Mô tả về công ty...">{{#if about.about_text}}{{about.about_text.content}}{{/if}}</textarea>
+          <div class="admin-card">
+            <div class="admin-card__header">
+              <div class="admin-card__title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:.4rem;color:#1a7f5a;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                Sứ mệnh & Tầm nhìn
+              </div>
+            </div>
+            <div style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem;">
+              <div class="form-row">
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Tiêu đề sứ mệnh</label>
+                  <input class="form-input" type="text" name="mission_title" value="{{#if about.mission}}{{about.mission.title}}{{/if}}" placeholder="Sứ mệnh" />
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Tiêu đề tầm nhìn</label>
+                  <input class="form-input" type="text" name="vision_title" value="{{#if about.vision}}{{about.vision.title}}{{/if}}" placeholder="Tầm nhìn" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Nội dung sứ mệnh</label>
+                  <textarea class="form-input form-textarea" name="mission" rows="5">{{#if about.mission}}{{about.mission.content}}{{/if}}</textarea>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Nội dung tầm nhìn</label>
+                  <textarea class="form-input form-textarea" name="vision" rows="5">{{#if about.vision}}{{about.vision.content}}{{/if}}</textarea>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Sứ mệnh & Tầm nhìn -->
+        <!-- CỘT PHẢI -->
+        <div style="display:flex;flex-direction:column;gap:1.25rem;">
+          <div class="admin-card">
+            <div class="admin-card__header">
+              <div class="admin-card__title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:.4rem;color:#1a7f5a;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Số liệu thống kê
+              </div>
+            </div>
+            <div style="padding:1.25rem;display:flex;flex-direction:column;gap:.875rem;">
+              <div class="about-stat-row">
+                <div class="about-stat-icon" style="background:#e8f5f0;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a7f5a" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
+                  <div><label class="form-label" style="margin-bottom:.2rem;">Số trường đối tác</label><input class="form-input" type="text" name="stats_schools_title" value="{{#if about.stats_schools}}{{about.stats_schools.title}}{{/if}}" placeholder="120+" /></div>
+                  <div><label class="form-label" style="margin-bottom:.2rem;">Nhãn mô tả</label><input class="form-input" type="text" name="stats_schools" value="{{#if about.stats_schools}}{{about.stats_schools.content}}{{/if}}" placeholder="Trường đối tác" /></div>
+                </div>
+              </div>
+              <div class="about-stat-row">
+                <div class="about-stat-icon" style="background:#fff3e0;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
+                  <div><label class="form-label" style="margin-bottom:.2rem;">Số học sinh</label><input class="form-input" type="text" name="stats_students_title" value="{{#if about.stats_students}}{{about.stats_students.title}}{{/if}}" placeholder="50,000+" /></div>
+                  <div><label class="form-label" style="margin-bottom:.2rem;">Nhãn mô tả</label><input class="form-input" type="text" name="stats_students" value="{{#if about.stats_students}}{{about.stats_students.content}}{{/if}}" placeholder="Học sinh" /></div>
+                </div>
+              </div>
+              <div class="about-stat-row">
+                <div class="about-stat-icon" style="background:#f3e8ff;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
+                  <div><label class="form-label" style="margin-bottom:.2rem;">Số khối lớp</label><input class="form-input" type="text" name="stats_grades_title" value="{{#if about.stats_grades}}{{about.stats_grades.title}}{{/if}}" placeholder="5" /></div>
+                  <div><label class="form-label" style="margin-bottom:.2rem;">Nhãn mô tả</label><input class="form-input" type="text" name="stats_grades" value="{{#if about.stats_grades}}{{about.stats_grades.content}}{{/if}}" placeholder="Khối lớp" /></div>
+                </div>
+              </div>
+              <div class="about-stat-row">
+                <div class="about-stat-icon" style="background:#e8f0fe;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
+                  <div><label class="form-label" style="margin-bottom:.2rem;">Năm kinh nghiệm</label><input class="form-input" type="text" name="stats_years_title" value="{{#if about.stats_years}}{{about.stats_years.title}}{{/if}}" placeholder="10+" /></div>
+                  <div><label class="form-label" style="margin-bottom:.2rem;">Nhãn mô tả</label><input class="form-input" type="text" name="stats_years" value="{{#if about.stats_years}}{{about.stats_years.content}}{{/if}}" placeholder="Năm kinh nghiệm" /></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="background:#e8f5f0;border-radius:10px;padding:1rem 1.125rem;display:flex;gap:.6rem;align-items:flex-start;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a7f5a" stroke-width="2" style="flex-shrink:0;margin-top:.1rem;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div style="font-size:.825rem;color:#1a7f5a;line-height:1.6;">Nội dung này hiển thị trên trang <strong>Về chúng tôi</strong> của website.</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid #e8e8e4;">
+        <button type="submit" class="btn btn--primary btn--lg">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:.4rem;vertical-align:middle;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Lưu thay đổi
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- TAB: ẢNH GIỚI THIỆU -->
+  <div id="abpanel-logo" style="display:none;">
+    <div class="about-img-grid">
+
+      <!-- CỘT TRÁI: Preview & căn chỉnh -->
+      <div class="admin-card">
+        <div class="admin-card__header">
+          <div class="admin-card__title">Xem trước & căn chỉnh</div>
+          <button type="button" onclick="abResetCrop()" class="media-reset-btn">↺ Đặt lại</button>
+        </div>
+        <div style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem;">
+          <!-- Preview wrap tròn giống trang thật -->
+          <div style="display:flex;flex-direction:column;align-items:center;gap:.75rem;">
+            <div style="font-size:.75rem;color:#9ca3af;letter-spacing:.03em;text-transform:uppercase;font-weight:600;">Xem trước thực tế</div>
+            <div id="abWrap" style="position:relative;width:220px;height:220px;border-radius:50%;overflow:hidden;background:rgba(26,127,90,.08);cursor:grab;user-select:none;box-shadow:0 4px 20px rgba(0,0,0,.1);">
+              <div id="ab-preview-icon" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                <svg width="120" height="120" viewBox="0 0 180 180" fill="none">
+                  <circle cx="90" cy="90" r="70" fill="rgba(26,127,90,.07)"/>
+                  <circle cx="90" cy="90" r="50" fill="rgba(26,127,90,.1)"/>
+                  <path d="M65 90c0-13.807 11.193-25 25-25s25 11.193 25 25" stroke="#1a7f5a" stroke-width="3" stroke-linecap="round"/>
+                  <circle cx="90" cy="103" r="12" fill="#1a7f5a" fill-opacity=".7"/>
+                  <path d="M68 125c4-8 12-13 22-13s18 5 22 13" stroke="#1a7f5a" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <img id="ab-preview-img" src="{{#if about.about_logo}}{{about.about_logo.content}}{{/if}}"
+                style="position:absolute;top:0;left:0;transform-origin:top left;display:{{#if about.about_logo}}{{#if (eq about.about_logo.title 'logo')}}block{{else}}none{{/if}}{{else}}none{{/if}};"
+                draggable="false" />
+            </div>
+          </div>
+          <!-- Zoom slider -->
+          <div class="zoom-row">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            <input type="range" id="abZoomSlider" min="100" max="300" step="1" value="100" style="flex:1;accent-color:#1a7f5a;" oninput="abOnZoom(this.value)" />
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            <span id="abZoomLabel" style="font-size:.8rem;color:#888;min-width:38px;text-align:right;">100%</span>
+          </div>
+          <input type="hidden" id="ab_pos_x" name="about_logo_pos_x" value="50" />
+          <input type="hidden" id="ab_pos_y" name="about_logo_pos_y" value="50" />
+          <input type="hidden" id="ab_zoom" name="about_logo_zoom" value="100" />
+          <div class="media-tip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Kéo ảnh để căn chỉnh. Dùng thanh zoom hoặc cuộn chuột để phóng to/thu nhỏ.
+          </div>
+        </div>
+      </div>
+
+      <!-- CỘT PHẢI: Settings -->
+      <div style="display:flex;flex-direction:column;gap:1.25rem;">
+
+        <!-- Tùy chọn hiển thị -->
         <div class="admin-card">
           <div class="admin-card__header">
-            <div class="admin-card__title">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:.4rem;color:#1a7f5a;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-              Sứ mệnh & Tầm nhìn
-            </div>
+            <div class="admin-card__title">Tùy chọn hiển thị</div>
+          </div>
+          <div style="padding:1.25rem;display:flex;gap:.75rem;">
+            <label style="flex:1;display:flex;align-items:center;gap:.75rem;padding:.875rem 1rem;border:2px solid #ddd;border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s;" id="opt-icon"
+              onmouseover="if(document.querySelector('[name=about_display_mode][value=icon]').checked) return; this.style.borderColor='#9ca3af';"
+              onmouseout="if(document.querySelector('[name=about_display_mode][value=icon]').checked) return; this.style.borderColor='#ddd';">
+              <input type="radio" name="about_display_mode" value="icon" onchange="switchAboutDisplay('icon')"
+                {{#if about.about_logo}}{{#if (eq about.about_logo.title 'icon')}}checked{{/if}}{{else}}checked{{/if}} style="accent-color:#1a7f5a;width:16px;height:16px;" />
+              <div>
+                <div style="font-weight:600;font-size:.875rem;color:#111827;">Icon mặc định</div>
+                <div style="font-size:.75rem;color:#9ca3af;margin-top:.1rem;">Dùng icon SVG có sẵn</div>
+              </div>
+            </label>
+            <label style="flex:1;display:flex;align-items:center;gap:.75rem;padding:.875rem 1rem;border:2px solid #ddd;border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s;" id="opt-logo"
+              onmouseover="if(document.querySelector('[name=about_display_mode][value=logo]').checked) return; this.style.borderColor='#9ca3af';"
+              onmouseout="if(document.querySelector('[name=about_display_mode][value=logo]').checked) return; this.style.borderColor='#ddd';">
+              <input type="radio" name="about_display_mode" value="logo" onchange="switchAboutDisplay('logo')"
+                {{#if about.about_logo}}{{#if (eq about.about_logo.title 'logo')}}checked{{/if}}{{/if}} style="accent-color:#1a7f5a;width:16px;height:16px;" />
+              <div>
+                <div style="font-weight:600;font-size:.875rem;color:#111827;">Ảnh tùy chỉnh</div>
+                <div style="font-size:.75rem;color:#9ca3af;margin-top:.1rem;">Dùng ảnh upload</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Ảnh giới thiệu -->
+        <div class="admin-card">
+          <div class="admin-card__header">
+            <div class="admin-card__title">Ảnh giới thiệu</div>
+            {{#if about.about_logo}}{{#unless (eq about.about_logo.title 'icon')}}
+            <label class="media-toggle" title="Bật/tắt hiển thị ảnh">
+              <input type="checkbox" id="ab-img-active" checked onchange="switchAboutDisplay(this.checked?'logo':'icon')" />
+              <span class="media-toggle__track"></span>
+            </label>
+            {{/unless}}{{/if}}
           </div>
           <div style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem;">
-            <div class="form-row">
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">Tiêu đề sứ mệnh</label>
-                <input class="form-input" type="text" name="mission_title" value="{{#if about.mission}}{{about.mission.title}}{{/if}}" placeholder="Sứ mệnh" />
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">Tiêu đề tầm nhìn</label>
-                <input class="form-input" type="text" name="vision_title" value="{{#if about.vision}}{{about.vision.title}}{{/if}}" placeholder="Tầm nhìn" />
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">Nội dung sứ mệnh</label>
-                <textarea class="form-input form-textarea" name="mission" rows="5">{{#if about.mission}}{{about.mission.content}}{{/if}}</textarea>
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">Nội dung tầm nhìn</label>
-                <textarea class="form-input form-textarea" name="vision" rows="5">{{#if about.vision}}{{about.vision.content}}{{/if}}</textarea>
+
+            <!-- Ảnh hiện tại -->
+            {{#if about.about_logo}}{{#unless (eq about.about_logo.title 'icon')}}
+            <div style="display:flex;align-items:center;gap:.875rem;padding:.875rem;background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;">
+              <img src="{{about.about_logo.content}}" style="width:52px;height:52px;object-fit:cover;border-radius:50%;border:2px solid #e5e7eb;flex-shrink:0;" />
+              <div style="min-width:0;">
+                <div style="font-size:.84rem;font-weight:600;color:#111827;">Ảnh hiện tại</div>
+                <div style="font-size:.75rem;color:#9ca3af;margin-top:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Đã lưu trên R2</div>
               </div>
             </div>
+            {{/unless}}{{/if}}
+
+            <!-- Upload từ máy tính -->
+            <div>
+              <label class="form-label">Upload ảnh mới</label>
+              <div class="crop-upload-area" onclick="document.getElementById('about_logo_picker').click()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span id="ab-logo-label">Chọn ảnh để tải lên</span>
+              </div>
+              <input type="file" id="about_logo_picker" accept="image/*" style="display:none" onchange="onAboutLogoFile(this)" />
+              <div class="form-hint" style="margin-top:.4rem;">JPG, PNG, WebP — tối đa 5MB</div>
+            </div>
+
+            <!-- Chọn từ thư viện -->
+            <button type="button" onclick="openAbR2Picker()"
+              style="width:100%;padding:.5rem;border:1px solid #d1d5db;border-radius:8px;background:#f9fafb;cursor:pointer;font-size:.82rem;color:#374151;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:border-color .15s,color .15s;"
+              onmouseover="this.style.borderColor='#1a7f5a';this.style.color='#1a7f5a';"
+              onmouseout="this.style.borderColor='#d1d5db';this.style.color='#374151';">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+              Chọn từ thư viện
+            </button>
+
+            <input type="hidden" name="about_logo_data" id="about_logo_data" />
+            <input type="hidden" name="about_display_mode_val" id="about_display_mode_val"
+              value="{{#if about.about_logo}}{{about.about_logo.title}}{{else}}icon{{/if}}" />
+
+            <div style="background:#f0fdf4;border-radius:8px;padding:.75rem 1rem;display:flex;gap:.5rem;align-items:flex-start;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a7f5a" stroke-width="2" style="flex-shrink:0;margin-top:.1rem;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <div style="font-size:.78rem;color:#166534;line-height:1.5;">Ảnh hiển thị dạng <strong>tròn</strong> ở phần giới thiệu trang Về chúng tôi.</div>
+            </div>
+
+            <button type="button" onclick="saveAboutLogo(this)" class="btn btn--primary btn--lg" style="width:100%;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:.4rem;vertical-align:middle;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Lưu ảnh giới thiệu
+            </button>
           </div>
         </div>
-
-      </div>
-
-      <!-- CỘT PHẢI -->
-      <div style="display:flex;flex-direction:column;gap:1.25rem;">
-
-        <!-- Số liệu thống kê -->
-        <div class="admin-card">
-          <div class="admin-card__header">
-            <div class="admin-card__title">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:.4rem;color:#1a7f5a;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              Số liệu thống kê
-            </div>
-          </div>
-          <div style="padding:1.25rem;display:flex;flex-direction:column;gap:.875rem;">
-
-            <div class="about-stat-row">
-              <div class="about-stat-icon" style="background:#e8f5f0;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a7f5a" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-              </div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
-                <div>
-                  <label class="form-label" style="margin-bottom:.2rem;">Số trường đối tác (con số)</label>
-                  <input class="form-input" type="text" name="stats_schools_title"
-                    value="{{#if about.stats_schools}}{{about.stats_schools.title}}{{/if}}"
-                    placeholder="120+" />
-                </div>
-                <div>
-                  <label class="form-label" style="margin-bottom:.2rem;">Nhãn mô tả</label>
-                  <input class="form-input" type="text" name="stats_schools"
-                    value="{{#if about.stats_schools}}{{about.stats_schools.content}}{{/if}}"
-                    placeholder="Trường đối tác" />
-                </div>
-              </div>
-            </div>
-
-            <div class="about-stat-row">
-              <div class="about-stat-icon" style="background:#fff3e0;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
-                <div>
-                  <label class="form-label" style="margin-bottom:.2rem;">Số học sinh (con số)</label>
-                  <input class="form-input" type="text" name="stats_students_title"
-                    value="{{#if about.stats_students}}{{about.stats_students.title}}{{/if}}"
-                    placeholder="50,000+" />
-                </div>
-                <div>
-                  <label class="form-label" style="margin-bottom:.2rem;">Nhãn mô tả</label>
-                  <input class="form-input" type="text" name="stats_students"
-                    value="{{#if about.stats_students}}{{about.stats_students.content}}{{/if}}"
-                    placeholder="Học sinh" />
-                </div>
-              </div>
-            </div>
-
-            <div class="about-stat-row">
-              <div class="about-stat-icon" style="background:#f3e8ff;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-              </div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
-                <div>
-                  <label class="form-label" style="margin-bottom:.2rem;">Số khối lớp (con số)</label>
-                  <input class="form-input" type="text" name="stats_grades_title"
-                    value="{{#if about.stats_grades}}{{about.stats_grades.title}}{{/if}}"
-                    placeholder="5" />
-                </div>
-                <div>
-                  <label class="form-label" style="margin-bottom:.2rem;">Nhãn mô tả</label>
-                  <input class="form-input" type="text" name="stats_grades"
-                    value="{{#if about.stats_grades}}{{about.stats_grades.content}}{{/if}}"
-                    placeholder="Khối lớp" />
-                </div>
-              </div>
-            </div>
-
-            <div class="about-stat-row">
-              <div class="about-stat-icon" style="background:#e8f0fe;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              </div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
-                <div>
-                  <label class="form-label" style="margin-bottom:.2rem;">Năm kinh nghiệm (con số)</label>
-                  <input class="form-input" type="text" name="stats_years_title"
-                    value="{{#if about.stats_years}}{{about.stats_years.title}}{{/if}}"
-                    placeholder="10+" />
-                </div>
-                <div>
-                  <label class="form-label" style="margin-bottom:.2rem;">Nhãn mô tả</label>
-                  <input class="form-input" type="text" name="stats_years"
-                    value="{{#if about.stats_years}}{{about.stats_years.content}}{{/if}}"
-                    placeholder="Năm kinh nghiệm" />
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- Tip box -->
-        <div style="background:#e8f5f0;border-radius:10px;padding:1rem 1.125rem;display:flex;gap:.6rem;align-items:flex-start;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a7f5a" stroke-width="2" style="flex-shrink:0;margin-top:.1rem;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <div style="font-size:.825rem;color:#1a7f5a;line-height:1.6;">
-            Nội dung này hiển thị trên trang <strong>Về chúng tôi</strong> của website. Số liệu thống kê sẽ hiển thị nổi bật ở phần giữa trang.
-          </div>
-        </div>
-
       </div>
     </div>
+  </div>
 
-    <!-- SAVE BAR -->
-    <div style="display:flex;justify-content:flex-end;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid #e8e8e4;">
-      <button type="submit" class="btn btn--primary btn--lg">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:.4rem;vertical-align:middle;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-        Lưu thay đổi
-      </button>
+  <!-- MODAL chọn ảnh từ R2 -->
+  <div id="abR2Modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1rem;">
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:880px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+      <div style="padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <div>
+          <div style="font-weight:700;font-size:1rem;color:#111827;">🖼 Chọn ảnh từ thư viện</div>
+          <div style="font-size:.75rem;color:#9ca3af;margin-top:.1rem;">Tất cả ảnh đã tải lên</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <input type="text" id="abR2Search" placeholder="Tìm tên file..." oninput="abR2Filter()"
+            style="padding:.35rem .75rem;border:1px solid #e5e7eb;border-radius:8px;font-size:.82rem;width:200px;outline:none;" />
+          <button onclick="closeAbR2Picker()" style="border:none;background:none;font-size:1.4rem;cursor:pointer;color:#9ca3af;line-height:1;padding:.2rem;">✕</button>
+        </div>
+      </div>
+      <div id="abR2Grid" style="flex:1;overflow-y:auto;padding:1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem;">
+        <div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af;">⏳ Đang tải...</div>
+      </div>
+      <div style="padding:.6rem 1.25rem;border-top:1px solid #e5e7eb;font-size:.75rem;color:#9ca3af;text-align:center;flex-shrink:0;">Nhấn vào ảnh để chọn</div>
     </div>
+  </div>
 
-  </form>
 </div>
 
 <style>
-.about-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
-  align-items: start;
-}
-.about-stat-row {
-  display: flex;
-  align-items: center;
-  gap: .875rem;
-  padding: .75rem;
-  background: #fafaf8;
-  border: 1px solid #e8e8e4;
-  border-radius: 8px;
-}
-.about-stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-@media (max-width: 900px) {
-  .about-grid { grid-template-columns: 1fr; }
-}
+.about-stat-row { display:flex;align-items:center;gap:.875rem;padding:.75rem;background:#fafaf8;border:1px solid #e8e8e4;border-radius:8px; }
+.about-stat-icon { width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.about-grid { display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start; }
+.about-img-grid { display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start; }
+@media (max-width:900px) { .about-grid,.about-img-grid { grid-template-columns:1fr; } }
 </style>
+
+<script>
+/* ── Tab switching ── */
+function switchAboutTab(tab) {
+  ['content','logo'].forEach(t => {
+    document.getElementById('abpanel-' + t).style.display = t === tab ? '' : 'none';
+    const btn = document.getElementById('abtab-' + t);
+    btn.style.borderBottomColor = t === tab ? '#1a7f5a' : 'transparent';
+    btn.style.color = t === tab ? '#1a7f5a' : '#6b7280';
+  });
+  if (tab === 'logo') abInitCrop();
+}
+
+/* ── Display mode toggle ── */
+function switchAboutDisplay(mode) {
+  document.getElementById('about_display_mode_val').value = mode;
+  const img = document.getElementById('ab-preview-img');
+  const hasImg = img.src && img.naturalWidth > 0;
+  document.getElementById('ab-preview-icon').style.display = mode === 'icon' ? 'flex' : 'none';
+  img.style.display = (mode === 'logo') ? 'block' : 'none';
+  document.getElementById('opt-icon').style.borderColor = mode === 'icon' ? '#1a7f5a' : '#ddd';
+  document.getElementById('opt-logo').style.borderColor = mode === 'logo' ? '#1a7f5a' : '#ddd';
+  if (mode === 'logo') abInitCrop();
+}
+
+/* ── Crop / pan / zoom ── */
+const abState = { posX:50, posY:50, zoom:100, dragging:false, startX:0, startY:0, startPX:50, startPY:50 };
+
+function abInitCrop() {
+  const img = document.getElementById('ab-preview-img');
+  if (!img || !img.src || img.style.display === 'none') return;
+  if (img.complete && img.naturalWidth) { abApply(); }
+  else { img.onload = abApply; }
+}
+
+function abApply() {
+  const img = document.getElementById('ab-preview-img');
+  const wrap = document.getElementById('abWrap');
+  if (!img || !wrap || !img.naturalWidth) return;
+  const wW = wrap.offsetWidth, wH = wrap.offsetHeight;
+  const iW = img.naturalWidth, iH = img.naturalHeight;
+  const baseScale = Math.max(wW/iW, wH/iH);
+  const scale = baseScale * (abState.zoom / 100);
+  const sW = iW * scale, sH = iH * scale;
+  const maxX = Math.max(0, sW - wW), maxY = Math.max(0, sH - wH);
+  const offX = -(abState.posX / 100) * maxX, offY = -(abState.posY / 100) * maxY;
+  img.style.width = sW + 'px';
+  img.style.height = sH + 'px';
+  img.style.transform = 'translate(' + offX + 'px,' + offY + 'px)';
+  document.getElementById('ab_pos_x').value = abState.posX.toFixed(1);
+  document.getElementById('ab_pos_y').value = abState.posY.toFixed(1);
+  document.getElementById('ab_zoom').value = abState.zoom;
+}
+
+function abOnZoom(val) {
+  abState.zoom = parseFloat(val);
+  document.getElementById('abZoomLabel').textContent = Math.round(abState.zoom) + '%';
+  document.getElementById('ab_zoom').value = abState.zoom;
+  abApply();
+}
+
+function abResetCrop() {
+  abState.posX = 50; abState.posY = 50; abState.zoom = 100;
+  document.getElementById('abZoomSlider').value = 100;
+  document.getElementById('abZoomLabel').textContent = '100%';
+  abApply();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const wrap = document.getElementById('abWrap');
+  const img = document.getElementById('ab-preview-img');
+
+  wrap.addEventListener('mousedown', function(e) {
+    if (!img || !img.naturalWidth || img.style.display === 'none') return;
+    abState.dragging = true;
+    abState.startX = e.clientX; abState.startY = e.clientY;
+    abState.startPX = abState.posX; abState.startPY = abState.posY;
+    wrap.style.cursor = 'grabbing'; e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (!abState.dragging) return;
+    const wW = wrap.offsetWidth, wH = wrap.offsetHeight;
+    const scale = Math.max(wW/img.naturalWidth, wH/img.naturalHeight) * (abState.zoom/100);
+    const sW = img.naturalWidth*scale, sH = img.naturalHeight*scale;
+    const maxX = Math.max(0,sW-wW), maxY = Math.max(0,sH-wH);
+    const dx = e.clientX - abState.startX, dy = e.clientY - abState.startY;
+    if (maxX > 0) abState.posX = Math.max(0, Math.min(100, abState.startPX - (dx/maxX)*100));
+    if (maxY > 0) abState.posY = Math.max(0, Math.min(100, abState.startPY - (dy/maxY)*100));
+    abApply();
+  });
+  document.addEventListener('mouseup', function() {
+    if (abState.dragging) { abState.dragging = false; wrap.style.cursor = 'grab'; }
+  });
+  wrap.addEventListener('wheel', function(e) {
+    if (!img || !img.naturalWidth) return;
+    e.preventDefault();
+    abState.zoom = Math.max(100, Math.min(300, abState.zoom - e.deltaY * 0.25));
+    document.getElementById('abZoomSlider').value = abState.zoom;
+    document.getElementById('abZoomLabel').textContent = Math.round(abState.zoom) + '%';
+    abApply();
+  }, { passive: false });
+
+  // Init
+  const checked = document.querySelector('input[name="about_display_mode"]:checked');
+  if (checked) switchAboutDisplay(checked.value);
+});
+
+/* ── Upload từ máy tính ── */
+function onAboutLogoFile(input) {
+  if (!input.files[0]) return;
+  const file = input.files[0];
+  document.getElementById('ab-logo-label').textContent = '✓ ' + file.name;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('about_logo_data').value = e.target.result;
+    const img = document.getElementById('ab-preview-img');
+    img.src = e.target.result;
+    img.onload = function() {
+      abState.posX=50; abState.posY=50; abState.zoom=100;
+      document.getElementById('abZoomSlider').value=100;
+      document.getElementById('abZoomLabel').textContent='100%';
+      abApply();
+    };
+    img.style.display = 'block';
+    document.querySelector('input[name="about_display_mode"][value="logo"]').checked = true;
+    switchAboutDisplay('logo');
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ── R2 Picker ── */
+let abR2Files = [];
+function openAbR2Picker() {
+  document.getElementById('abR2Modal').style.display = 'flex';
+  abLoadR2();
+}
+function closeAbR2Picker() {
+  document.getElementById('abR2Modal').style.display = 'none';
+}
+async function abLoadR2() {
+  const grid = document.getElementById('abR2Grid');
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#9ca3af;">Đang tải...</div>';
+  try {
+    const res = await fetch('/admin/uploads/list');
+    const data = await res.json();
+    const VIDEO_EXT = ['.mp4','.webm','.ogg','.mov'];
+    abR2Files = (data.files || [])
+      .filter(f => !VIDEO_EXT.includes(f.name.slice(f.name.lastIndexOf('.')).toLowerCase()))
+      .sort((a,b) => b.mtime - a.mtime);
+    abR2Render(abR2Files);
+  } catch(e) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#dc2626;">Lỗi tải danh sách</div>';
+  }
+}
+function abR2Filter() {
+  const q = document.getElementById('abR2Search').value.toLowerCase();
+  abR2Render(q ? abR2Files.filter(f => f.name.toLowerCase().includes(q)) : abR2Files);
+}
+function abR2Render(files) {
+  const grid = document.getElementById('abR2Grid');
+  if (!files.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af;">Không có ảnh nào</div>'; return; }
+  grid.innerHTML = files.map(f => {
+    const kb = f.size ? (f.size/1024).toFixed(0)+' KB' : '';
+    return `<div onclick="abSelectR2('${f.url}','${f.name}')"
+      title="${f.name}"
+      style="cursor:pointer;border:2px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#f9fafb;transition:border-color .15s,box-shadow .15s;position:relative;"
+      onmouseover="this.style.borderColor='#1a7f5a';this.style.boxShadow='0 2px 8px rgba(26,127,90,.2)'"
+      onmouseout="this.style.borderColor='#e5e7eb';this.style.boxShadow='none'">
+      <div style="aspect-ratio:4/3;overflow:hidden;background:#f3f4f6;">
+        <img src="${f.url}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.background='#e5e7eb'" />
+      </div>
+      <div style="position:absolute;top:5px;right:5px;font-size:.6rem;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(0,0,0,.5);color:#fff;">${f.folder}</div>
+      <div style="padding:.35rem .5rem;">
+        <div style="font-size:.7rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.name}</div>
+        ${kb ? `<div style="font-size:.65rem;color:#9ca3af;">${kb}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function abSelectR2(url, name) {
+  const img = document.getElementById('ab-preview-img');
+  const proxyUrl = '/admin/proxy-image?url=' + encodeURIComponent(url);
+  img.src = proxyUrl;
+  img.style.display = 'block';
+  document.getElementById('about_logo_data').value = 'r2:' + url;
+  document.getElementById('ab-logo-label').textContent = '✓ ' + name;
+  document.querySelector('input[name="about_display_mode"][value="logo"]').checked = true;
+  switchAboutDisplay('logo');
+  img.onload = function() {
+    abState.posX=50; abState.posY=50; abState.zoom=100;
+    document.getElementById('abZoomSlider').value=100;
+    document.getElementById('abZoomLabel').textContent='100%';
+    abApply();
+  };
+  closeAbR2Picker();
+}
+
+/* ── Lưu ── */
+async function saveAboutLogo(btn) {
+  const logoData = document.getElementById('about_logo_data').value;
+  const displayMode = document.getElementById('about_display_mode_val').value ||
+    document.querySelector('input[name="about_display_mode"]:checked')?.value || 'icon';
+  btn.disabled = true;
+  const origHTML = btn.innerHTML;
+  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin" style="margin-right:.3rem;vertical-align:middle;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Đang lưu...';
+  try {
+    const fd = new FormData();
+    fd.append('about_display_mode', displayMode);
+    fd.append('about_logo_pos_x', document.getElementById('ab_pos_x').value);
+    fd.append('about_logo_pos_y', document.getElementById('ab_pos_y').value);
+    fd.append('about_logo_zoom', document.getElementById('ab_zoom').value);
+    if (logoData) fd.append('about_logo_data', logoData);
+    const res = await fetch('/admin/about', { method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}, body:fd });
+    const data = await res.json();
+    if (data.ok) {
+      btn.innerHTML = '✓ Đã lưu!';
+      btn.style.background = '#16a34a';
+      setTimeout(() => { btn.innerHTML = origHTML; btn.style.background=''; btn.disabled=false; }, 2000);
+    } else {
+      alert('Lỗi: ' + data.message);
+      btn.innerHTML = origHTML; btn.disabled=false;
+    }
+  } catch(e) {
+    alert('Lỗi kết nối');
+    btn.innerHTML = origHTML; btn.disabled=false;
+  }
+}
+
+document.getElementById('abR2Modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAbR2Picker();
+});
+</script>

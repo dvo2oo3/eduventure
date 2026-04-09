@@ -49,7 +49,7 @@
                 <span>Chưa có ảnh — upload bên dưới</span>
               </div>
               {{/if}}
-              <div id="heroOverlayPreview" style="position:absolute;inset:0;background:rgba(0,0,0,{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}0{{/if}});pointer-events:none;border-radius:inherit;"></div>
+              <div id="heroOverlayPreview" style="position:absolute;inset:0;background:rgba(0,0,0,{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}0.45{{/if}});pointer-events:none;border-radius:inherit;"></div>
               <div class="crop-hint"></div>
             </div>
             <div class="zoom-row">
@@ -85,6 +85,9 @@
                 <input type="file" id="banner_file_picker" accept="image/*" style="display:none" onchange="openCropModal('banner',this)" />
                 <input type="hidden" name="banner_cropped_data" id="banner_cropped_data" />
                 <div class="form-hint">JPG, PNG, WebP — tối đa 5MB · Cắt trước khi lưu</div>
+                <button type="button" onclick="openLibraryForCrop('banner')" style="width:100%;margin-top:.5rem;padding:.45rem;border:1px solid #d1d5db;border-radius:8px;background:#f9fafb;cursor:pointer;font-size:.8rem;color:#374151;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:border-color .15s;" onmouseover="this.style.borderColor='#1a7f5a';this.style.color='#1a7f5a'" onmouseout="this.style.borderColor='#d1d5db';this.style.color='#374151'">
+                  🖼 Chọn từ thư viện
+                </button>
               </div>
             </div>
           </div>
@@ -185,10 +188,10 @@
                 <div style="display:flex;align-items:center;gap:.75rem;">
                   <input type="range" name="banner_overlay_opacity" id="bannerOverlaySlider"
                     min="0" max="80" step="5"
-                    value="{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}0{{/if}}"
+                    value="{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}45{{/if}}"
                     style="flex:1;accent-color:#1a7f5a;"
                     oninput="document.getElementById('bannerOverlayLabel').textContent=this.value+'%';var o=document.getElementById('heroOverlayPreview');if(o)o.style.background='rgba(0,0,0,'+(parseInt(this.value)/100)+')';" />
-                  <span id="bannerOverlayLabel" style="font-size:.85rem;color:#888;min-width:38px;text-align:right;">{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}0{{/if}}%</span>
+                  <span id="bannerOverlayLabel" style="font-size:.85rem;color:#888;min-width:38px;text-align:right;">{{#if data.banner_overlay_opacity}}{{data.banner_overlay_opacity}}{{else}}45{{/if}}%</span>
                 </div>
                 <div class="form-hint">0% = không tối, 80% = rất tối.</div>
               </div>
@@ -286,6 +289,9 @@
                 <input type="file" id="logo_file_picker" accept="image/*" style="display:none" onchange="openCropModal('logo',this)" />
                 <input type="hidden" name="logo_cropped_data" id="logo_cropped_data" />
                 <div class="form-hint">PNG nền trong suốt sẽ đẹp nhất · Tối đa 5MB · Cắt trước khi lưu</div>
+                <button type="button" onclick="openLibraryForCrop('logo')" style="width:100%;margin-top:.5rem;padding:.45rem;border:1px solid #d1d5db;border-radius:8px;background:#f9fafb;cursor:pointer;font-size:.8rem;color:#374151;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:border-color .15s;" onmouseover="this.style.borderColor='#1a7f5a';this.style.color='#1a7f5a'" onmouseout="this.style.borderColor='#d1d5db';this.style.color='#374151'">
+                  🖼 Chọn từ thư viện
+                </button>
               </div>
               <div class="form-group" style="margin:0;">
                 <label class="form-label">Chế độ hiển thị</label>
@@ -358,6 +364,9 @@
                 <input type="file" id="logoBeside_file_picker" accept="image/*" style="display:none" onchange="openCropModal('logoBeside',this)" />
                 <input type="hidden" name="logo_beside_cropped_data" id="logoBeside_cropped_data" />
                 <div class="form-hint">PNG nền trong suốt đẹp nhất · Chiều cao khuyên 56–80px · Cắt tự do</div>
+                <button type="button" onclick="openLibraryForCrop('logoBeside')" style="width:100%;margin-top:.5rem;padding:.45rem;border:1px solid #d1d5db;border-radius:8px;background:#f9fafb;cursor:pointer;font-size:.8rem;color:#374151;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:border-color .15s;" onmouseover="this.style.borderColor='#1a7f5a';this.style.color='#1a7f5a'" onmouseout="this.style.borderColor='#d1d5db';this.style.color='#374151'">
+                  🖼 Chọn từ thư viện
+                </button>
               </div>
             </div>
           </div>
@@ -548,6 +557,9 @@
               <input type="file" id="favicon_file_picker" accept="image/*" style="display:none" onchange="openCropModal('favicon',this)" />
               <input type="hidden" name="favicon_cropped_data" id="favicon_cropped_data" />
               <div class="form-hint">PNG nền trong suốt đẹp nhất · Cắt vuông 1:1 trước khi lưu</div>
+                <button type="button" onclick="openLibraryForCrop('favicon')" style="width:100%;margin-top:.5rem;padding:.45rem;border:1px solid #d1d5db;border-radius:8px;background:#f9fafb;cursor:pointer;font-size:.8rem;color:#374151;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:border-color .15s;" onmouseover="this.style.borderColor='#1a7f5a';this.style.color='#1a7f5a'" onmouseout="this.style.borderColor='#d1d5db';this.style.color='#374151'">
+                  🖼 Chọn từ thư viện
+                </button>
             </div>
           </div>
 
@@ -562,6 +574,9 @@
               <input type="file" id="ogImage_file_picker" accept="image/*" style="display:none" onchange="openCropModal('ogImage',this)" />
               <input type="hidden" name="og_image_cropped_data" id="ogImage_cropped_data" />
               <div class="form-hint">Khuyên dùng tỉ lệ 1200×630px (16:9 hoặc ~1.91:1)</div>
+                <button type="button" onclick="openLibraryForCrop('ogImage')" style="width:100%;margin-top:.5rem;padding:.45rem;border:1px solid #d1d5db;border-radius:8px;background:#f9fafb;cursor:pointer;font-size:.8rem;color:#374151;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:border-color .15s;" onmouseover="this.style.borderColor='#1a7f5a';this.style.color='#1a7f5a'" onmouseout="this.style.borderColor='#d1d5db';this.style.color='#374151'">
+                  🖼 Chọn từ thư viện
+                </button>
             </div>
           </div>
 
@@ -640,6 +655,9 @@
                 <input type="file" id="event_file_picker" accept="image/*" style="display:none" onchange="openCropModal('event',this)" />
                 <input type="hidden" name="event_cropped_data" id="event_cropped_data" />
                 <div class="form-hint">Ảnh ngang sẽ đẹp hơn · Tối đa 5MB</div>
+                <button type="button" onclick="openLibraryForCrop('event')" style="width:100%;margin-top:.5rem;padding:.45rem;border:1px solid #d1d5db;border-radius:8px;background:#f9fafb;cursor:pointer;font-size:.8rem;color:#374151;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:border-color .15s;" onmouseover="this.style.borderColor='#1a7f5a';this.style.color='#1a7f5a'" onmouseout="this.style.borderColor='#d1d5db';this.style.color='#374151'">
+                  🖼 Chọn từ thư viện
+                </button>
               </div>
             </div>
           </div>
@@ -1400,12 +1418,6 @@ function doDeleteImage(key, msg) {
 document.addEventListener('DOMContentLoaded', function() {
   initCrop('banner');
   updateBadgePreview();
-  // Fix overlay opacity: DB lưu 0-80 (int), CSS cần 0.0-0.8 (float)
-  var overlay = document.getElementById('heroOverlayPreview');
-  var slider = document.getElementById('bannerOverlaySlider');
-  if (overlay && slider) {
-    overlay.style.background = 'rgba(0,0,0,' + (parseInt(slider.value) / 100) + ')';
-  }
 });
 
 /* ─── Click ngoài modal để đóng ─────────────────────── */
@@ -1492,4 +1504,165 @@ function showMediaToast(type, msg) {
     setTimeout(() => el.remove(), 260);
   }, 3200);
 }
+// ══════════════════════════════════════════════
+// THƯ VIỆN ẢNH — chọn từ R2 để đưa vào crop modal
+// ══════════════════════════════════════════════
+let _mediaLibKey = null;
+let _mediaLibFiles = [];
+
+function openLibraryForCrop(key) {
+  _mediaLibKey = key;
+  let modal = document.getElementById('media-lib-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'media-lib-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:1rem;';
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:880px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+        <div style="padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+          <div>
+            <div style="font-weight:700;font-size:1rem;color:#111827;">🖼 Chọn ảnh từ thư viện</div>
+            <div style="font-size:.75rem;color:#9ca3af;margin-top:.1rem;">Tất cả ảnh đã tải lên (news · media · content)</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <div style="display:flex;background:#f3f4f6;border-radius:7px;padding:2px;gap:2px;" id="media-lib-folder-tabs">
+              <button onclick="filterMediaLib('all')" data-f="all" style="padding:.3rem .7rem;border:none;border-radius:5px;font-size:.78rem;font-weight:500;cursor:pointer;background:#fff;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,.1);">Tất cả</button>
+              <button onclick="filterMediaLib('news')" data-f="news" style="padding:.3rem .7rem;border:none;border-radius:5px;font-size:.78rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;">News</button>
+              <button onclick="filterMediaLib('media')" data-f="media" style="padding:.3rem .7rem;border:none;border-radius:5px;font-size:.78rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;">Media</button>
+              <button onclick="filterMediaLib('content')" data-f="content" style="padding:.3rem .7rem;border:none;border-radius:5px;font-size:.78rem;font-weight:500;cursor:pointer;background:transparent;color:#6b7280;">Content</button>
+            </div>
+            <input id="media-lib-search" type="text" placeholder="Tìm tên file..." oninput="searchMediaLib(this.value)"
+              style="padding:.35rem .75rem;border:1px solid #e5e7eb;border-radius:8px;font-size:.82rem;width:180px;outline:none;" />
+            <button onclick="closeMediaLib()" style="border:none;background:none;font-size:1.4rem;cursor:pointer;color:#9ca3af;line-height:1;padding:.2rem;">✕</button>
+          </div>
+        </div>
+        <div id="media-lib-grid" style="flex:1;overflow-y:auto;padding:1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem;">
+          <div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af;">⏳ Đang tải...</div>
+        </div>
+        <div style="padding:.6rem 1.25rem;border-top:1px solid #e5e7eb;font-size:.75rem;color:#9ca3af;text-align:center;flex-shrink:0;">
+          Nhấn vào ảnh để chọn — ảnh sẽ mở trong cửa sổ cắt
+        </div>
+      </div>`;
+    modal.addEventListener('click', e => { if (e.target === modal) closeMediaLib(); });
+    document.body.appendChild(modal);
+    loadMediaLibImages();
+  } else {
+    modal.style.display = 'flex';
+    if (_mediaLibFiles.length === 0) loadMediaLibImages();
+  }
+}
+
+function closeMediaLib() {
+  const modal = document.getElementById('media-lib-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+let _mediaLibCurrentFolder = 'all';
+
+async function loadMediaLibImages() {
+  try {
+    const res = await fetch('/admin/uploads/list');
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.message);
+    _mediaLibFiles = data.files.filter(f =>
+      f.name && /\.(jpe?g|png|webp|gif)$/i.test(f.name)
+    );
+    renderMediaLibGrid(_mediaLibFiles);
+  } catch(e) {
+    const grid = document.getElementById('media-lib-grid');
+    if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#ef4444;">Lỗi tải ảnh: ${e.message}</div>`;
+  }
+}
+
+function renderMediaLibGrid(files) {
+  const grid = document.getElementById('media-lib-grid');
+  if (!grid) return;
+  if (!files.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af;">Không có ảnh nào</div>';
+    return;
+  }
+  grid.innerHTML = files.map(f => {
+    const kb = f.size ? (f.size / 1024).toFixed(0) + ' KB' : '';
+    return `<div onclick="pickMediaLibImage('${f.url}')"
+      title="${f.name}"
+      style="cursor:pointer;border:2px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#f9fafb;transition:border-color .15s,box-shadow .15s;position:relative;"
+      onmouseover="this.style.borderColor='#1a7f5a';this.style.boxShadow='0 2px 8px rgba(26,127,90,.2)'"
+      onmouseout="this.style.borderColor='#e5e7eb';this.style.boxShadow='none'">
+      <div style="aspect-ratio:4/3;overflow:hidden;background:#f3f4f6;">
+        <img src="${f.url}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.background='#e5e7eb'" />
+      </div>
+      <div style="position:absolute;top:5px;right:5px;font-size:.6rem;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(0,0,0,.5);color:#fff;">${f.folder}</div>
+      <div style="padding:.35rem .5rem;">
+        <div style="font-size:.7rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.name}</div>
+        ${kb ? `<div style="font-size:.65rem;color:#9ca3af;">${kb}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterMediaLib(folder) {
+  _mediaLibCurrentFolder = folder;
+  // update tab styles
+  document.querySelectorAll('#media-lib-folder-tabs button').forEach(btn => {
+    const active = btn.dataset.f === folder;
+    btn.style.background = active ? '#fff' : 'transparent';
+    btn.style.color = active ? '#111827' : '#6b7280';
+    btn.style.boxShadow = active ? '0 1px 3px rgba(0,0,0,.1)' : 'none';
+  });
+  const q = document.getElementById('media-lib-search')?.value || '';
+  applyMediaLibFilter(folder, q);
+}
+
+function searchMediaLib(q) {
+  applyMediaLibFilter(_mediaLibCurrentFolder, q);
+}
+
+function applyMediaLibFilter(folder, q) {
+  let filtered = folder === 'all' ? _mediaLibFiles : _mediaLibFiles.filter(f => f.folder === folder);
+  if (q.trim()) filtered = filtered.filter(f => f.name.toLowerCase().includes(q.toLowerCase()));
+  renderMediaLibGrid(filtered);
+}
+
+function pickMediaLibImage(url) {
+  closeMediaLib();
+  // Load URL into crop modal for the target key
+  const key = _mediaLibKey;
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  const proxyUrl = '/admin/proxy-image?url=' + encodeURIComponent(url);
+  img.onload = function() {
+    _cropCtx.key = key;
+    _cropCtx.imgEl = img;
+    const titles = { banner: 'Cắt ảnh Banner', logo: 'Cắt ảnh Logo', event: 'Cắt ảnh Sự kiện', logoBeside: 'Cắt ảnh phụ cạnh Logo', favicon: 'Cắt ảnh Favicon (1:1)', ogImage: 'Cắt ảnh OG — Facebook / Zalo' };
+    document.getElementById('cropModalTitle').textContent = titles[key] || 'Cắt ảnh';
+    const defaults = { banner: 'free', logo: 'free', event: 'free', logoBeside: 'free', favicon: 1, ogImage: 1200/630 };
+    const defaultRatio = key in defaults ? defaults[key] : 'free';
+    document.getElementById('cropModal').style.display = 'flex';
+    initCropModal();
+    if (defaultRatio !== 'free') setCropRatio(defaultRatio);
+    const labelEl = document.getElementById(key + '-file-label');
+    if (labelEl) labelEl.textContent = url.split('/').pop();
+  };
+  img.onerror = function() {
+    // Nếu CORS bị chặn, dùng URL thẳng không qua crop
+    if (confirm('Ảnh này không thể cắt do giới hạn CORS.\nDùng thẳng URL mà không cắt?')) {
+      document.getElementById(key + '_cropped_data').value = '';
+      updatePanelPreview(key, url);
+      // Lưu URL vào hidden field phụ nếu cần
+      const urlField = document.getElementById(key + '_url_override');
+      if (!urlField) {
+        const inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = key + '_url_override';
+        inp.id = key + '_url_override';
+        inp.value = url;
+        document.getElementById('mediaForm').appendChild(inp);
+      } else {
+        urlField.value = url;
+      }
+    }
+  };
+  img.src = proxyUrl;
+}
+
 </script>

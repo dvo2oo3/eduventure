@@ -10,6 +10,25 @@
 <section class="section">
   <div class="container about-intro">
     <div class="about-intro__visual" aria-hidden="true">
+      {{#if about.about_logo}}
+        {{#if (eq about.about_logo.title 'logo')}}
+        {{! Ảnh tùy chỉnh: ẩn shape nền xanh, hiển thị ảnh fill tròn }}
+        <div style="width:220px;height:220px;border-radius:50%;overflow:hidden;flex-shrink:0;">
+          <img src="{{about.about_logo.content}}" alt="Logo"
+            style="width:100%;height:100%;object-fit:cover;
+              object-position:{{#if about.about_logo_pos}}{{about.about_logo_pos.content}}{{else}}center{{/if}};" />
+        </div>
+        {{else}}
+        <div class="about-intro__shape"></div>
+        <svg width="180" height="180" viewBox="0 0 180 180" fill="none">
+          <circle cx="90" cy="90" r="70" fill="rgba(26,127,90,.07)"/>
+          <circle cx="90" cy="90" r="50" fill="rgba(26,127,90,.1)"/>
+          <path d="M65 90c0-13.807 11.193-25 25-25s25 11.193 25 25" stroke="#1a7f5a" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="90" cy="103" r="12" fill="#1a7f5a" fill-opacity=".7"/>
+          <path d="M68 125c4-8 12-13 22-13s18 5 22 13" stroke="#1a7f5a" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        {{/if}}
+      {{else}}
       <div class="about-intro__shape"></div>
       <svg width="180" height="180" viewBox="0 0 180 180" fill="none">
         <circle cx="90" cy="90" r="70" fill="rgba(26,127,90,.07)"/>
@@ -18,6 +37,7 @@
         <circle cx="90" cy="103" r="12" fill="#1a7f5a" fill-opacity=".7"/>
         <path d="M68 125c4-8 12-13 22-13s18 5 22 13" stroke="#1a7f5a" stroke-width="2.5" stroke-linecap="round"/>
       </svg>
+      {{/if}}
     </div>
     <div class="about-intro__text">
       <span class="label-tag">Giới thiệu</span>
@@ -50,19 +70,19 @@
   <div class="container stats-grid">
     <div class="stat-item">
       <div class="stat-item__num">{{#if about.stats_schools}}{{about.stats_schools.title}}{{else}}120+{{/if}}</div>
-      <div class="stat-item__label">{{#if about.stats_schools}}{{about.stats_schools.content}}{{else}}Trường đối tác{{/if}}</div>
+      <div class="stat-item__label">Trường đối tác</div>
     </div>
     <div class="stat-item">
       <div class="stat-item__num">{{#if about.stats_students}}{{about.stats_students.title}}{{else}}50.000+{{/if}}</div>
-      <div class="stat-item__label">{{#if about.stats_students}}{{about.stats_students.content}}{{else}}Học sinh{{/if}}</div>
+      <div class="stat-item__label">Học sinh</div>
     </div>
     <div class="stat-item">
-      <div class="stat-item__num">{{#if about.stats_grades}}{{about.stats_grades.title}}{{else}}5{{/if}}</div>
-      <div class="stat-item__label">{{#if about.stats_grades}}{{about.stats_grades.content}}{{else}}Khối lớp{{/if}}</div>
+      <div class="stat-item__num">5</div>
+      <div class="stat-item__label">Khối lớp</div>
     </div>
     <div class="stat-item">
       <div class="stat-item__num">{{#if about.stats_years}}{{about.stats_years.title}}{{else}}10+{{/if}}</div>
-      <div class="stat-item__label">{{#if about.stats_years}}{{about.stats_years.content}}{{else}}Năm kinh nghiệm{{/if}}</div>
+      <div class="stat-item__label">Năm kinh nghiệm</div>
     </div>
   </div>
 </section>

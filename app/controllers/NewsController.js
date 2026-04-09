@@ -33,10 +33,15 @@ const NewsController = {
     try {
       const news = await NewsModel.getBySlug(req.params.slug);
       if (!news) return res.status(404).render('error', { message: 'Bai viet khong ton tai' });
+      const settings = await ContactModel.getSettings();
+      const relatedLimit = parseInt(settings.news_related_count) || parseInt(settings.related_count) || 4;
+      const relatedNews = await NewsModel.getRelated({ id: news.id, category: news.category, limit: relatedLimit });
       res.render('news/detail', {
         title: news.title + ' - ' + (res.locals.siteName || 'EduVenture'),
         page: 'news',
-        news
+        pageCSS: 'news',
+        news,
+        relatedNews
       });
     } catch (err) {
       console.error(err);

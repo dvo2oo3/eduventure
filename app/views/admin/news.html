@@ -16,9 +16,13 @@
       style="padding:.6rem 1.25rem;font-size:.875rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid #1a7f5a;margin-bottom:-2px;color:#1a7f5a;">
       📋 Danh sách bài viết
     </button>
-    <button id="tab-btn-settings" onclick="switchAdminTab('settings')"
+    <button id="tab-btn-pagination" onclick="switchAdminTab('pagination')"
       style="padding:.6rem 1.25rem;font-size:.875rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:#6b7280;">
-      ⚙️ Cài đặt hiển thị
+      📄 Số bài mỗi trang
+    </button>
+    <button id="tab-btn-related" onclick="switchAdminTab('related')"
+      style="padding:.6rem 1.25rem;font-size:.875rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:#6b7280;">
+      🔗 Bài viết đề xuất
     </button>
   </div>
 
@@ -141,11 +145,11 @@
 
   </div><!-- /#tab-panel-list -->
 
-  <!-- TAB: CÀI ĐẶT HIỂN THỊ -->
-  <div id="tab-panel-settings" style="display:none;">
+  <!-- TAB: SỐ BÀI MỖI TRANG -->
+  <div id="tab-panel-pagination" style="display:none;">
     <div class="admin-card" style="max-width:520px;">
       <div class="admin-card__header">
-        <div class="admin-card__title">⚙️ Cài đặt số bài hiển thị mỗi trang</div>
+        <div class="admin-card__title">📄 Số bài hiển thị mỗi trang</div>
       </div>
       <form method="POST" action="/admin/news/display-settings" style="padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem;">
         <div style="display:flex;flex-direction:column;gap:.5rem;">
@@ -173,20 +177,55 @@
         </div>
       </form>
     </div>
-  </div><!-- /#tab-panel-settings -->
+  </div><!-- /#tab-panel-pagination -->
+
+  <!-- TAB: BÀI VIẾT ĐỀ XUẤT -->
+  <div id="tab-panel-related" style="display:none;">
+    <div class="admin-card" style="max-width:520px;">
+      <div class="admin-card__header">
+        <div class="admin-card__title">🔗 Số bài viết đề xuất ở sidebar</div>
+      </div>
+      <form method="POST" action="/admin/news/display-settings" style="padding:1.5rem;display:flex;flex-direction:column;gap:1.5rem;">
+
+        <div style="display:flex;flex-direction:column;gap:.5rem;">
+          <label style="font-size:.875rem;font-weight:600;color:#374151;">📌 Tin nổi bật — số bài đề xuất</label>
+          <div style="display:flex;align-items:center;gap:.75rem;">
+            <input type="number" name="news_related_count" value="{{news_related_count}}" min="1" max="20"
+              style="width:80px;padding:.45rem .65rem;border:1px solid #d1d5db;border-radius:8px;font-size:1rem;text-align:center;" />
+            <span style="font-size:.875rem;color:#6b7280;">bài</span>
+          </div>
+          <p style="font-size:.78rem;color:#9ca3af;margin:0;">Hiển thị ở sidebar trang chi tiết tin tức</p>
+        </div>
+
+        <div style="border-top:1px solid #f3f4f6;"></div>
+
+        <div style="display:flex;flex-direction:column;gap:.5rem;">
+          <label style="font-size:.875rem;font-weight:600;color:#374151;">📚 Chương trình — số bài đề xuất</label>
+          <div style="display:flex;align-items:center;gap:.75rem;">
+            <input type="number" name="program_related_count" value="{{program_related_count}}" min="1" max="20"
+              style="width:80px;padding:.45rem .65rem;border:1px solid #d1d5db;border-radius:8px;font-size:1rem;text-align:center;" />
+            <span style="font-size:.875rem;color:#6b7280;">bài</span>
+          </div>
+          <p style="font-size:.78rem;color:#9ca3af;margin:0;">Hiển thị ở sidebar trang chi tiết chương trình</p>
+        </div>
+
+        <div style="border-top:1px solid #e5e7eb;padding-top:1rem;">
+          <button type="submit" class="btn btn--primary">💾 Lưu cài đặt</button>
+        </div>
+      </form>
+    </div>
+  </div><!-- /#tab-panel-related -->
 
 </div><!-- /.admin-page -->
 
 <script>
 function switchAdminTab(tab) {
-  const isSettings = tab === 'settings';
-  document.getElementById('tab-panel-list').style.display = isSettings ? 'none' : '';
-  document.getElementById('tab-panel-settings').style.display = isSettings ? '' : 'none';
+  const tabs = ['list', 'pagination', 'related'];
   const activeStyle = 'padding:.6rem 1.25rem;font-size:.875rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid #1a7f5a;margin-bottom:-2px;color:#1a7f5a;';
   const inactiveStyle = 'padding:.6rem 1.25rem;font-size:.875rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:#6b7280;';
-  document.getElementById('tab-btn-list').style.cssText = isSettings ? inactiveStyle : activeStyle;
-  document.getElementById('tab-btn-settings').style.cssText = isSettings ? activeStyle : inactiveStyle;
+  tabs.forEach(function(t) {
+    document.getElementById('tab-panel-' + t).style.display = (t === tab) ? '' : 'none';
+    document.getElementById('tab-btn-' + t).style.cssText = (t === tab) ? activeStyle : inactiveStyle;
+  });
 }
 </script>
-<!-- FAB mobile -->
-<a href="/admin/news/create" class="admin-fab">＋ Thêm tin mới</a>
