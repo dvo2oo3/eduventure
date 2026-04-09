@@ -1,3 +1,16 @@
+{{#*inline "head"}}
+<title>{{news.title}} — {{siteName}}</title>
+<meta name="description" content="{{#if news.summary}}{{truncate news.summary 160}}{{else}}{{siteName}} — Chương trình kỹ năng sống cho học sinh tiểu học{{/if}}" />
+<meta property="og:title" content="{{news.title}} — {{siteName}}" />
+<meta property="og:description" content="{{#if news.summary}}{{truncate news.summary 160}}{{else}}{{siteName}} — Chương trình kỹ năng sống cho học sinh tiểu học{{/if}}" />
+<meta property="og:type" content="article" />
+{{#if news.image}}<meta property="og:image" content="{{news.image}}" />{{/if}}
+<meta property="og:url" content="{{siteUrl}}/tin-tuc/{{news.slug}}" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="{{news.title}} — {{siteName}}" />
+{{#if news.image}}<meta name="twitter:image" content="{{news.image}}" />{{/if}}
+<link rel="canonical" href="{{siteUrl}}/tin-tuc/{{news.slug}}" />
+{{/inline}}
 <!-- BREADCRUMB -->
 <div class="breadcrumb">
   <div class="container breadcrumb__inner">
