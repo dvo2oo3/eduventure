@@ -3,6 +3,7 @@ const NewsModel = require('../models/NewsModel');
 const AboutModel = require('../models/AboutModel');
 const DownloadModel = require('../models/DownloadModel');
 const ContactModel = require('../models/ContactModel');
+const { broadcast } = require('../../lib/sse');
 const ProgramModel = require('../models/ProgramModel');
 const XLSX = require('xlsx');
 const multer = require('multer');
@@ -317,6 +318,12 @@ const AdminController = {
   async downloadToggleGlobalPause(req, res) {
     try {
       await ProgramModel.toggleDownloadPause();
+      // ── Phát SSE tức thì tới trang tải xuống ──
+      const status = await ProgramModel.getDownloadPauseStatus();
+      broadcast('download-status', 'status-change', {
+        paused: !!status.paused,
+        message: status.message || ''
+      });
       res.json({ ok: true });
     } catch (err) {
       res.json({ ok: false, message: err.message });
@@ -330,6 +337,14 @@ const AdminController = {
         return res.json({ ok: false, message: 'Nội dung thông báo không được để trống.' });
       }
       await ProgramModel.updateDownloadPauseMessage(message.trim());
+      // ── Phát SSE cập nhật nội dung thông báo (nếu đang paused) ──
+      const status = await ProgramModel.getDownloadPauseStatus();
+      if (status.paused) {
+        broadcast('download-status', 'status-change', {
+          paused: true,
+          message: message.trim()
+        });
+      }
       res.json({ ok: true, message: 'Đã cập nhật nội dung thông báo!' });
     } catch (err) {
       res.json({ ok: false, message: err.message });

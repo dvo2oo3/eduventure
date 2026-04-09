@@ -3,6 +3,7 @@ const router = express.Router();
 const AdminController = require('../app/controllers/AdminController');
 const { uploadMedia } = require('../app/controllers/AdminController');
 const { requireAuth, requirePermission, requireSuperAdmin } = require('../middleware/auth');
+const { subscribe, unsubscribe, initSSE } = require('../lib/sse');
 
 // Auth
 router.get('/login', AdminController.loginPage);
@@ -63,7 +64,38 @@ router.post('/contact/messages/:id/read', AdminController.contactMessageRead);
 router.post('/contact/messages/:id/delete', AdminController.contactMessageDelete)
 router.post('/contact/messages/bulk-delete', express.json(), AdminController.contactMessageBulkDelete);
 
-// 25002500 Polling APIs 25002500
+// ═══════════════════════════════════════════════════
+// SSE — Stream endpoints (tức thì, thay thế polling)
+// ═══════════════════════════════════════════════════
+
+// SSE: tin nhắn mới → admin (yêu cầu đăng nhập)
+router.get('/contact/messages/stream', requireAuth, (req, res) => {
+  initSSE(req, res);
+  subscribe('messages', res);
+  req.on('close', () => unsubscribe('messages', res));
+  // Gửi event connected để client biết kết nối thành công
+  res.write('event: connected\ndata: {"ok":true}\n\n');
+});
+
+// SSE: trạng thái tải xuống → trang public (không cần đăng nhập)
+router.get('/download-stream', async (req, res) => {
+  initSSE(req, res);
+  subscribe('download-status', res);
+  req.on('close', () => unsubscribe('download-status', res));
+
+  // Gửi trạng thái HIỆN TẠI ngay khi client vừa kết nối
+  try {
+    const ProgramModel = require('../app/models/ProgramModel');
+    const status = await ProgramModel.getDownloadPauseStatus();
+    res.write('event: status-change\ndata: ' + JSON.stringify({ paused: !!status.paused, message: status.message || '' }) + '\n\n');
+  } catch (_) {
+    res.write('event: connected\ndata: {"ok":true}\n\n');
+  }
+});
+
+// ═══════════════════════════════════════════════════
+// Polling APIs (giữ lại làm fallback khi SSE lỗi)
+// ═══════════════════════════════════════════════════
 router.get('/contact/messages/poll', requireAuth, async (req, res) => {
   try {
     const afterId = parseInt(req.query.after) || 0;

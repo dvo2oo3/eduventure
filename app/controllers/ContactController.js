@@ -1,5 +1,6 @@
 const ContactModel = require('../models/ContactModel');
 const transporter = require('../../config/mail');
+const { broadcast } = require('../../lib/sse');
 require('dotenv').config();
 
 const ContactController = {
@@ -31,7 +32,18 @@ const ContactController = {
         return res.redirect('/lien-he');
       }
 
-      await ContactModel.saveMessage({ full_name, email, phone, message });
+      const insertId = await ContactModel.saveMessage({ full_name, email, phone, message });
+
+      // ── Phát sự kiện SSE tức thì tới admin đang mở trang ──
+      broadcast('messages', 'new-message', {
+        id: insertId,
+        full_name,
+        email,
+        phone: phone || '',
+        message,
+        is_read: false,
+        created_at_fmt: new Date().toLocaleString('vi-VN')
+      });
 
       transporter.sendMail({
         from: `"EduVenture Website" <${process.env.MAIL_USER}>`,

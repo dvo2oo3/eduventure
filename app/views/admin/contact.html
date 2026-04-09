@@ -222,10 +222,42 @@ function bulkDelete() {
   });
 }
 </script>
+<style>
+@keyframes slideInRight {
+  from { transform: translateX(120%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes slideOutRight {
+  from { transform: translateX(0);    opacity: 1; }
+  to   { transform: translateX(120%); opacity: 0; }
+}
+.msg-notify {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  width: 320px; background: #fff; border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.15); overflow: hidden;
+  animation: slideInRight .35s cubic-bezier(.34,1.56,.64,1);
+  border: 1px solid #e8e8e4;
+}
+.msg-notify__bar  { height: 4px; background: linear-gradient(90deg,#1a7f5a,#34d399); }
+.msg-notify__body { padding: 1rem 1.125rem .875rem; display: flex; gap: .75rem; align-items: flex-start; }
+.msg-notify__avatar {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg,#1a7f5a,#34d399);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 1rem;
+}
+.msg-notify__info { flex: 1; min-width: 0; }
+.msg-notify__label { font-size: .7rem; font-weight: 600; color: #1a7f5a; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .2rem; }
+.msg-notify__name  { font-weight: 700; font-size: .9rem; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-notify__text  { font-size: .8rem; color: #666; margin-top: .2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-notify__foot  { padding: .5rem 1.125rem .75rem; display: flex; gap: .5rem; justify-content: flex-end; }
+.msg-notify__close { position: absolute; top: .5rem; right: .625rem; background: none; border: none; cursor: pointer; color: #aaa; font-size: 1rem; line-height: 1; padding: 2px 4px; }
+.msg-notify__close:hover { color: #555; }
+</style>
+
 <script>
-// ── Auto-poll tin nhắn mới mỗi 30 giây ──────────────────────
+// ── Nhận tin nhắn mới tức thì qua SSE (fallback: poll 60 giây) ──
 (function() {
-  // Lấy ID lớn nhất hiện tại trên trang
   var maxId = 0;
   document.querySelectorAll('.msg-item[id^="msg-"]').forEach(function(el) {
     var id = parseInt(el.id.replace('msg-', ''));
@@ -235,6 +267,45 @@ function bulkDelete() {
   function formatDate(str) {
     var d = new Date(str);
     return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear();
+  }
+
+  function showMsgPopup(msgs) {
+    var old = document.getElementById('_msg_notify');
+    if (old) old.remove();
+
+    var first = msgs[0];
+    var initials = first.full_name.trim().split(' ').slice(-1)[0].charAt(0).toUpperCase();
+    var count = msgs.length;
+
+    var el = document.createElement('div');
+    el.className = 'msg-notify';
+    el.id = '_msg_notify';
+    el.innerHTML =
+      '<div class="msg-notify__bar"></div>' +
+      '<button class="msg-notify__close" onclick="document.getElementById(\'_msg_notify\').remove()">✕</button>' +
+      '<div class="msg-notify__body">' +
+        '<div class="msg-notify__avatar">' + initials + '</div>' +
+        '<div class="msg-notify__info">' +
+          '<div class="msg-notify__label">🔔 ' + (count > 1 ? count + ' tin nhắn mới' : 'Tin nhắn mới') + '</div>' +
+          '<div class="msg-notify__name">' + first.full_name + (count > 1 ? ' và ' + (count-1) + ' người khác' : '') + '</div>' +
+          '<div class="msg-notify__text">' + first.message.substring(0, 60) + (first.message.length > 60 ? '...' : '') + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="msg-notify__foot">' +
+        '<button class="btn btn--sm btn--outline" onclick="document.getElementById(\'_msg_notify\').remove()">Bỏ qua</button>' +
+        '<button class="btn btn--sm btn--primary" onclick="document.getElementById(\'_msg_notify\').remove();openMsg(' + first.id + ',event)">Xem ngay</button>' +
+      '</div>';
+
+    document.body.appendChild(el);
+
+    // Auto dismiss sau 8 giây
+    setTimeout(function() {
+      var n = document.getElementById('_msg_notify');
+      if (n) {
+        n.style.animation = 'slideOutRight .3s ease forwards';
+        setTimeout(function() { if (n) n.remove(); }, 300);
+      }
+    }, 8000);
   }
 
   function pollMessages() {
@@ -247,17 +318,17 @@ function bulkDelete() {
         var emptyState = list.querySelector('.empty-state');
         if (emptyState) emptyState.remove();
 
+        var newMsgs = [];
         data.messages.forEach(function(msg) {
-          if (document.getElementById('msg-' + msg.id)) return; // đã có rồi
+          if (document.getElementById('msg-' + msg.id)) return;
           if (msg.id > maxId) maxId = msg.id;
-
-          // Thêm vào _messages map để modal dùng được
+          newMsgs.push(msg);
           _messages[msg.id] = msg;
 
           var div = document.createElement('div');
           div.className = 'msg-item msg-item--unread';
           div.id = 'msg-' + msg.id;
-          div.style.cssText = 'display:flex;align-items:flex-start;gap:.6rem;padding:.85rem 1.25rem;border-bottom:1px solid #f5f5f3;cursor:pointer;animation:fadeIn .4s ease;';
+          div.style.cssText = 'display:flex;align-items:flex-start;gap:.6rem;padding:.85rem 1.25rem;border-bottom:1px solid #f5f5f3;cursor:pointer;';
           div.setAttribute('onclick', 'openMsg(' + msg.id + ', event)');
           div.innerHTML =
             '<input type="checkbox" class="msg-chk" data-id="' + msg.id + '" onclick="event.stopPropagation();updateBulkBar()" style="margin-top:3px;width:15px;height:15px;accent-color:#1a7f5a;flex-shrink:0;cursor:pointer;" />' +
@@ -269,17 +340,14 @@ function bulkDelete() {
               '<div class="msg-item__email">' + msg.email + (msg.phone ? ' · ' + msg.phone : '') + '</div>' +
               '<p class="msg-item__text">' + msg.message.substring(0, 120) + (msg.message.length > 120 ? '...' : '') + '</p>' +
             '</div>';
-
-          // Chèn lên đầu danh sách
           list.insertBefore(div, list.firstChild);
         });
 
-        // Cập nhật badge unread
+        // Cập nhật badge
         var badge = document.querySelector('.badge--amber');
         if (data.unread > 0) {
-          if (badge) {
-            badge.textContent = data.unread + ' chưa đọc';
-          } else {
+          if (badge) badge.textContent = data.unread + ' chưa đọc';
+          else {
             var title = document.querySelector('.admin-card__title');
             if (title) {
               var nb = document.createElement('span');
@@ -291,13 +359,84 @@ function bulkDelete() {
           }
         }
 
-        // Toast thông báo
-        showAdminMsg(true, '🔔 ' + data.messages.length + ' tin nhắn mới!');
+        if (newMsgs.length) showMsgPopup(newMsgs);
       })
-      .catch(function() {}); // silent fail
+      .catch(function() {});
   }
 
-  // Poll mỗi 30 giây
-  setInterval(pollMessages, 30000);
+  // ── SSE: nhận tin nhắn mới tức thì ──────────────────────────
+  function handleNewMessage(msg) {
+    var list = document.getElementById('msgList');
+    if (!list) return;
+    if (msg.id > maxId) maxId = msg.id;
+
+    // Tránh thêm trùng
+    if (document.getElementById('msg-' + msg.id)) return;
+
+    var emptyState = list.querySelector('.empty-state');
+    if (emptyState) emptyState.remove();
+
+    _messages[msg.id] = msg;
+
+    var div = document.createElement('div');
+    div.className = 'msg-item msg-item--unread';
+    div.id = 'msg-' + msg.id;
+    div.style.cssText = 'display:flex;align-items:flex-start;gap:.6rem;padding:.85rem 1.25rem;border-bottom:1px solid #f5f5f3;cursor:pointer;';
+    div.setAttribute('onclick', 'openMsg(' + msg.id + ', event)');
+    div.innerHTML =
+      '<input type="checkbox" class="msg-chk" data-id="' + msg.id + '" onclick="event.stopPropagation();updateBulkBar()" style="margin-top:3px;width:15px;height:15px;accent-color:#1a7f5a;flex-shrink:0;cursor:pointer;" />' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div class="msg-item__header">' +
+          '<div class="msg-item__name"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1a7f5a;margin-right:6px;vertical-align:middle;"></span>' + msg.full_name + '</div>' +
+          '<div class="msg-item__date">' + formatDate(new Date().toISOString()) + '</div>' +
+        '</div>' +
+        '<div class="msg-item__email">' + msg.email + (msg.phone ? ' · ' + msg.phone : '') + '</div>' +
+        '<p class="msg-item__text">' + msg.message.substring(0, 120) + (msg.message.length > 120 ? '...' : '') + '</p>' +
+      '</div>';
+    list.insertBefore(div, list.firstChild);
+
+    // Cập nhật badge
+    var badge = document.querySelector('.badge--amber');
+    if (badge) {
+      var cur = parseInt(badge.textContent) || 0;
+      badge.textContent = (cur + 1) + ' chưa đọc';
+    } else {
+      var title = document.querySelector('.admin-card__title');
+      if (title) {
+        var nb = document.createElement('span');
+        nb.className = 'badge badge--amber';
+        nb.style.marginLeft = '8px';
+        nb.textContent = '1 chưa đọc';
+        title.appendChild(nb);
+      }
+    }
+
+    showMsgPopup([msg]);
+  }
+
+  // Kết nối SSE
+  var _sseConnected = false;
+  function connectSSE() {
+    var es = new EventSource('/admin/contact/messages/stream');
+
+    es.addEventListener('connected', function() {
+      _sseConnected = true;
+    });
+
+    es.addEventListener('new-message', function(e) {
+      try { handleNewMessage(JSON.parse(e.data)); } catch(_) {}
+    });
+
+    es.onerror = function() {
+      _sseConnected = false;
+      es.close();
+      // Thử kết nối lại sau 5 giây
+      setTimeout(connectSSE, 5000);
+    };
+  }
+  connectSSE();
+
+  // Fallback polling 60 giây (phòng khi SSE mất kết nối)
+  setInterval(pollMessages, 60000);
 })();
 </script>
