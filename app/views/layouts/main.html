@@ -18,11 +18,13 @@
   <meta property="og:title" content="{{#if siteOgTitle}}{{siteOgTitle}}{{else}}{{title}}{{/if}}" />
   <meta property="og:description" content="{{#if siteOgDescription}}{{siteOgDescription}}{{else}}{{siteName}} — Chương trình kỹ năng sống cho học sinh tiểu học lớp 1 đến lớp 5{{/if}}" />
   <meta property="og:type" content="website" />
+{{#unless extraHead}}
   {{#if siteOgImageUrl}}
   <meta property="og:image" content="{{siteOgImageUrl}}" />
   {{else if siteLogoUrl}}
   <meta property="og:image" content="{{siteLogoUrl}}" />
   {{/if}}
+{{/unless}}
   <meta property="og:site_name" content="{{siteName}}" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="{{#if siteOgTitle}}{{siteOgTitle}}{{else}}{{title}}{{/if}}" />
