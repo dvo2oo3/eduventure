@@ -45,6 +45,7 @@ router.post('/download/programs/:id/delete', AdminController.downloadDeleteProgr
 router.post('/download/programs/:id/edit', AdminController.downloadEditProgram);
 router.post('/download/programs/:id/toggle', AdminController.downloadToggleProgram);
 router.post('/download/programs/:id/grade/:grade/toggle', AdminController.downloadToggleGrade);
+router.post('/download/presign', AdminController.downloadPresign);
 router.post('/download/pause/toggle', AdminController.downloadToggleGlobalPause);
 router.post('/download/pause-message', AdminController.downloadUpdatePauseMessage);
 router.post('/download/sysreq', AdminController.downloadUpdateSysreq);
@@ -144,8 +145,9 @@ router.post('/upload-image', (req, res) => {
     if (err) return res.status(400).json({ error: err.message });
     if (!req.file) return res.status(400).json({ error: 'Không có file' });
     try {
-      const { uploadToR2 } = require('../config/r2');
+      const { uploadToR2, invalidateR2Cache } = require('../config/r2');
       const url = await uploadToR2(req.file.buffer, req.file.originalname, 'content');
+      invalidateR2Cache();
       res.json({ location: url });
     } catch (e) {
       res.status(500).json({ error: e.message });
@@ -170,8 +172,9 @@ router.post('/upload-video', (req, res) => {
     if (err) return res.status(400).json({ error: err.message });
     if (!req.file) return res.status(400).json({ error: 'Không có file' });
     try {
-      const { uploadToR2 } = require('../config/r2');
+      const { uploadToR2, invalidateR2Cache } = require('../config/r2');
       const url = await uploadToR2(req.file.buffer, req.file.originalname, 'content');
+      invalidateR2Cache();
       res.json({ location: url });
     } catch (e) {
       res.status(500).json({ error: e.message });

@@ -79,6 +79,7 @@
     <button class="uf-tab" data-folder="news">Tin tức</button>
     <button class="uf-tab" data-folder="media">Banner/Logo</button>
     <button class="uf-tab" data-folder="content">Nội dung</button>
+    <button class="uf-tab" data-folder="software">💾 Phần mềm</button>
     <button class="uf-tab" data-type="video">🎬 Video</button>
     <button class="uf-tab" data-type="image">🖼 Ảnh</button>
     <button class="uf-tab" data-usage="used">✅ Đang dùng</button>
@@ -232,9 +233,10 @@ let usedUrls = new Set(); // Set các URL đang được sử dụng trong hệ 
 function getFiltered() {
   if (currentFolder === 'all')      return allFiles;
   if (currentFolder === '__video')  return allFiles.filter(f => f.isVideo);
-  if (currentFolder === '__image')  return allFiles.filter(f => !f.isVideo);
+  if (currentFolder === '__image')  return allFiles.filter(f => !f.isVideo && !f.isSoftware);
   if (currentFolder === '__used')   return allFiles.filter(f => usedUrls.has(f.url));
   if (currentFolder === '__unused') return allFiles.filter(f => !usedUrls.has(f.url));
+  if (currentFolder === 'software') return allFiles.filter(f => f.isSoftware);
   return allFiles.filter(f => f.folder === currentFolder);
 }
 
@@ -291,13 +293,18 @@ function renderGrid() {
   }
   grid.innerHTML = filtered.map(f => {
     const isUsed = usedUrls.has(f.url);
-    return `
-    <div class="ucard ${isUsed ? 'ucard--used' : 'ucard--unused'}" id="card-${f.id}" onclick="selectCard(event, '${f.id}')">
-      ${f.isVideo
+    const thumb = f.isSoftware
+      ? `<div class="ucard__thumb" style="background:#f0f6ff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;">
+           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1860a5" stroke-width="1.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13,2 13,9 20,9"/></svg>
+           <span style="font-size:.65rem;font-weight:700;color:#1860a5;">${(f.name.split('.').pop()||'FILE').toUpperCase()}</span>
+         </div>`
+      : f.isVideo
         ? `<video class="ucard__thumb" src="${f.url}" preload="metadata" muted style="object-fit:cover;background:#111;"></video>
            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.55);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;pointer-events:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg></div>`
-        : `<img class="ucard__thumb" src="${f.url}" alt="${f.name}" loading="lazy" onerror="this.style.background='#e5e7eb'">`
-      }
+        : `<img class="ucard__thumb" src="${f.url}" alt="${f.name}" loading="lazy" onerror="this.style.background='#e5e7eb'">`;
+    return `
+    <div class="ucard ${isUsed ? 'ucard--used' : 'ucard--unused'}" id="card-${f.id}" onclick="selectCard(event, '${f.id}')">
+      ${thumb}
       <div class="ucard__check"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg></div>
       <div class="ucard__folder">${f.folder}</div>
       <div class="ucard__usage-badge ${isUsed ? 'ucard__usage-badge--used' : 'ucard__usage-badge--unused'}">

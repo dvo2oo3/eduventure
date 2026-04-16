@@ -9,7 +9,7 @@ const XLSX = require('xlsx');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { uploadToR2, deleteFromR2, listFilesFromR2 } = require('../../config/r2');
+const { uploadToR2, deleteFromR2, listFilesFromR2, invalidateR2Cache, getPresignedUploadUrl } = require('../../config/r2');
 
 // Tất cả file đều giữ trong RAM, rồi đẩy lên R2
 const memStorage = multer.memoryStorage();
@@ -301,6 +301,17 @@ const AdminController = {
     });
   },
 
+  async downloadPresign(req, res) {
+    try {
+      const { filename } = req.body;
+      if (!filename) return res.json({ ok: false, message: 'Thiếu tên file' });
+      const { uploadUrl, publicUrl, key } = await getPresignedUploadUrl(filename);
+      res.json({ ok: true, uploadUrl, publicUrl, key });
+    } catch (err) {
+      res.json({ ok: false, message: err.message });
+    }
+  },
+
   async downloadUpdateSysreq(req, res) {
     try {
       const { sysreq_os, sysreq_cpu, sysreq_ram, sysreq_disk, sysreq_screen } = req.body;
@@ -367,17 +378,21 @@ const AdminController = {
         return res.json({ ok: false, message: 'Thiếu program_id hoặc grade' });
       }
       await ProgramModel.updateDownload(program_id, grade, {
-        label:         req.body[`label_${grade}`],
-        version:       req.body[`version_${grade}`],
-        file_size:     req.body[`size_${grade}`],
-        url_main:      req.body[`url_main_${grade}`],
-        label_main:    req.body[`label_main_${grade}`],
-        url_mirror1:   req.body[`url_mirror1_${grade}`],
-        label_mirror1: req.body[`label_mirror1_${grade}`],
-        url_mirror2:   req.body[`url_mirror2_${grade}`],
-        label_mirror2: req.body[`label_mirror2_${grade}`],
-        url_mirror3:   req.body[`url_mirror3_${grade}`],
-        label_mirror3: req.body[`label_mirror3_${grade}`],
+        label:          req.body[`label_${grade}`],
+        version:        req.body[`version_${grade}`],
+        file_size:      req.body[`size_${grade}`],
+        url_main:       req.body[`url_main_${grade}`],
+        label_main:     req.body[`label_main_${grade}`],
+        hidden_main:    req.body[`hidden_main_${grade}`],
+        url_mirror1:    req.body[`url_mirror1_${grade}`],
+        label_mirror1:  req.body[`label_mirror1_${grade}`],
+        hidden_mirror1: req.body[`hidden_mirror1_${grade}`],
+        url_mirror2:    req.body[`url_mirror2_${grade}`],
+        label_mirror2:  req.body[`label_mirror2_${grade}`],
+        hidden_mirror2: req.body[`hidden_mirror2_${grade}`],
+        url_mirror3:    req.body[`url_mirror3_${grade}`],
+        label_mirror3:  req.body[`label_mirror3_${grade}`],
+        hidden_mirror3: req.body[`hidden_mirror3_${grade}`],
       });
       res.json({ ok: true, message: 'Đã lưu link thành công!' });
     } catch (err) {
@@ -1065,6 +1080,7 @@ const AdminControllerExtension = {
           errors.push(e.message);
         }
       }
+      invalidateR2Cache();
       res.json({ ok: true, deleted, errors });
     } catch (e) {
       res.json({ ok: false, message: e.message });

@@ -44,17 +44,17 @@ const ProgramModel = {
     await db.query(
       `UPDATE program_downloads SET
         label=?, version=?, file_size=?,
-        url_main=?, label_main=?,
-        url_mirror1=?, label_mirror1=?,
-        url_mirror2=?, label_mirror2=?,
-        url_mirror3=?, label_mirror3=?
+        url_main=?, label_main=?, hidden_main=?,
+        url_mirror1=?, label_mirror1=?, hidden_mirror1=?,
+        url_mirror2=?, label_mirror2=?, hidden_mirror2=?,
+        url_mirror3=?, label_mirror3=?, hidden_mirror3=?
        WHERE program_id=? AND grade=?`,
       [
         data.label, data.version, data.file_size,
-        data.url_main || null, data.label_main || 'Link chính',
-        data.url_mirror1 || null, data.label_mirror1 || 'Link dự phòng 1',
-        data.url_mirror2 || null, data.label_mirror2 || 'Link dự phòng 2',
-        data.url_mirror3 || null, data.label_mirror3 || 'Link dự phòng 3',
+        data.url_main || null, data.label_main || 'Link chính', parseInt(data.hidden_main) === 1 ? 1 : 0,
+        data.url_mirror1 || null, data.label_mirror1 || 'Link dự phòng 1', parseInt(data.hidden_mirror1) === 1 ? 1 : 0,
+        data.url_mirror2 || null, data.label_mirror2 || 'Link dự phòng 2', parseInt(data.hidden_mirror2) === 1 ? 1 : 0,
+        data.url_mirror3 || null, data.label_mirror3 || 'Link dự phòng 3', parseInt(data.hidden_mirror3) === 1 ? 1 : 0,
         programId, grade
       ]
     );
