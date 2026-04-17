@@ -66,9 +66,13 @@ const AdminController = {
     const { email, password } = req.body;
     const admin = await AdminModel.findByEmail(email);
     if (!admin || !(await AdminModel.verifyPassword(password, admin.password))) {
+      // Ghi nhận lần đăng nhập sai (nếu có rate limiter)
+      if (req.recordFailedLogin) req.recordFailedLogin();
       req.flash('error', 'Email hoặc mật khẩu không đúng.');
       return res.redirect('/admin/login');
     }
+    // Đăng nhập thành công → xoá lịch sử thất bại
+    if (req.clearLoginAttempts) req.clearLoginAttempts();
     req.session.adminId = admin.id;
     req.session.adminName = admin.name;
     req.session.adminEmail = admin.email;

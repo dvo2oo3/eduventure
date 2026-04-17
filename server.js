@@ -11,6 +11,18 @@ const adminRoutes = require('./routes/admin');
 
 const app = express();
 
+// ── Cache about/contact để tránh query DB mỗi request ────────────────────────
+let _aboutCache = null;
+let _aboutCacheAt = 0;
+let _contactCache = null;
+let _contactCacheAt = 0;
+const ABOUT_CACHE_TTL = 30 * 1000; // 30 giây
+
+function invalidateAboutCache() { _aboutCache = null; _aboutCacheAt = 0; }
+function invalidateContactCache() { _contactCache = null; _contactCacheAt = 0; }
+app.locals.invalidateAboutCache = invalidateAboutCache;
+app.locals.invalidateContactCache = invalidateContactCache;
+
 // ── View engine: Handlebars ──────────────────────────────
 app.engine('html', engine({
   extname: '.html',
@@ -59,8 +71,8 @@ app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'app/views'));
 
 // ── Middleware ───────────────────────────────────────────
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
+app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
   secret: process.env.SESSION_SECRET || 'eduventure_secret',
@@ -80,8 +92,13 @@ app.use(async (req, res, next) => {
   res.locals.adminPermissions = req.session.adminPermissions || [];
   res.locals.activeMenu = '';
   try {
-    const AboutModel = require('./app/models/AboutModel');
-    const about = await AboutModel.getAll();
+    const now = Date.now();
+    if (!_aboutCache || (now - _aboutCacheAt) > ABOUT_CACHE_TTL) {
+      const AboutModel = require('./app/models/AboutModel');
+      _aboutCache = await AboutModel.getAll();
+      _aboutCacheAt = now;
+    }
+    const about = _aboutCache;
     res.locals.siteLogoUrl = about?.logo_url?.content || null;
     res.locals.siteBannerUrl = about?.banner_url?.content || null;
     res.locals.siteBannerTitle = about?.banner_title?.content || null;
@@ -132,12 +149,16 @@ app.use(async (req, res, next) => {
     res.locals.siteLogoBesideUrl = about?.logo_beside_url?.content || null;
   } catch(e) {}
   try {
-    const ContactModel = require('./app/models/ContactModel');
-    const contactSettings = await ContactModel.getSettings();
-    res.locals.siteContactAddress = contactSettings.address || '';
-    res.locals.siteContactEmail   = contactSettings.email   || '';
-    res.locals.siteContactPhone   = contactSettings.phone   || '';
-    res.locals.siteContactHours   = contactSettings.working_hours || '';
+    const now = Date.now();
+    if (!_contactCache || (now - _contactCacheAt) > ABOUT_CACHE_TTL) {
+      const ContactModel = require('./app/models/ContactModel');
+      _contactCache = await ContactModel.getSettings();
+      _contactCacheAt = now;
+    }
+    res.locals.siteContactAddress = _contactCache.address || '';
+    res.locals.siteContactEmail   = _contactCache.email   || '';
+    res.locals.siteContactPhone   = _contactCache.phone   || '';
+    res.locals.siteContactHours   = _contactCache.working_hours || '';
   } catch(e) {}
   next();
 });

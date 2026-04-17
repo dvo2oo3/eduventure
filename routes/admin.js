@@ -5,9 +5,51 @@ const { uploadMedia } = require('../app/controllers/AdminController');
 const { requireAuth, requirePermission, requireSuperAdmin } = require('../middleware/auth');
 const { subscribe, unsubscribe, initSSE } = require('../lib/sse');
 
+// ── Rate limiting cho login (chống brute force) ──────────────────────────────
+const loginAttempts = new Map(); // IP -> { count, resetAt }
+const MAX_ATTEMPTS = 5;          // tối đa 5 lần sai
+const WINDOW_MS = 15 * 60 * 1000; // trong 15 phút
+
+function loginRateLimit(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress;
+  const now = Date.now();
+  const record = loginAttempts.get(ip);
+
+  if (record && now < record.resetAt) {
+    if (record.count >= MAX_ATTEMPTS) {
+      const remaining = Math.ceil((record.resetAt - now) / 1000 / 60);
+      req.flash('error', `Quá nhiều lần đăng nhập sai. Thử lại sau ${remaining} phút.`);
+      return res.redirect('/admin/login');
+    }
+  } else {
+    // Reset hoặc tạo mới
+    loginAttempts.set(ip, { count: 0, resetAt: now + WINDOW_MS });
+  }
+  next();
+}
+
+function recordFailedLogin(req) {
+  const ip = req.ip || req.connection.remoteAddress;
+  const record = loginAttempts.get(ip) || { count: 0, resetAt: Date.now() + WINDOW_MS };
+  record.count += 1;
+  loginAttempts.set(ip, record);
+}
+
+function clearLoginAttempts(req) {
+  const ip = req.ip || req.connection.remoteAddress;
+  loginAttempts.delete(ip);
+}
+
+// Gắn helper vào req để controller dùng
+function attachLoginHelpers(req, res, next) {
+  req.recordFailedLogin = () => recordFailedLogin(req);
+  req.clearLoginAttempts = () => clearLoginAttempts(req);
+  next();
+}
+
 // Auth
 router.get('/login', AdminController.loginPage);
-router.post('/login', AdminController.loginPost);
+router.post('/login', loginRateLimit, attachLoginHelpers, AdminController.loginPost);
 router.get('/logout', AdminController.logout);
 
 // Dashboard (tất cả route bên dưới cần đăng nhập)

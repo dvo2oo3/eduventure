@@ -51,10 +51,10 @@ const ProgramModel = {
        WHERE program_id=? AND grade=?`,
       [
         data.label, data.version, data.file_size,
-        data.url_main || null, data.label_main || 'Link chính', parseInt(data.hidden_main) === 1 ? 1 : 0,
-        data.url_mirror1 || null, data.label_mirror1 || 'Link dự phòng 1', parseInt(data.hidden_mirror1) === 1 ? 1 : 0,
-        data.url_mirror2 || null, data.label_mirror2 || 'Link dự phòng 2', parseInt(data.hidden_mirror2) === 1 ? 1 : 0,
-        data.url_mirror3 || null, data.label_mirror3 || 'Link dự phòng 3', parseInt(data.hidden_mirror3) === 1 ? 1 : 0,
+        data.url_main || null, data.label_main || 'Link chính', data.hidden_main ? 1 : 0,
+        data.url_mirror1 || null, data.label_mirror1 || 'Link dự phòng 1', data.hidden_mirror1 ? 1 : 0,
+        data.url_mirror2 || null, data.label_mirror2 || 'Link dự phòng 2', data.hidden_mirror2 ? 1 : 0,
+        data.url_mirror3 || null, data.label_mirror3 || 'Link dự phòng 3', data.hidden_mirror3 ? 1 : 0,
         programId, grade
       ]
     );
